@@ -1,33 +1,38 @@
 <!doctype html>
 <html lang="de">
   <head>
-    <link rel="stylesheet" type="text/css" href="./src/custom.css" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wohnmobil Verleih</title>
+    <link rel="stylesheet" type="text/css" href="/src/css/style.css" />
+    <title>Rent-a-Camper</title>
+    <script src="./src/elements/mainheader.ts" defer></script>
+    <script src="./src/elements/mainfooter.ts" defer></script>
   </head>
   <body>
-    <div id="app">
-      <header>
-        <h1 class="anime-title">
-          <span>R</span><span>e</span><span>n</span><span>t</span>
-          <span>-</span>
-          <span>a</span>
-          <span>-</span>
-          <span>C</span><span>a</span><span>m</span><span>p</span><span>e</span
-          ><span>r</span>
-        </h1>
-        <h1>Wohnmobil Verleih</h1>
-        <p>Finde dein perfektes Reisemobil.</p>
-      </header>
+    <main-header></main-header>
 
-      <main id="wohnmobil-liste">
-        <p>Lade Fahrzeuge...</p>
-      </main>
+    <main class="center">
+      <iframe
+        width="560"
+        height="315"
+        src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1"
+        title="YouTube video player"
+        frameborder="0"
+        allow="
+          accelerometer;
+          autoplay;
+          clipboard-write;
+          encrypted-media;
+          gyroscope;
+          picture-in-picture;
+          web-share;
+        "
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      >
+      </iframe>
+    </main>
 
-      <button id="counter" type="button" class="counter">Klick mich</button>
-    </div>
-
-    <script type="module" src="/src/main.ts"></script>
+    <main-footer></main-footer>
   </body>
 </html>
