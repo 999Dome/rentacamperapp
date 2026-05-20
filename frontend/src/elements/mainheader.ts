@@ -18,6 +18,13 @@ class mainHeader extends HTMLElement {
     while (doc.head.firstChild) {
       this.shadowRoot!.appendChild(doc.head.firstChild);
     }
+
+    window.addEventListener("load", () => {
+      const loader = document.querySelector(".loader");
+      if (loader) {
+        loader.remove();
+      }
+    });
   }
 }
 
