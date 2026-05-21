@@ -23,3 +23,5 @@ Das Projekt ist als **Full-Stack TypeScript Monorepo** aufgebaut.
 * **Besonderheit:** Ein gemeinsamer `shared/`-Ordner für TypeScript-Interfaces, um Frontend und Backend typsicher zu synchronisieren.
 
 ---
+
+
