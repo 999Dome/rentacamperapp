@@ -1,0 +1,9 @@
+{
+  "name": "rent-a-camper-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ]
+}
