@@ -24,4 +24,28 @@ Das Projekt ist als **Full-Stack TypeScript Monorepo** aufgebaut.
 
 ---
 
+## Geplante Features (ergänzbar)
+Suche aller verfügbaren Wohnmobile inkl. Filter & Merkliste (LocalStorage)
+
+Registrieren, Login (inkl. Bot-Schutz via MathML)
+
+Rollen: Mieter, Vermieter, Admin
+
+Wohnmobil anlegen (Vermieter) -> Autom. Bild-Optimierung (Backend) -> Admin-Freigabe
+
+Detail-Sicht / Vermieten-Sicht inkl. Standort-Karte (Google Maps API)
+
+Kalender-Sicht für Wohnmobile (verfügbar/blockiert)
+
+Seiten zum Buchen/Zahlen inkl. digitaler Unterschrift (Canvas-Element)
+
+Bezahlen via Stripe/PayPal inkl. Rechnungs-Generierung (PDF)
+
+
+
+
+
+
+
+
 
