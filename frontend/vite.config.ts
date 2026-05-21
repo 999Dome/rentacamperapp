@@ -2,6 +2,17 @@ import { defineConfig } from 'vite'
 import { resolve } from 'path'
 
 export default defineConfig({
+  server: {
+    fs: {
+      allow: ['..']
+    }
+  },
+  resolve: {
+    tsconfigPaths: true,
+    alias: {
+      '@shared': resolve(__dirname, '../shared')
+    }
+  },
   build: {
     rollupOptions: {
       input: {
