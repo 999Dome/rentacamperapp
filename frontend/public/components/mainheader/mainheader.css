@@ -9,12 +9,16 @@ header {
   margin-bottom: 10px;
 }
 
+/* HIER ANGEPASST: Flexbox sorgt für die perfekte vertikale Zentrierung */
 .title {
   font-family: "Gochi Hand", cursive;
   font-size: 30px;
-  text-align: center;
-  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
   font-weight: 600;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
+
+  display: flex; /* Aktiviert Flexbox */
+  align-items: center; /* Zentriert Text und Icon absolut mittig auf der Y-Achse */
+  gap: 12px; /* Gibt einen sauberen Abstand zwischen Icon und Text */
 }
 
 .blue {
@@ -28,7 +32,8 @@ header {
 }
 
 .title span {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   text-transform: uppercase;
 }
 
@@ -47,7 +52,7 @@ header {
 
 .nav-link:hover {
   transform: scale(1.1);
-  color: #fcc218; 
+  color: #fcc218;
 }
 
 .main-nav ul {
@@ -64,4 +69,38 @@ header {
 
 .main-nav ul li:nth-child(even) a {
   color: #ea5d42;
+}
+
+.site-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-name::before {
+  content: "";
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  background-image: url("/src/assets/Wohnwagen.ico");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon {
+  width: 44px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.icon {
+  width: 40px;
+  height: 40px;
 }
