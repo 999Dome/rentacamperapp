@@ -1,20 +1,28 @@
 <!doctype html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" type="text/css" href="/src/css/style.css" />
-    <title>Rent-a-Camper</title>
-    <script type="module" src="../src/elements/mainheader.ts" defer></script>
-    <script type="module" src="../src/elements/mainfooter.ts" defer></script>
-  </head>
-  <body>
-    <main-header></main-header>
 
-    <main class="center">
-        <h2>mieten</h2>
-    </main>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" type="text/css" href="/src/css/style.css" />
+  <title>Rent-a-Camper</title>
+  <script type="module" src="../src/elements/mainheader.ts" defer></script>
+  <script type="module" src="../src/elements/mainfooter.ts" defer></script>
+  <script type="module" src="./insult-handler.ts" defer></script>
+</head>
 
-    <main-footer></main-footer>
-  </body>
+<body>
+  <main-header></main-header>
+
+  <main class="center">
+    <div class="insult-box">
+      <button id="insult-btn">Drück mich!</button>
+      <br />
+      <p id="insult-text"></p>
+    </div>
+  </main>
+
+  <main-footer></main-footer>
+</body>
+
 </html>
