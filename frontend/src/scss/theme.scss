@@ -1,0 +1,13 @@
+@import url("https://fonts.googleapis.com/css2?family=Gochi+Hand&display=swap");
+
+@import "variables";
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+$theme-colors: map-merge($theme-colors, $custom-colors);
+
+@import "bootstrap/scss/maps";
+
+@import "bootstrap/scss/bootstrap";
+
+@import "custom";

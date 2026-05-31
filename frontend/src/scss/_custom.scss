@@ -1,0 +1,49 @@
+@font-face {
+    font-family: 'Burbank Big Condensed';
+    src: url('../fonts/burbankbigcondensed_bold.otf') format('opentype');
+    font-style: normal;
+    font-display: swap;
+}
+
+.title {
+  font-family: "Gochi Hand", cursive;
+  font-size: 45px;
+  font-weight: 500;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.05);
+  letter-spacing: 1px;
+}
+
+.custom-font {
+  font-family: "Gochi Hand", cursive;
+}
+
+.blue {
+  color: $custom-light-blue;
+}
+
+.red {
+  color: $custom-red;
+}
+
+.yellow {
+  color: $custom-yellow;
+}
+
+.nav-link {
+  font-size: 1.8rem;
+  transition: transform 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+  font-family: $font-family-base;
+  letter-spacing: 2px;
+  
+  &:hover {
+    transform: scale(1.1);
+    color: $warning !important; // Gold beim Hover
+  }
+}
+
+.btn {
+  font-size: 1.3rem;     
+  letter-spacing: 1.5px;    
+  text-transform: uppercase; 
+}

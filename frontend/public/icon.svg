@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" width="100%" height="100%">
+    <defs>
+        <clipPath id="shieldClip">
+            <path d="M 25 60 A 15 15 0 0 1 40 45 L 75 45 A 25 25 0 0 1 125 45 L 160 45 A 15 15 0 0 1 175 60 L 175 140 C 175 190 130 220 100 230 C 70 220 25 190 25 140 Z" />
+        </clipPath>
+    </defs>
+
+    <path d="M 25 60 A 15 15 0 0 1 40 45 L 75 45 A 25 25 0 0 1 125 45 L 160 45 A 15 15 0 0 1 175 60 L 175 140 C 175 190 130 220 100 230 C 70 220 25 190 25 140 Z" fill="#FCF5E3" />
+
+    <g clip-path="url(#shieldClip)">
+        <polygon points="10,150 50,85 85,125 115,75 155,120 180,95 210,150 210,240 10,240" fill="#7CBED6" />
+
+        <path d="M 0 160 C 50 160 80 140 150 145 C 180 147 200 155 200 155 L 200 240 L 0 240 Z" fill="#F4B426" />
+
+        <path d="M 60 240 C 60 190 110 170 160 160 L 190 160 L 190 175 C 140 180 90 200 90 240 Z" fill="#FFFFFF" />
+    </g>
+
+    <path d="M 100 85 C 100 85 82 60 82 45 A 18 18 0 1 1 118 45 C 118 60 100 85 100 85 Z" fill="#F4B426" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" />
+    <circle cx="100" cy="45" r="7" fill="#FFFFFF" />
+
+    <path d="M 45 145 L 45 105 A 6 6 0 0 1 51 99 L 122 99 A 6 6 0 0 1 128 102 L 138 102 A 10 10 0 0 1 148 112 L 148 116 L 132 126 L 152 126 A 6 6 0 0 1 158 132 L 158 145 A 6 6 0 0 1 152 151 L 137 151 A 12 12 0 0 0 113 151 L 83 151 A 12 12 0 0 0 59 151 L 51 151 A 6 6 0 0 1 45 145 Z" fill="#DE7A22" stroke="#FFFFFF" stroke-width="4.5" stroke-linejoin="round" />
+    
+    <polygon points="134,122 140,115 145,115 145,122" fill="#FFFFFF" />
+
+    <circle cx="125" cy="151" r="7.5" fill="#DE7A22" stroke="#FFFFFF" stroke-width="4.5" />
+    <circle cx="71" cy="151" r="7.5" fill="#DE7A22" stroke="#FFFFFF" stroke-width="4.5" />
+
+    <path d="M 25 60 A 15 15 0 0 1 40 45 L 75 45 A 25 25 0 0 1 125 45 L 160 45 A 15 15 0 0 1 175 60 L 175 140 C 175 190 130 220 100 230 C 70 220 25 190 25 140 Z" fill="none" stroke="#2D3D4E" stroke-width="8" stroke-linejoin="round" />
+</svg>
