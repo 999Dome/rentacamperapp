@@ -8,10 +8,22 @@ export default defineConfig({
     }
   },
   resolve: {
-    tsconfigPaths: true,
+    // tsconfigPaths: true wurde entfernt, da es hier ungültig ist
     alias: {
       '@shared': resolve(__dirname, '../shared')
     }
+  },
+  css: {
+     preprocessorOptions: {
+        scss: {
+          silenceDeprecations: [
+            'import',
+            'color-functions',
+            'global-builtin',
+            'if-function'
+          ],
+        },
+     },
   },
   build: {
     rollupOptions: {
@@ -23,5 +35,5 @@ export default defineConfig({
         rentout: resolve(__dirname, 'rentout/index.html')
       },
     },
-  },
+  }
 })

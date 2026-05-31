@@ -1,17 +1,19 @@
 <!doctype html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" type="text/css" href="/src/css/style.css" />
-    <title>Rent-a-Camper</title>
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rent-a-Camper</title>
 
-    <script type="module" src="./src/elements/mainheader.ts" defer></script>
-    <script type="module" src="./src/elements/mainfooter.ts" defer></script>
-  </head>
-  <body>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+
+  <script type="module" src="./src/components/mainheader/mainheader.ts" defer></script>
+</head>
+
+<body>
+
+  <!-- 
     <div class="loader">
       <svg
         xml:space="preserve"
@@ -54,17 +56,13 @@
       </svg>
       <div class="road"></div>
     </div>
+  -->
 
-    <main-header></main-header>
+  <div id="main-header"></div>
 
-    <main class="center">
-      <iframe
-        width="560"
-        height="315"
-        src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1"
-        title="YouTube video player"
-        frameborder="0"
-        allow="
+  <main class="center">
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1"
+      title="YouTube video player" frameborder="0" allow="
           accelerometer;
           autoplay;
           clipboard-write;
@@ -72,12 +70,10 @@
           gyroscope;
           picture-in-picture;
           web-share;
-        "
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen
-      ></iframe>
-    </main>
+        " referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
-    <main-footer></main-footer>
-  </body>
+  </main>
+
+</body>
+
 </html>

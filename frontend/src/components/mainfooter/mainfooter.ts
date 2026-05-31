@@ -5,7 +5,7 @@ class mainFooter extends HTMLElement {
   }
 
   async connectedCallback() {
-    const response = await fetch("/components/mainfooter/mainfooter.html");
+    const response = await fetch("./mainfooter.html");
     const text = await response.text();
 
     const parser = new DOMParser();
