@@ -5,6 +5,10 @@
     font-display: swap;
 }
 
+.header {
+  background-color: beige;
+}
+
 .title {
   font-family: "Gochi Hand", cursive;
   font-size: 45px;
@@ -46,4 +50,8 @@
   font-size: 1.3rem;     
   letter-spacing: 1.5px;    
   text-transform: uppercase; 
+}
+
+.text-stroke-grey {
+  -webkit-text-stroke: 1px gray 
 }
