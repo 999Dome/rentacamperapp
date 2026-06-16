@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link href="/src/css/style.css" rel="stylesheet" type="text/css"/>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;700&family=Montserrat:wght@300;400;700&display=swap"
+            rel="stylesheet"
+    />
+    <link href="rent.css" rel="stylesheet"/>
+    <title>Mieten — Rent-a-Camper</title>
+    <script
+            defer
+            src="../src/components/mainheader.ts"
+            type="module"
+    ></script>
+    <script
+            defer
+            src="../src/components/mainfooter/mainfooter.ts"
+            type="module"
+    ></script>
+    <script defer src="insult-handler.ts" type="module"></script>
+    <script defer src="rent.js" type="module"></script>
+</head>
+
+<body>
+<a class="back-button" href="/frontend/public">Zurück</a>
+<main-header></main-header>
+
+<header class="hero">
+    <div class="hero-inner">
+        <h1 class="neon">Unsere Camper</h1>
+        <p class="tag">Camper für jeden Geschmack • Unschlagbare Preise</p>
+        <nav class="jump-nav">
+            <a href="#campers">Fahrzeuge</a>
+            <a href="#buchungen">Buchungen</a>
+        </nav>
+    </div>
+</header>
+
+<main class="container">
+    <section class="panel reveal" id="campers">
+        <h2>Verfügbare Camper</h2>
+        <div class="filter-panel">
+            <div class="filter-group">
+                <label for="sortSelect">Sortieren nach</label>
+                <select id="sortSelect">
+                    <option value="priceAsc">Preis aufsteigend</option>
+                    <option value="priceDesc">Preis absteigend</option>
+                    <option value="nameAsc">Name A–Z</option>
+                    <option value="nameDesc">Name Z–A</option>
+                    <option value="typeOwnFirst">Eigene zuerst</option>
+                    <option value="typeCompanyFirst">Unternehmen zuerst</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="typeSelect">Angebotsart</label>
+                <select id="typeSelect">
+                    <option value="all">Alle</option>
+                    <option value="company">Unternehmen</option>
+                    <option value="self">Eigene</option>
+                    <option value="community">Community</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="statusSelect">Verfügbarkeit</label>
+                <select id="statusSelect">
+                    <option value="all">Alle</option>
+                    <option value="available">Verfügbar</option>
+                    <option value="rented">Vermietet</option>
+                </select>
+            </div>
+            <div class="filter-group date-group">
+                <label>Datumsabschnitt</label>
+                <div class="date-row">
+                    <input id="dateFrom" type="date"/>
+                    <span>bis</span>
+                    <input id="dateTo" type="date"/>
+                </div>
+            </div>
+        </div>
+        <div class="camper-grid" id="companyCamperList"></div>
+        <p class="empty-state" id="companyEmpty">
+            Momentan sind noch keine Unternehmens-Camper verfügbar.
+        </p>
+        <p class="panel-note">
+            Sie können hier nach Preis, Name, Typ, Verfügbarkeit und Mietdatum
+            filtern.
+        </p>
+    </section>
+
+    <section class="panel reveal" id="community-campers">
+        <h2>Community Camper</h2>
+        <p>
+            Hier sehen Sie Camper, die von anderen Nutzern oder Ihnen selbst
+            hochgeladen wurden.
+        </p>
+        <div class="camper-grid" id="communityCamperList"></div>
+        <p class="empty-state" id="communityEmpty">
+            Momentan sind noch keine Community-Camper eingetragen.
+        </p>
+    </section>
+</main>
+
+<main-footer></main-footer>
+<div class="overlay hidden" id="inquiryOverlay">
+    <div class="overlay-panel">
+        <button aria-label="Schließen" class="overlay-close" id="closeOverlay">
+            ×
+        </button>
+        <h3>Anfrage stellen</h3>
+        <p class="inquiry-title" id="inquiryItemTitle"></p>
+        <label for="inquiryName">Ihr Name</label>
+        <input id="inquiryName" placeholder="Max Mustermann" type="text"/>
+        <label for="inquiryMessage">Ihre Nachricht</label>
+        <textarea
+                id="inquiryMessage"
+                placeholder="Ich möchte diesen Camper vom ... mieten."
+                rows="4"
+        ></textarea>
+        <button class="btn btn-primary" id="submitInquiry">
+            Anfrage senden
+        </button>
+        <p class="inquiry-confirm hidden" id="inquiryConfirm"></p>
+    </div>
+</div>
+</body>
+</html>
