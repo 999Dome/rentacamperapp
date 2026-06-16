@@ -4,15 +4,129 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" type="text/css" href="/src/css/style.css" />
-    <title>Rent-a-Camper</title>
-    <script type="module" src="../src/components/mainheader/mainheader.ts" defer></script>
-    <script type="module" src="../src/components/mainfooter/mainfooter.ts" defer></script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap"
+    />
+    <link rel="stylesheet" href="account.css" />
+    <title>Konto — Rent-a-Camper</title>
+    <script
+      type="module"
+      src="../src/components/mainheader/mainheader.ts"
+      defer
+    ></script>
+    <script
+      type="module"
+      src="../src/components/mainfooter/mainfooter.ts"
+      defer
+    ></script>
   </head>
   <body>
+    <a class="back-button" href="/">Zurück</a>
     <main-header></main-header>
 
-    <main class="center">
-        <h2>Konto</h2>
+    <header class="hero">
+      <div class="hero-inner">
+        <h1 class="neon">Mein Konto</h1>
+        <p class="tag">Anmelden • Registrieren • Profil verwalten</p>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="auth-wrapper">
+        <!-- Login Section -->
+        <section class="panel reveal auth-panel">
+          <h2>Anmelden</h2>
+          <form class="auth-form" id="loginForm">
+            <div class="form-group">
+              <label for="login-email">E-Mail</label>
+              <input
+                type="email"
+                id="login-email"
+                name="email"
+                placeholder="deine@email.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Passwort</label>
+              <input
+                type="password"
+                id="login-password"
+                name="password"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Anmelden</button>
+              <a href="#" class="link-forgot">Passwort vergessen?</a>
+            </div>
+          </form>
+        </section>
+
+        <!-- Registration Section -->
+        <section class="panel reveal auth-panel">
+          <h2>Registrieren</h2>
+          <form class="auth-form" id="registerForm">
+            <div class="form-group">
+              <label for="register-name">Vollständiger Name</label>
+              <input
+                type="text"
+                id="register-name"
+                name="name"
+                placeholder="Max Mustermann"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="register-email">E-Mail</label>
+              <input
+                type="email"
+                id="register-email"
+                name="email"
+                placeholder="deine@email.com"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="register-password">Passwort</label>
+              <input
+                type="password"
+                id="register-password"
+                name="password"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="register-phone">Telefon</label>
+              <input
+                type="tel"
+                id="register-phone"
+                name="phone"
+                placeholder="+49 123 456789"
+              />
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">
+                Registrieren
+              </button>
+            </div>
+
+            <p class="terms">
+              Mit der Registrierung akzeptiere ich die
+              <a href="#" class="link-terms">Nutzungsbedingungen</a>.
+            </p>
+          </form>
+        </section>
+      </div>
     </main>
 
     <main-footer></main-footer>

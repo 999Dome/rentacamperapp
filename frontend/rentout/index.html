@@ -4,15 +4,138 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" type="text/css" href="/src/css/style.css" />
-    <title>Rent-a-Camper</title>
-    <script type="module" src="../src/components/mainheader/mainheader.ts" defer></script>
-    <script type="module" src="../src/components/mainfooter/mainfooter.ts" defer></script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap"
+    />
+    <link rel="stylesheet" href="rentout.css" />
+    <title>Vermieten — Rent-a-Camper</title>
+    <script
+      type="module"
+      src="../src/components/mainheader/mainheader.ts"
+      defer
+    ></script>
+    <script
+      type="module"
+      src="../src/components/mainfooter/mainfooter.ts"
+      defer
+    ></script>
+    <script type="module" src="./rentout.js" defer></script>
   </head>
   <body>
+    <a class="back-button" href="/">Zurück</a>
     <main-header></main-header>
 
-    <main class="center">
-        <h2>vermieten</h2>
+    <header class="hero">
+      <div class="hero-inner">
+        <h1 class="neon">Camper Vermieten</h1>
+        <p class="tag">Verdienen Sie mit Ihrem Camper • Flexible Buchungen</p>
+        <nav class="jump-nav">
+          <a href="#add-camper">Eigenen Camper anbieten</a>
+          <a href="#submissions">Ihre Camper</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section id="add-camper" class="panel reveal">
+        <h2>Eigenen Camper anbieten</h2>
+        <p>
+          Tragen Sie hier Ihren Camper ein. Bilder, Beschreibung, Preis und
+          Kontaktdaten werden unten als Einträge angezeigt.
+        </p>
+
+        <form id="camperForm" class="add-camper-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="camperName">Camper Modell</label>
+              <input type="text" id="camperName" name="camperName" required />
+            </div>
+            <div class="form-group">
+              <label for="ownerName">Ihr Name</label>
+              <input type="text" id="ownerName" name="ownerName" required />
+            </div>
+            <div class="form-group">
+              <label for="pricePerDay">Preis pro Tag</label>
+              <input
+                type="text"
+                id="pricePerDay"
+                name="pricePerDay"
+                placeholder="z. B. 45€"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="status">Status</label>
+              <select id="status" name="status">
+                <option value="available">Verfügbar</option>
+                <option value="rented">Bereits vermietet</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="rentedUntil">Vermietet bis</label>
+              <input type="date" id="rentedUntil" name="rentedUntil" />
+            </div>
+            <div class="form-group full">
+              <label for="imageUrl">Bild-URL</label>
+              <input
+                type="url"
+                id="imageUrl"
+                name="imageUrl"
+                placeholder="https://..."
+              />
+            </div>
+            <div class="form-group full">
+              <label for="imageFile">Oder Bild hochladen</label>
+              <input
+                type="file"
+                id="imageFile"
+                name="imageFile"
+                accept="image/*"
+              />
+            </div>
+            <div class="form-group full">
+              <label for="contactInfo">Kontakt-E-Mail oder Telefon</label>
+              <input
+                type="text"
+                id="contactInfo"
+                name="contactInfo"
+                placeholder="info@beispiel.de oder +49 123 456789"
+                required
+              />
+            </div>
+            <div class="form-group full">
+              <label for="camperDescription">Beschreibung</label>
+              <textarea
+                id="camperDescription"
+                name="camperDescription"
+                rows="4"
+                placeholder="Ausstattung, Größe, Extras..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="preview-block">
+            <span>Vorschau</span>
+            <img
+              id="imagePreview"
+              class="image-preview"
+              alt="Camper Bild Vorschau"
+            />
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Camper hinzufügen
+          </button>
+        </form>
+      </section>
+
+      <section id="submissions" class="panel reveal">
+        <h2>Ihre Camper</h2>
+        <div id="submissionsList" class="submissions-list">
+          <p class="empty-state">Sie haben noch keinen Camper eingetragen.</p>
+        </div>
+      </section>
     </main>
 
     <main-footer></main-footer>

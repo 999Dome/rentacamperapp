@@ -4,17 +4,115 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" type="text/css" href="/src/css/style.css" />
-    <title>Rent-a-Camper</title>
-    <script type="module" src="../src/components/mainheader/mainheader.ts"></script>
-    <script type="module" src="../src/components/mainfooter/mainfooter.ts"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap" />
+    <link rel="stylesheet" href="aboutus.css" />
+    <title>Über uns — Rent-a-Camper</title>
+    <script
+      type="module"
+      src="../src/components/mainheader/mainheader.ts"
+    ></script>
+    <script
+      type="module"
+      src="../src/components/mainfooter/mainfooter.ts"
+    ></script>
   </head>
   <body>
+    <a class="back-button" href="/">Zurück</a>
     <main-header></main-header>
 
     <main class="center">
       <h2>Über uns</h2>
+       <header class="hero">
+      <div class="hero-inner">
+        <h1 class="neon">About Us</h1>
+        <p class="tag">Authentic Campers • 24/7 Vibes</p>
+        <nav class="jump-nav">
+          <a href="#standort">Standort</a>
+          <a href="#oeffnungszeiten">Öffnungszeiten</a>
+          <a href="#personal">Personal</a>
+          <a href="#impressum">Impressum</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <section id="standort" class="panel reveal">
+        <h2>Standort</h2>
+        <div class="content split">
+          <div class="text">
+            <p>
+              Unsere Zentrale befindet sich zentral gelegen — leicht erreichbar,
+              mit ausreichend Parkplätzen.
+            </p>
+            <address>
+              Musterstraße 1<br />
+              12345 Musterstadt
+            </address>
+          </div>
+          <div class="map">
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox=9.0%2C48.0%2C9.1%2C48.1&amp;layer=mapnik"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+      </section>
+
+      <section id="oeffnungszeiten" class="panel reveal">
+        <h2>Öffnungszeiten</h2>
+        <ul class="hours">
+          <li><strong>Montag:</strong> 09:00 — 18:00</li>
+          <li><strong>Dienstag:</strong> 09:00 — 18:00</li>
+          <li><strong>Mittwoch:</strong> 09:00 — 18:00</li>
+          <li><strong>Donnerstag:</strong> 09:00 — 18:00</li>
+          <li><strong>Freitag:</strong> 09:00 — 16:00</li>
+          <li><strong>Samstag:</strong> 10:00 — 16:00</li>
+          <li>
+            <strong>Sonntag:</strong> Geschlossen (Notfallkontakt verfügbar)
+          </li>
+        </ul>
+      </section>
+
+      <section id="personal" class="panel reveal">
+        <h2>Personal</h2>
+        <div class="staff-grid">
+          <article class="card">
+            <img
+              src="https://i.pravatar.cc/200?img=32"
+              alt="Anna - Kundenservice"
+            />
+            <h3>Dominik</h3>
+            <p>Kundenservice &amp; Beratung</p>
+          </article>
+          <article class="card">
+            <img
+              src="https://i.pravatar.cc/200?img=47"
+              alt="Marco - Werkstatt"
+            />
+            <h3>Kevin</h3>
+            <p>Werkstatt &amp; Technik</p>
+          </article>
+          <article class="card">
+            <img
+              src="https://i.pravatar.cc/200?img=12"
+              alt="Lea - Flottenmanagerin"
+            />
+            <h3>Max</h3>
+            <p>Management</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="impressum" class="panel reveal small">
+        <h2>Impressum</h2>
+        <p>
+          Rent-a-Camper GmbH<br />Musterstraße 1, 12345 Musterstadt<br />Geschäftsführer:
+          Max Mustermann<br />E-Mail: info@rentacamper.example
+        </p>
+      </section>
     </main>
 
     <main-footer></main-footer>
+     <script type="module" src="aboutus.js"></script>
   </body>
 </html>
