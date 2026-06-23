@@ -1,0 +1,413 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
+  public: {
+    Tables: {
+      camper_features: {
+        Row: {
+          camper_id: string | null
+          feature_id: string | null
+          id: string
+        }
+        Insert: {
+          camper_id?: string | null
+          feature_id?: string | null
+          id?: string
+        }
+        Update: {
+          camper_id?: string | null
+          feature_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camper_features_camper_id_fkey"
+            columns: ["camper_id"]
+            isOneToOne: false
+            referencedRelation: "campers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "camper_features_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      camper_images: {
+        Row: {
+          camper_id: string | null
+          created_at: string
+          id: string
+          image_path: string | null
+          is_primary: boolean | null
+        }
+        Insert: {
+          camper_id?: string | null
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_primary?: boolean | null
+        }
+        Update: {
+          camper_id?: string | null
+          created_at?: string
+          id?: string
+          image_path?: string | null
+          is_primary?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camper_images_camper_id_fkey"
+            columns: ["camper_id"]
+            isOneToOne: false
+            referencedRelation: "campers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campers: {
+        Row: {
+          beds: number | null
+          created_at: string
+          empty_weight_kg: number | null
+          engine_power: number | null
+          fuel_consumption: number | null
+          fuel_type: Database["public"]["Enums"]["fuel_type"]
+          has_tow_hitch: boolean | null
+          height_cm: number | null
+          id: string
+          length_cm: number | null
+          manufacturer: Database["public"]["Enums"]["manufacturers"]
+          max_towing_capacity_kg: number | null
+          max_weight_kg: number | null
+          name: string | null
+          required_license: string
+          width_cm: number | null
+        }
+        Insert: {
+          beds?: number | null
+          created_at?: string
+          empty_weight_kg?: number | null
+          engine_power?: number | null
+          fuel_consumption?: number | null
+          fuel_type?: Database["public"]["Enums"]["fuel_type"]
+          has_tow_hitch?: boolean | null
+          height_cm?: number | null
+          id?: string
+          length_cm?: number | null
+          manufacturer: Database["public"]["Enums"]["manufacturers"]
+          max_towing_capacity_kg?: number | null
+          max_weight_kg?: number | null
+          name?: string | null
+          required_license: string
+          width_cm?: number | null
+        }
+        Update: {
+          beds?: number | null
+          created_at?: string
+          empty_weight_kg?: number | null
+          engine_power?: number | null
+          fuel_consumption?: number | null
+          fuel_type?: Database["public"]["Enums"]["fuel_type"]
+          has_tow_hitch?: boolean | null
+          height_cm?: number | null
+          id?: string
+          length_cm?: number | null
+          manufacturer?: Database["public"]["Enums"]["manufacturers"]
+          max_towing_capacity_kg?: number | null
+          max_weight_kg?: number | null
+          name?: string | null
+          required_license?: string
+          width_cm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campers_required_license_fkey"
+            columns: ["required_license"]
+            isOneToOne: false
+            referencedRelation: "drivers_license"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drivers_license: {
+        Row: {
+          class: Database["public"]["Enums"][" driver's licenses"] | null
+          created_at: string
+          id: string
+          max_trailer_weight: number | null
+          max_vehicle_wieght: number | null
+          total_weight: number | null
+          value: number | null
+        }
+        Insert: {
+          class?: Database["public"]["Enums"][" driver's licenses"] | null
+          created_at?: string
+          id?: string
+          max_trailer_weight?: number | null
+          max_vehicle_wieght?: number | null
+          total_weight?: number | null
+          value?: number | null
+        }
+        Update: {
+          class?: Database["public"]["Enums"][" driver's licenses"] | null
+          created_at?: string
+          id?: string
+          max_trailer_weight?: number | null
+          max_vehicle_wieght?: number | null
+          total_weight?: number | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      features: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          driver_license_class: string | null
+          firstname: string | null
+          id: string
+          lastname: string | null
+          phone: string | null
+          role: string | null
+          user: string | null
+        }
+        Insert: {
+          created_at?: string
+          driver_license_class?: string | null
+          firstname?: string | null
+          id?: string
+          lastname?: string | null
+          phone?: string | null
+          role?: string | null
+          user?: string | null
+        }
+        Update: {
+          created_at?: string
+          driver_license_class?: string | null
+          firstname?: string | null
+          id?: string
+          lastname?: string | null
+          phone?: string | null
+          role?: string | null
+          user?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      " driver's licenses":
+        | "Klasse B"
+        | "Klasse B96"
+        | "Klasse BE"
+        | "Klasse C1"
+        | "Klasse C1E"
+        | "Klasse C"
+        | "Klasse CE"
+        | "alte Klasse 3"
+        | "alte Klasse 2"
+      fuel_type: "Diesel" | "Super" | "Super Plus" | "Super E10"
+      manufacturers:
+        | "Rolls-Boyce"
+        | "Folkwagen"
+        | "Mercedenz-Bonz"
+        | "Avdi"
+        | "DYB"
+        | "Tayota"
+        | "Sabaru"
+        | "Chervolet"
+        | "Ferraro"
+        | "Lamberghini"
+        | "Bandley"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      " driver's licenses": [
+        "Klasse B",
+        "Klasse B96",
+        "Klasse BE",
+        "Klasse C1",
+        "Klasse C1E",
+        "Klasse C",
+        "Klasse CE",
+        "alte Klasse 3",
+        "alte Klasse 2",
+      ],
+      fuel_type: ["Diesel", "Super", "Super Plus", "Super E10"],
+      manufacturers: [
+        "Rolls-Boyce",
+        "Folkwagen",
+        "Mercedenz-Bonz",
+        "Avdi",
+        "DYB",
+        "Tayota",
+        "Sabaru",
+        "Chervolet",
+        "Ferraro",
+        "Lamberghini",
+        "Bandley",
+      ],
+    },
+  },
+} as const
