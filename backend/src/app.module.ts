@@ -1,12 +1,18 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { CamperModule } from './camper/camper.module';
-import { InsultModule } from './insult/insult.module';
+import { ConfigModule } from '@nestjs/config';
+import { SupabaseModule } from './supabase/supabase.module';
+import { CampersModule } from './campers/camper.module';
+import { CamperImagesModule } from './camper_images/camper_images.module';
 
 @Module({
-  imports: [CamperModule, InsultModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true,
+    }),
+    SupabaseModule,
+    CampersModule,
+    CamperImagesModule,
+  ],
 })
 export class AppModule {}
