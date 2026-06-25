@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      addons: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_per_night: boolean
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_per_night?: boolean
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_per_night?: boolean
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
       camper_features: {
         Row: {
           camper_id: string | null
@@ -82,7 +106,10 @@ export type Database = {
       campers: {
         Row: {
           beds: number | null
+          cleaning_fee: number
           created_at: string
+          deposit_amount: number
+          description: string
           empty_weight_kg: number | null
           engine_power: number | null
           fuel_consumption: number | null
@@ -95,12 +122,17 @@ export type Database = {
           max_towing_capacity_kg: number | null
           max_weight_kg: number | null
           name: string | null
+          price_per_night_base: number
           required_license: string
+          short_desc: string
           width_cm: number | null
         }
         Insert: {
           beds?: number | null
+          cleaning_fee?: number
           created_at?: string
+          deposit_amount?: number
+          description?: string
           empty_weight_kg?: number | null
           engine_power?: number | null
           fuel_consumption?: number | null
@@ -113,12 +145,17 @@ export type Database = {
           max_towing_capacity_kg?: number | null
           max_weight_kg?: number | null
           name?: string | null
+          price_per_night_base?: number
           required_license: string
+          short_desc?: string
           width_cm?: number | null
         }
         Update: {
           beds?: number | null
+          cleaning_fee?: number
           created_at?: string
+          deposit_amount?: number
+          description?: string
           empty_weight_kg?: number | null
           engine_power?: number | null
           fuel_consumption?: number | null
@@ -131,7 +168,9 @@ export type Database = {
           max_towing_capacity_kg?: number | null
           max_weight_kg?: number | null
           name?: string | null
+          price_per_night_base?: number
           required_license?: string
+          short_desc?: string
           width_cm?: number | null
         }
         Relationships: [
@@ -189,6 +228,27 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string | null
+        }
+        Relationships: []
+      }
+      pricing_rules: {
+        Row: {
+          description: string | null
+          id: number
+          rule_key: string
+          rule_value: number
+        }
+        Insert: {
+          description?: string | null
+          id?: number
+          rule_key: string
+          rule_value: number
+        }
+        Update: {
+          description?: string | null
+          id?: number
+          rule_key?: string
+          rule_value?: number
         }
         Relationships: []
       }

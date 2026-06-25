@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { InsultResponse } from "@shared/insult.ts";
 
 const button = document.getElementById("insult-btn") as HTMLButtonElement;
