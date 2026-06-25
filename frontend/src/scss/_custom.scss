@@ -1,8 +1,15 @@
 @font-face {
-    font-family: 'Burbank Big Condensed';
-    src: url('../fonts/burbankbigcondensed_bold.otf') format('opentype');
-    font-style: normal;
-    font-display: swap;
+  font-family: 'Burbank Big Condensed';
+  src: url('../fonts/burbankbigcondensed_bold.otf') format('opentype');
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cartoonist Hand Bold';
+  src: url('../fonts/SF_Cartoonist_Hand_Bold.ttf') format('truetype');
+  font-style: normal;
+  font-display: swap;
 }
 
 .header {
@@ -19,6 +26,14 @@
 
 .custom-font {
   font-family: "Gochi Hand", cursive;
+}
+
+.custom-font-base {
+  font-family: $font-family-base
+}
+
+.custom-font-cartoonist {
+  font-family: $font-family-cartoonist
 }
 
 .blue {
@@ -39,7 +54,7 @@
   white-space: nowrap;
   font-family: $font-family-base;
   letter-spacing: 2px;
-  
+
   &:hover {
     transform: scale(1.1);
     color: $warning !important; // Gold beim Hover
@@ -47,11 +62,19 @@
 }
 
 .btn {
-  font-size: 1.3rem;     
-  letter-spacing: 1.5px;    
-  text-transform: uppercase; 
+  font-size: 1.3rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .text-stroke-grey {
-  -webkit-text-stroke: 1px gray 
+  -webkit-text-stroke: 1px gray
+}
+
+.hover-zoom {
+  transition: transform 0.3s ease-in-out;
+
+  &:hover {
+    transform: scale(1.06);
+  }
 }

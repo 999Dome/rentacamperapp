@@ -1,11 +1,11 @@
 export const Fragment = Symbol('Fragment');
 
-type Attrs = Record<string, any> | null;
+type Attrs = Record<string, unknown> | null;
 
 export function createElement(
   tag: string | typeof Fragment,
   attrs: Attrs,
-  ...children: any[]
+  ...children: unknown[]
 ): Element | DocumentFragment {
   if (tag === Fragment) {
     const frag = document.createDocumentFragment();
@@ -25,9 +25,11 @@ export function createElement(
         return;
 
       if (key === 'className') {
-        isSvg
-          ? el.setAttribute('class', String(value))
-          : ((el as HTMLElement).className = String(value));
+        if (isSvg) {
+          el.setAttribute('class', String(value));
+        } else {
+          (el as HTMLElement).className = String(value);
+        }
         return;
       }
 
@@ -56,7 +58,7 @@ export function createElement(
   return el;
 }
 
-function appendChild(parent: Node, child: any) {
+function appendChild(parent: Node, child: unknown) {
   if (child === undefined || child === null || typeof child === 'boolean') return;
 
   if (Array.isArray(child)) {
@@ -74,7 +76,7 @@ function appendChild(parent: Node, child: any) {
   }
 }
 
-export function createSVGElement(tag: string, attrs: Attrs, ...children: any[]) {
+export function createSVGElement(tag: string, attrs: Attrs, ...children: unknown[]) {
   const svgAttrs = Object.assign({ xmlns: 'http://www.w3.org/2000/svg' }, attrs || {});
   return createElement(tag, svgAttrs, ...children);
 }

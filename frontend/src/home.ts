@@ -13,3 +13,4 @@ document.body.appendChild(SearchBar());
 document.body.appendChild(Highlights());
 document.body.appendChild(Contact());
 document.body.appendChild(MainFooter());
+

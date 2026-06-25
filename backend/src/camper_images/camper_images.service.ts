@@ -22,4 +22,26 @@ export class CamperImagesService {
     if (error) throw new Error(error.message);
     return data;
   }
+
+  async findPrimaryByCamperId(camperId: string) {
+    const { data, error } = await this.supabase.client
+      .from(this.table)
+      .select('*')
+      .eq('camper_id', camperId)
+      .eq('is_primary', true)
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async findAllByCamperId(camperId: string) {
+    const { data, error } = await this.supabase.client
+      .from(this.table)
+      .select('*')
+      .eq('camper_id', camperId);
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
 }
