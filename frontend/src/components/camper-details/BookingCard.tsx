@@ -3,6 +3,7 @@ import type { Camper, Addon, PricingRule } from '../../types/interface.ts';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import { German } from 'flatpickr/dist/l10n/de.js';
+import { isLoggedIn } from '../../auth/auth.ts';
 
 export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: PricingRule[]) {
   const pricePerNight = camper.price_per_night_base || camper.engine_power || 0;
@@ -43,7 +44,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
           </div>
         </div>
 
-        <button className="btn btn-lg w-100 mb-3 fw-bold custom-font-cartoonist fs-3 text-white" 
+        <button className="btn btn-lg w-100 mb-3 fw-bold custom-font-base fs-3 text-white" 
                 style={{ backgroundColor: "var(--bs-primary, #ea5d42)", letterSpacing: "2px" }} 
                 id="bookButton">
           Reservieren
@@ -79,6 +80,22 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
   let endDateStr = "";
   const bookButton = card.querySelector('#bookButton') as HTMLButtonElement;
   bookButton.disabled = true;
+
+  bookButton.addEventListener('click', () => {
+    const checkoutData = {
+      camperId: camper.id,
+      startDate: startDateStr,
+      endDate: endDateStr,
+      addons: selectedAddons
+    };
+    sessionStorage.setItem('pendingCheckout', JSON.stringify(checkoutData));
+
+    if (isLoggedIn()) {
+      window.location.href = '/pages/checkout/';
+    } else {
+      window.location.href = '/pages/account/';
+    }
+  });
 
   const receiptContainer = card.querySelector('#receipt-container') as HTMLElement;
   const receiptList = card.querySelector('#receipt-list') as HTMLElement;
@@ -130,7 +147,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
         addRow(`Reinigungsgebühr`, `${result.cleaningFee.toFixed(2)} €`);
       }
 
-      result.addonDetails.forEach((addon: any) => {
+      result.addonDetails.forEach((addon: { name: string; cost: number }) => {
         addRow(`${addon.name}`, `${addon.cost.toFixed(2)} €`);
       });
 
@@ -146,6 +163,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       updateStickyPosition();
 
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error(error);
       receiptContainer.classList.add('d-none');
       bookButton.disabled = true;
@@ -192,7 +210,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       } else {
         selectedAddons = selectedAddons.filter(id => id !== target.value);
       }
-      (card as any).selectedAddons = selectedAddons;
+      (card as HTMLElement & { selectedAddons?: string[] }).selectedAddons = selectedAddons;
       triggerCalculation();
     });
   });

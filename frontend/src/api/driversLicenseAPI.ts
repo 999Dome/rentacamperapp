@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { DriversLicense } from "../types/interface.ts";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -16,7 +15,7 @@ export async function getDriversLicenseById(id: string): Promise<DriversLicense>
 
     return await response.json();
   } catch (error) {
-    console.error("Fehler beim Laden des Führerscheins:", error);
+    console.error("Error while loading the drivers license:", error);
     return null as unknown as DriversLicense;
   }
 }

@@ -12,7 +12,7 @@ const observer = new IntersectionObserver(
 
 document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
 
-// Gentle parallax on mouse move
+
 const inner = document.querySelector(".hero-inner");
 if (inner) {
   document.querySelector(".hero")?.addEventListener("mousemove", (e) => {

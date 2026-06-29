@@ -7,14 +7,16 @@ const highlightCamperImages = await getHighlightCamperImages();
 
 function getCamperImageUrl(camperId: string): string {
   const image = highlightCamperImages.find((img) => img.camper_id === camperId);
-  return image?.image_path || "https://via.placeholder.com/400x300?text=No+Image";
+  return (
+    image?.image_path || "https://via.placeholder.com/400x300?text=No+Image"
+  );
 }
 
 export function Highlights() {
   return (
     <section className="container my-4">
       <div className="text-center mb-5">
-        <h2 className="display-4 fw-bold custom-font-cartoonist text-white mb-3">
+        <h2 className="display-4 fw-bold custom-font-burbank text-white mb-3">
           Unsere Highlights
         </h2>
         <p className="lead text-white-50 display-6">
@@ -34,18 +36,20 @@ export function Highlights() {
               }}
             >
               <div className="overflow-hidden rounded-top">
-                <img
-                  src={getCamperImageUrl(camper.id.toString())}
-                  className="card-img-top hover-zoom"
-                  alt={camper.name}
-                  style={{ height: "220px", objectFit: "cover" }}
-                />
+                <a href={`/campers/${camper.id}`}>
+                  <img
+                    src={getCamperImageUrl(camper.id.toString())}
+                    className="card-img-top hover-zoom"
+                    alt={camper.name}
+                    style={{ height: "220px", objectFit: "cover" }}
+                  />
+                </a>
               </div>
               <div className="card-body d-flex flex-column p-4">
                 <h5 className="card-title custom-font-base text-white fs-3 mb-1">
                   {camper.name}
                 </h5>
-                <p className="text-white-50 small mb-4 custom-font-cartoonist">
+                <p className="text-white-50 small mb-4 custom-font-base">
                   {camper.short_desc}
                 </p>
                 <div className="mt-auto d-flex justify-content-between align-items-center">
@@ -56,8 +60,8 @@ export function Highlights() {
                     </span>
                   </span>
                   <a
-                   href={`/campers/${camper.id}`}
-                    className="btn btn-primary w-100 mt-3"
+                    href={`/campers/${camper.id}`}
+                    className="btn btn-primary px-4"
                   >
                     Ansehen
                   </a>

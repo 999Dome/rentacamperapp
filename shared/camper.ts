@@ -1,5 +1,5 @@
 export interface Camper {
-    id: number, // später auf UUID ändern
+    id: number, 
     model: string,
     price: number
 }

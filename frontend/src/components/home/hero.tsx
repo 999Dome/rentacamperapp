@@ -31,7 +31,7 @@ export function Hero() {
               style={{ width: '100px', height: 'auto' }}
             />
 
-            <p className="display-2 mb-4 text-stroke-grey" style={{ letterSpacing: '2px' }}>
+            <p className="display-2 mb-4 text-stroke-grey custom-font-burbank" style={{ letterSpacing: '2px' }}>
               <span className="text-custom-light-blue">Dein Weg</span>
               <span className="text-custom-red">. </span>
               <span className="text-custom-yellow">Dein Tempo</span>
