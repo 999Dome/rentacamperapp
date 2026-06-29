@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { CamperImage } from "../types/interface.ts";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -28,12 +27,11 @@ export async function getCamperPrimaryImageById(camperId: string): Promise<Campe
     if (!response.ok) {
       const text = await response.text();
       console.error(`Fetch error ${response.status} for ${url}:`, text);
-      throw new Error(`Fehler beim Laden des Camper-Bildes: ${response.status}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Fehler beim Laden des Camper-Bildes:", error);
+    console.error("Error while loading the camper image:", error);
     throw error;
   }
 }
@@ -46,12 +44,11 @@ export async function getAllCamperImagesById(camperId: string): Promise<CamperIm
     if (!response.ok) {
       const text = await response.text();
       console.error(`Fetch error ${response.status} for ${url}:`, text);
-      throw new Error(`Fehler beim Laden der Camper-Bilder: ${response.status}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Fehler beim Laden des Camper-Bildes:", error);
+    console.error("error while loading the camper-images:", error);
     throw error;
   }
 }

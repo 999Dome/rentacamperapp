@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { CamperFeature } from "../types/interface.ts";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -17,7 +16,7 @@ export async function getCamperFeaturesByCamperId(
 
     return await response.json();
   } catch (error) {
-    console.error("Fehler beim Laden der Camper-Features:", error);
+    console.error("Error while loading the camper features:", error);
     return [];
   }
 }

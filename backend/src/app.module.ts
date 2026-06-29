@@ -8,6 +8,8 @@ import { AddonsModule } from './addons/addons.module';
 import { PricingRulesModule } from './pricing_rules/pricing_rules.module';
 import { DriversLicenseModule } from './drivers_license/drivers_license.module';
 
+import { AuthModule } from './auth/auth.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -15,6 +17,7 @@ import { DriversLicenseModule } from './drivers_license/drivers_license.module';
       isGlobal: true,
     }),
     SupabaseModule,
+    AuthModule,
     CampersModule,
     CamperImagesModule,
     CamperFeaturesModule,

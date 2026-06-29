@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { PricingRule } from "../types/interface.ts";
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
@@ -15,7 +14,7 @@ export async function getAllPricingRules(): Promise<PricingRule[]> {
 
     return await response.json();
   } catch (error) {
-    console.error("Fehler beim Laden der Pricing Rules:", error);
+    console.error("Error while loading the pricing rules:", error);
     return [];
   }
 }

@@ -48,7 +48,7 @@ export class CampersService {
     endDateStr: string,
     selectedAddonIds: string[] = [],
   ) {
-    // 1. Fetch Camper Data
+    
     const { data: camper, error: camperError } = await this.supabase.client
       .from('campers')
       .select('price_per_night_base, cleaning_fee, deposit_amount')
@@ -57,7 +57,7 @@ export class CampersService {
     if (camperError)
       throw new Error(`Camper not found: ${camperError.message}`);
 
-    // 2. Fetch Pricing Rules
+    
     const { data: pricingRules, error: rulesError } = await this.supabase.client
       .from('pricing_rules')
       .select('*');
@@ -75,7 +75,7 @@ export class CampersService {
     const discountLevel2Days = getRule('discount_level_2_days', 14);
     const discountLevel2Factor = getRule('discount_level_2_factor', 0.9);
 
-    // 3. Fetch Addons
+    
     let addons: {
       id: string;
       name: string;
@@ -92,8 +92,8 @@ export class CampersService {
       addons = addonData || [];
     }
 
-    // 4. Calculate Nights
-    // Flatpickr in german locale returns DD.MM.YYYY
+    
+    
     let startObj: Date;
     let endObj: Date;
 
@@ -113,7 +113,7 @@ export class CampersService {
       throw new Error('Invalid dates provided');
     }
 
-    // Set times to midnight to avoid daylight saving issues
+    
     startObj.setHours(0, 0, 0, 0);
     endObj.setHours(0, 0, 0, 0);
 
@@ -124,12 +124,12 @@ export class CampersService {
       return { nights: 0, totalAmount: 0 };
     }
 
-    // 5. Determine Season Factor
-    const startMonth0 = startObj.getMonth(); // 0-indexed: 5 = June, 6 = July, 7 = August
+    
+    const startMonth0 = startObj.getMonth(); 
     const isHighSeason = startMonth0 >= 5 && startMonth0 <= 7;
     const currentSeasonFactor = isHighSeason ? highSeasonFactor : 1.0;
 
-    // 6. Determine Discount Factor
+    
     let currentDiscountFactor = 1.0;
     if (nights >= discountLevel2Days) {
       currentDiscountFactor = discountLevel2Factor;
@@ -137,7 +137,7 @@ export class CampersService {
       currentDiscountFactor = discountLevel1Factor;
     }
 
-    // 7. Calculate Rental Price
+    
     const basePrice = Number(camper.price_per_night_base) || 0;
     const baseRentalPrice = basePrice * nights;
     const seasonSurchargeAmount = baseRentalPrice * (currentSeasonFactor - 1.0);
@@ -145,7 +145,7 @@ export class CampersService {
     const discountAmount = priceAfterSurcharge * (1.0 - currentDiscountFactor);
     const rawRentalPrice = priceAfterSurcharge - discountAmount;
 
-    // 8. Calculate Addons Cost
+    
     let addonsTotal = 0;
     const addonDetails = addons.map((addon) => {
       const price = Number(addon.price) || 0;
@@ -160,7 +160,7 @@ export class CampersService {
       };
     });
 
-    // 9. Calculate Final Total
+    
     const cleaningFee = Number(camper.cleaning_fee) || 0;
     const totalAmount = rawRentalPrice + addonsTotal + cleaningFee;
 

@@ -67,7 +67,7 @@ function renderList(containerId, items, emptyId) {
 function refreshAll() {
   const companyCampers = [];
 
-  // community = user + others stored in rentout
+  
   const community = parseStorage(STORAGE_KEY).map((c) => ({
     ...c,
     source: "community",
@@ -82,7 +82,7 @@ function refreshAll() {
 window.addEventListener("DOMContentLoaded", () => {
   refreshAll();
 
-  // simple listener to re-render when storage changes (from other tabs)
+  
   window.addEventListener("storage", (e) => {
     if (e.key === STORAGE_KEY || e.key === BOOKINGS_KEY) refreshAll();
   });
