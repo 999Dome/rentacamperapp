@@ -11,7 +11,7 @@ if (!projectId) {
 
 try {
   execSync(
-    `npx supabase gen types typescript --project-id "${projectId}" > src/types/supabase.ts`,
+    `npx -y supabase gen types typescript --project-id "${projectId}" > src/types/supabase.ts`,
     { stdio: 'inherit' },
   );
 

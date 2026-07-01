@@ -1,5 +1,5 @@
 import { createElement } from "../../utils/createElement.ts";
-import { getMockCampers, saveMockCampers } from "../../utils/mockData.ts";
+import { getAllCampers, createCamper, updateCamper, deleteCamper as apiDeleteCamper } from "../../api/campersAPI.ts";
 import type { MockCamper } from "../../utils/mockData.ts";
 
 interface CamperCRUDProps {
@@ -8,9 +8,18 @@ interface CamperCRUDProps {
 }
 
 export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
-  let campers = getMockCampers().filter(c => c.owner_id === ownerId || c.owner_id === "user-1");
+  let campers: MockCamper[] = [];
   let activeEditId: string | null = null;
-  let container: HTMLElement;
+
+  async function loadCampers() {
+    try {
+      const all = await getAllCampers();
+      campers = all.filter(c => c.owner_id === ownerId || c.owner_id === "user-1");
+      renderTable();
+    } catch (err) {
+      console.error(err);
+    }
+  }
 
   function renderTable() {
     const tbody = container.querySelector("#camper-crud-tbody") as HTMLElement;
@@ -131,20 +140,20 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
     activeEditId = null;
   }
 
-  function handleFormSubmit(e: Event) {
+  async function handleFormSubmit(e: Event) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
 
     const newCamperData = {
       name: (form.elements.namedItem("camperName") as HTMLInputElement).value,
-      manufacturer: (form.elements.namedItem("camperManufacturer") as HTMLSelectElement).value as any,
+      manufacturer: (form.elements.namedItem("camperManufacturer") as HTMLSelectElement).value as MockCamper["manufacturer"],
       price_per_night_base: parseFloat((form.elements.namedItem("camperPrice") as HTMLInputElement).value),
       cleaning_fee: parseFloat((form.elements.namedItem("camperCleaning") as HTMLInputElement).value),
       deposit_amount: parseFloat((form.elements.namedItem("camperDeposit") as HTMLInputElement).value),
       beds: parseInt((form.elements.namedItem("camperBeds") as HTMLInputElement).value),
       required_license: (form.elements.namedItem("camperLicense") as HTMLSelectElement).value,
       engine_power: parseInt((form.elements.namedItem("camperPower") as HTMLInputElement).value),
-      fuel_type: (form.elements.namedItem("camperFuel") as HTMLSelectElement).value as any,
+      fuel_type: (form.elements.namedItem("camperFuel") as HTMLSelectElement).value as MockCamper["fuel_type"],
       fuel_consumption: parseFloat((form.elements.namedItem("camperConsumption") as HTMLInputElement).value),
       has_tow_hitch: (form.elements.namedItem("camperTowHitch") as HTMLInputElement).checked,
       length_cm: parseInt((form.elements.namedItem("camperLength") as HTMLInputElement).value),
@@ -160,58 +169,53 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
       max_towing_capacity_kg: 0
     };
 
-    const allCampers = getMockCampers();
-
-    if (activeEditId) {
-      const idx = allCampers.findIndex(c => c.id === activeEditId);
-      if (idx !== -1) {
-        allCampers[idx] = {
-          ...allCampers[idx],
+    try {
+      if (activeEditId) {
+        await updateCamper(activeEditId, newCamperData);
+      } else {
+        const createData = {
+          owner_id: ownerId,
+          is_blocked: false,
           ...newCamperData
         };
+        await createCamper(createData);
       }
-    } else {
-      const newCamper: MockCamper = {
-        id: `camper-${Date.now()}`,
-        owner_id: ownerId,
-        is_blocked: false,
-        ...newCamperData
-      };
-      allCampers.push(newCamper);
-    }
 
-    saveMockCampers(allCampers);
-    campers = allCampers.filter(c => c.owner_id === ownerId || c.owner_id === "user-1");
-
-    renderTable();
-    closeModal();
-    onDataChanged();
-  }
-
-  function toggleBlock(id: string) {
-    const all = getMockCampers();
-    const idx = all.findIndex(c => c.id === id);
-    if (idx !== -1) {
-      all[idx].is_blocked = !all[idx].is_blocked;
-      saveMockCampers(all);
-      campers = all.filter(c => c.owner_id === ownerId || c.owner_id === "user-1");
-      renderTable();
+      await loadCampers();
+      closeModal();
       onDataChanged();
+    } catch (err) {
+      console.error(err);
+      alert("Fehler beim Speichern des Campers.");
     }
   }
 
-  function deleteCamper(id: string) {
+  async function toggleBlock(id: string) {
+    const camper = campers.find(c => c.id === id);
+    if (!camper) return;
+    try {
+      await updateCamper(id, { is_blocked: !camper.is_blocked });
+      await loadCampers();
+      onDataChanged();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function deleteCamper(id: string) {
     if (confirm("Möchtest du dieses Fahrzeug wirklich löschen?")) {
-      const all = getMockCampers();
-      const filtered = all.filter(c => c.id !== id);
-      saveMockCampers(filtered);
-      campers = filtered.filter(c => c.owner_id === ownerId || c.owner_id === "user-1");
-      renderTable();
-      onDataChanged();
+      try {
+        await apiDeleteCamper(id);
+        await loadCampers();
+        onDataChanged();
+      } catch (err) {
+        console.error(err);
+        alert("Fehler beim Löschen des Campers.");
+      }
     }
   }
 
-  container = (
+  const container = (
     <div className="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
@@ -371,7 +375,7 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
     </div>
   ) as HTMLElement;
 
-  setTimeout(renderTable, 0);
+  loadCampers();
 
   return container;
 }

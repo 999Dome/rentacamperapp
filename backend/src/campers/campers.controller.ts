@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Delete,
+  Body,
+} from '@nestjs/common';
 import { CampersService } from './camper.service';
 
 @Controller('campers')
@@ -33,5 +41,20 @@ export class CampersController {
       endDate,
       selectedAddonIds,
     );
+  }
+
+  @Post('create')
+  async create(@Body() dto: any) {
+    return await this.campersService.create(dto);
+  }
+
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() dto: any) {
+    return await this.campersService.update(id, dto);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return await this.campersService.delete(id);
   }
 }

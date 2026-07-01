@@ -1,12 +1,10 @@
 import { createElement } from "../../utils/createElement.ts";
-import { logout } from "../../auth/auth.ts";
+import { logout, fetchCurrentUser } from "../../auth/auth.ts";
 import { ProfileManagement } from "./ProfileManagement.tsx";
 import { BookingsTable } from "./BookingsTable.tsx";
-import { getMockProfile } from "../../utils/mockData.ts";
+import { fetchProfile } from "../../api/profilesAPI.ts";
 
 export function AccountPage() {
-  const profile = getMockProfile();
-
   const handleLogout = (e: Event) => {
     e.preventDefault();
     logout();
@@ -16,51 +14,44 @@ export function AccountPage() {
   const container = (
     <div className="container py-5" style={{ minHeight: "80vh" }}>
       <header className="mb-5 text-center">
-        <h1 className="display-4 fw-bold custom-font-burbank text-custom-light-blue text-stroke-grey mb-2" style={{ letterSpacing: "2px" }}>
+        <h1 className="display-4 fw-bold custom-font-burbank text-custom-red text-stroke-grey mb-2" style={{ letterSpacing: "2px" }}>
           Mein Konto
         </h1>
-        <p className="fs-5 text-muted">Willkommen zurück, {profile.firstname}! Hier kannst du deine Buchungen einsehen und deine Profildaten pflegen.</p>
+        <p className="fs-5 text-muted">Willkommen zurück! Hier kannst du deine Buchungen einsehen und deine Profildaten pflegen.</p>
       </header>
 
       <div className="row g-4">
         <div className="col-12 col-md-3">
-          <div className="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-            <div className="text-center mb-4 border-bottom pb-3">
-              <div
-                className="rounded-circle bg-custom-light-blue text-white d-flex align-items-center justify-content-center mx-auto mb-3 fw-bold"
-                style={{ width: "80px", height: "80px", fontSize: "32px" }}
-              >
-                {profile.firstname.charAt(0) || "U"}
-              </div>
-              <h4 className="fw-bold mb-1 text-dark">{profile.firstname} {profile.lastname}</h4>
-              <span className="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1">Kunde</span>
+          <div className="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-beige">
+            <div className="text-center mb-3 pb-3 border-bottom">
+              <h4 className="fw-bold mb-1 text-dark custom-font-base" id="account-username">Kunde</h4>
+              <span className="badge bg-custom-yellow text-dark rounded-pill px-3 py-1" id="account-role-badge">Kunde</span>
             </div>
 
-            <div className="d-flex flex-column gap-2">
+            <div className="d-flex flex-column gap-1">
               <button
                 type="button"
-                className="btn btn-primary rounded-pill w-100 text-start px-3 py-2 fw-medium"
+                className="btn btn-sm w-100 text-start px-3 py-2 fw-medium rounded-3 account-tab-btn active"
                 id="btn-tab-profile"
                 onclick={() => switchTab("profile")}
               >
-                Profil bearbeiten
+                <i className="bi bi-person-gear me-2"></i>Profil bearbeiten
               </button>
               <button
                 type="button"
-                className="btn btn-light rounded-pill w-100 text-start px-3 py-2 text-secondary fw-medium"
+                className="btn btn-sm w-100 text-start px-3 py-2 fw-medium rounded-3 account-tab-btn"
                 id="btn-tab-bookings"
                 onclick={() => switchTab("bookings")}
-                style={{ backgroundColor: "transparent", border: "none" }}
               >
-                Meine Buchungen
+                <i className="bi bi-calendar-check me-2"></i>Meine Buchungen
               </button>
-              <hr />
+              <hr className="my-2" />
               <button
                 type="button"
-                className="btn btn-outline-danger rounded-pill w-100 text-start px-3 py-2 fw-medium"
+                className="btn btn-sm btn-outline-danger rounded-3 w-100 text-start px-3 py-2 fw-medium"
                 onclick={handleLogout}
               >
-                Abmelden
+                <i className="bi bi-box-arrow-right me-2"></i>Abmelden
               </button>
             </div>
           </div>
@@ -91,24 +82,43 @@ export function AccountPage() {
     const paneProfile = container.querySelector("#account-tab-profile-pane") as HTMLElement;
     const paneBookings = container.querySelector("#account-tab-bookings-pane") as HTMLElement;
 
+    // Reset all tab buttons
+    btnProfile.classList.remove("active");
+    btnBookings.classList.remove("active");
+
     if (tab === "profile") {
-      btnProfile.className = "btn btn-primary rounded-pill w-100 text-start px-3 py-2 fw-medium";
-      btnBookings.className = "btn btn-light rounded-pill w-100 text-start px-3 py-2 text-secondary fw-medium";
-      btnBookings.style.backgroundColor = "transparent";
-      btnBookings.style.border = "none";
+      btnProfile.classList.add("active");
       paneProfile.classList.remove("d-none");
       paneBookings.classList.add("d-none");
     } else {
-      btnBookings.className = "btn btn-primary rounded-pill w-100 text-start px-3 py-2 fw-medium";
-      btnProfile.className = "btn btn-light rounded-pill w-100 text-start px-3 py-2 text-secondary fw-medium";
-      btnProfile.style.backgroundColor = "transparent";
-      btnProfile.style.border = "none";
+      btnBookings.classList.add("active");
       paneBookings.classList.remove("d-none");
       paneProfile.classList.add("d-none");
     }
   };
 
+  const loadHeader = async () => {
+    try {
+      const user = await fetchCurrentUser();
+      if (!user) return;
+      const profile = await fetchProfile(user.id);
+      
+      const welcome = container.querySelector("header p") as HTMLElement;
+      if (welcome) {
+        welcome.textContent = `Willkommen zurück, ${profile.first_name || "Kunde"}! Hier kannst du deine Buchungen einsehen und deine Profildaten pflegen.`;
+      }
+
+      const fullname = container.querySelector("#account-username") as HTMLElement;
+      if (fullname) {
+        fullname.textContent = `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "Kunde";
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   setTimeout(refreshPanes, 0);
+  loadHeader();
 
   return container;
 }

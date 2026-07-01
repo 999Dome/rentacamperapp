@@ -24,13 +24,13 @@ export function CamperInfo(
             {camper.manufacturer + " " + camper.name || "N/A"}
           </h1>
           <div className="d-flex flex-wrap gap-2 text-muted fs-6">
-            <span className="badge bg-info text-white custom-font-base fs-6 px-3 py-2 rounded-pill">
+            <span className="badge bg-custom-yellow text-dark custom-font-base fs-6 px-3 py-2 rounded-pill">
               {camper.manufacturer || "Unbekannt"}
             </span>
-            <span className="badge bg-primary text-white custom-font-base fs-6 px-3 py-2 rounded-pill">
+            <span className="badge bg-custom-light-blue text-white custom-font-base fs-6 px-3 py-2 rounded-pill">
               {bedsText}
             </span>
-            <span className="badge bg-secondary text-white custom-font-base fs-6 px-3 py-2 rounded-pill">
+            <span className="badge bg-custom-red text-white custom-font-base fs-6 px-3 py-2 rounded-pill">
               Führerschein {license.class || "B"}
             </span>
           </div>

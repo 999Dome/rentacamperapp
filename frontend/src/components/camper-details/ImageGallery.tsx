@@ -27,8 +27,8 @@ export function ImageGallery(images: CamperImage[]) {
           alt="Camper Main" 
           className="w-100 h-100" 
           style={{ objectFit: "cover", transition: "transform 0.3s ease", cursor: "pointer" }}
-          onmouseover={(e: any) => e.target.style.filter = "brightness(0.9)"}
-          onmouseout={(e: any) => e.target.style.filter = "brightness(1)"}
+          onmouseover={(e: Event) => { (e.target as HTMLImageElement).style.filter = "brightness(0.9)"; }}
+          onmouseout={(e: Event) => { (e.target as HTMLImageElement).style.filter = "brightness(1)"; }}
         />
       </div>
 
@@ -40,8 +40,8 @@ export function ImageGallery(images: CamperImage[]) {
               alt={`Camper Detail ${index + 1}`} 
               className="w-100 h-100" 
               style={{ objectFit: "cover", transition: "transform 0.3s ease", cursor: "pointer" }}
-              onmouseover={(e: any) => e.target.style.filter = "brightness(0.9)"}
-              onmouseout={(e: any) => e.target.style.filter = "brightness(1)"}
+              onmouseover={(e: Event) => { (e.target as HTMLImageElement).style.filter = "brightness(0.9)"; }}
+              onmouseout={(e: Event) => { (e.target as HTMLImageElement).style.filter = "brightness(1)"; }}
             />
           </div>
         ))}

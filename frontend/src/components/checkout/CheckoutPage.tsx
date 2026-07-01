@@ -1,7 +1,45 @@
 import { createElement } from "../../utils/createElement.ts";
 import { fetchCurrentUser, isLoggedIn } from "../../auth/auth.ts";
 import { getCamperById, calculatePrice } from "../../api/campersAPI.ts";
-import type { Camper } from "../../types/interface.ts";
+import { getCamperPrimaryImageById } from "../../api/camperImagesAPI.ts";
+import { createBooking } from "../../api/bookingsAPI.ts";
+import type { MockCamper } from "../../utils/mockData.ts";
+
+interface UserProfile {
+  id?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  profile?: {
+    firstname?: string;
+    lastname?: string;
+    driver_license_class?: string | null;
+  } | null;
+}
+
+interface AddonDetail {
+  name: string;
+  cost: number;
+}
+
+interface PriceCalculationResult {
+  basePrice: number;
+  nights: number;
+  seasonSurchargeAmount: number;
+  discountPercentage: number;
+  discountAmount: number;
+  cleaningFee: number;
+  addonDetails: AddonDetail[];
+  totalAmount: number;
+  depositAmount: number;
+}
+
+interface PendingBookingData {
+  camperId: string;
+  startDate: string;
+  endDate: string;
+  addons: string[];
+}
 
 export function CheckoutPage() {
   const container = (
@@ -34,11 +72,11 @@ export function CheckoutPage() {
       return;
     }
 
-    const pendingData = JSON.parse(pendingDataStr);
+    const pendingData = JSON.parse(pendingDataStr) as PendingBookingData;
     const { camperId, startDate, endDate, addons } = pendingData;
 
     try {
-      const [user, camper, priceData] = await Promise.all([
+      const [user, camperRaw, priceDataRaw] = await Promise.all([
         fetchCurrentUser(),
         getCamperById(camperId),
         calculatePrice(camperId, startDate, endDate, addons),
@@ -49,11 +87,30 @@ export function CheckoutPage() {
         return;
       }
 
+      let image_url = "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7";
+      try {
+        const primaryImg = await getCamperPrimaryImageById(camperId);
+        if (primaryImg && primaryImg.image_path) {
+          image_url = primaryImg.image_path;
+        }
+      } catch (err) {
+        console.warn("Failed to load primary image for checkout camper", err);
+      }
+
+      const camper: MockCamper = {
+        ...camperRaw,
+        image_url,
+        features_list: [],
+        owner_id: "user-1",
+      };
+
+      const priceData = priceDataRaw as PriceCalculationResult;
+
       renderContent(
         container.querySelector("#checkout-content") as HTMLElement,
-        user,
+        user as UserProfile,
         camper,
-        priceData as any,
+        priceData,
         pendingData,
       );
     } catch (error) {
@@ -67,10 +124,10 @@ export function CheckoutPage() {
 
   const renderContent = (
     content: HTMLElement,
-    user: any,
-    camper: Camper,
-    priceData: any,
-    pendingData: any,
+    user: UserProfile,
+    camper: MockCamper,
+    priceData: PriceCalculationResult,
+    pendingData: PendingBookingData,
   ) => {
     content.innerHTML = "";
 
@@ -207,7 +264,7 @@ export function CheckoutPage() {
       );
     }
 
-    priceData.addonDetails.forEach((addon: any) => {
+    priceData.addonDetails.forEach((addon) => {
       receiptItems.push(
         <li className="list-group-item d-flex justify-content-between px-0 py-2 border-0 bg-transparent text-muted">
           <span>{addon.name}</span>
@@ -228,12 +285,27 @@ export function CheckoutPage() {
       </button>
     ) as HTMLButtonElement;
 
-    confirmButton.addEventListener("click", () => {
-      alert(
-        "Buchung erfolgreich! (Dummy - Backend Logic noch nicht implementiert)",
-      );
-      sessionStorage.removeItem("pendingCheckout");
-      window.location.href = "/";
+    confirmButton.addEventListener("click", async () => {
+      try {
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Wird gebucht...";
+        await createBooking({
+          camper_id: camper.id,
+          user_id: user.id!,
+          start_date: pendingData.startDate,
+          end_date: pendingData.endDate,
+          total_price: priceData.totalAmount,
+          addons: pendingData.addons,
+        });
+        alert("Buchung erfolgreich!");
+        sessionStorage.removeItem("pendingCheckout");
+        window.location.href = "/pages/account/";
+      } catch (err) {
+        console.error(err);
+        alert("Fehler bei der Buchung. Bitte versuchen Sie es erneut.");
+        confirmButton.disabled = false;
+        confirmButton.textContent = "Zahlungspflichtig buchen";
+      }
     });
 
     rightCol.appendChild(
@@ -243,7 +315,7 @@ export function CheckoutPage() {
       >
         <img
           src={
-            (camper as any).images?.[0] ||
+            camper.image_url ||
             "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7"
           }
           alt={camper.name || "Camper"}

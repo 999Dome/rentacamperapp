@@ -2,9 +2,10 @@ import { createElement } from "../../utils/createElement.ts";
 import { getAllCampers } from "../../api/campersAPI.ts";
 import { FilterBar } from "./FilterBar.tsx";
 import { CamperCard } from "./CamperCard.tsx";
+import type { MockCamper } from "../../utils/mockData.ts";
 
 export function RentPage() {
-  let campersList: any[] = [];
+  let campersList: MockCamper[] = [];
 
   const container = (
     <div className="container-fluid py-5 px-3 px-md-5" style={{ backgroundColor: "#D1FEB8" }}>
@@ -68,9 +69,9 @@ export function RentPage() {
     const hasTowHitch = (form.elements.namedItem("hasTowHitch") as HTMLInputElement)?.checked;
 
     const checkboxes = form.querySelectorAll("input[name='features']:checked");
-    const selectedFeatures = Array.from(checkboxes).map((cb: any) => cb.value);
+    const selectedFeatures = Array.from(checkboxes).map((cb) => (cb as HTMLInputElement).value);
 
-    let filtered = campersList.filter((camper) => {
+    const filtered = campersList.filter((camper) => {
       if (query) {
         const nameMatch = camper.name?.toLowerCase().includes(query);
         const descMatch = camper.description?.toLowerCase().includes(query) || camper.short_desc?.toLowerCase().includes(query);

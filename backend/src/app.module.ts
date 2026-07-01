@@ -7,8 +7,10 @@ import { CamperFeaturesModule } from './camper_features/camper_features.module';
 import { AddonsModule } from './addons/addons.module';
 import { PricingRulesModule } from './pricing_rules/pricing_rules.module';
 import { DriversLicenseModule } from './drivers_license/drivers_license.module';
-
 import { AuthModule } from './auth/auth.module';
+import { ProfilesModule } from './profiles/profiles.module';
+import { BookingsModule } from './bookings/bookings.module';
+import { BookingAddonsModule } from './booking_addons/booking_addons.module';
 
 @Module({
   imports: [
@@ -24,6 +26,9 @@ import { AuthModule } from './auth/auth.module';
     AddonsModule,
     PricingRulesModule,
     DriversLicenseModule,
+    ProfilesModule,
+    BookingsModule,
+    BookingAddonsModule,
   ],
 })
 export class AppModule {}

@@ -3,12 +3,14 @@ import type { MockCamper } from "../../utils/mockData.ts";
 
 export function CamperCard(camper: MockCamper) {
   const bedsText = camper.beds ? `${camper.beds} Betten` : "Keine Betten";
-  const licenseText = camper.required_license ? `Klasse ${camper.required_license}` : "Klasse B";
+  const licenseText = camper.license_name
+    ? (camper.license_name.startsWith("Klasse") ? camper.license_name : `Klasse ${camper.license_name}`)
+    : "Klasse B";
   const imageSrc = camper.image_url || "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7";
 
   return (
     <div className="col-12 col-md-6 col-lg-4 mb-4">
-      <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-zoom bg-white">
+      <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-zoom bg-beige">
         <div style={{ position: "relative", height: "220px", overflow: "hidden" }}>
           <img
             src={imageSrc}
@@ -26,12 +28,10 @@ export function CamperCard(camper: MockCamper) {
           )}
         </div>
         <div className="card-body p-4 d-flex flex-column">
-          <div className="d-flex justify-content-between align-items-start mb-2">
-            <div>
-              <span className="badge bg-light text-dark border mb-2 me-1">{camper.manufacturer}</span>
-              <span className="badge bg-light text-dark border mb-2">{licenseText}</span>
-            </div>
-            <span className="badge bg-primary text-white py-1 px-2 rounded">{bedsText}</span>
+          <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
+            <span className="badge bg-light text-dark border rounded-pill px-2.5 py-1.5">{camper.manufacturer}</span>
+            <span className="badge bg-light text-dark border rounded-pill px-2.5 py-1.5">{licenseText}</span>
+            <span className="badge bg-custom-light-blue text-white rounded-pill px-3 py-1.5">{bedsText}</span>
           </div>
 
           <h4 className="card-title fw-bold text-dark mb-2 custom-font-base">

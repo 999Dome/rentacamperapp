@@ -163,7 +163,6 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       updateStickyPosition();
 
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error(error);
       receiptContainer.classList.add('d-none');
       bookButton.disabled = true;

@@ -1,12 +1,11 @@
 import { createElement } from "../../utils/createElement.ts";
-import { getMockBookings } from "../../utils/mockData.ts";
-import type { MockBooking } from "../../utils/mockData.ts";
+import { fetchCurrentUser } from "../../auth/auth.ts";
+import { fetchBookingsByRenter } from "../../api/bookingsAPI.ts";
+import type { BookingResponse } from "../../api/bookingsAPI.ts";
 
 export function BookingsTable() {
-  const bookings = getMockBookings();
-
   const container = (
-    <div className="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+    <div className="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-beige">
       <h3 className="fw-bold mb-4 text-dark custom-font-base">Meine Buchungen</h3>
       <div className="table-responsive">
         <table className="table align-middle">
@@ -19,13 +18,21 @@ export function BookingsTable() {
               <th className="text-end">Preisdetails</th>
             </tr>
           </thead>
-          <tbody id="bookings-tbody"></tbody>
+          <tbody id="bookings-tbody">
+            <tr>
+              <td colspan={5} className="text-center py-4">
+                <div className="spinner-border spinner-border-sm text-primary" role="status">
+                  <span className="visually-hidden">Laden...</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </div>
   ) as HTMLElement;
 
-  const renderTable = () => {
+  const renderTable = (bookings: BookingResponse[]) => {
     const tbody = container.querySelector("#bookings-tbody") as HTMLElement;
     tbody.innerHTML = "";
 
@@ -56,13 +63,13 @@ export function BookingsTable() {
       let badgeClass = "bg-warning-subtle text-warning";
       let badgeText = "Ausstehend";
 
-      if (booking.status === "Confirmed") {
+      if (booking.status === "confirmed") {
         badgeClass = "bg-primary-subtle text-primary";
         badgeText = "Bestätigt";
-      } else if (booking.status === "Completed") {
+      } else if (booking.status === "completed") {
         badgeClass = "bg-success-subtle text-success";
         badgeText = "Abgeschlossen";
-      } else if (booking.status === "Cancelled") {
+      } else if (booking.status === "cancelled") {
         badgeClass = "bg-danger-subtle text-danger";
         badgeText = "Storniert";
       }
@@ -126,7 +133,7 @@ export function BookingsTable() {
     });
   };
 
-  const toggleDetails = (e: Event, booking: MockBooking) => {
+  const toggleDetails = (e: Event, booking: BookingResponse) => {
     const btn = e.target as HTMLButtonElement;
     const detailRow = container.querySelector(`#details-${booking.id}`) as HTMLElement;
     if (detailRow.classList.contains("d-none")) {
@@ -140,7 +147,24 @@ export function BookingsTable() {
     }
   };
 
-  setTimeout(renderTable, 0);
+  const loadBookings = async () => {
+    try {
+      const user = await fetchCurrentUser();
+      if (!user) return;
+      const bookings = await fetchBookingsByRenter(user.id);
+      renderTable(bookings);
+    } catch (err) {
+      console.error(err);
+      const tbody = container.querySelector("#bookings-tbody") as HTMLElement;
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-danger py-4">Fehler beim Laden der Buchungen.</td>
+        </tr>
+      `;
+    }
+  };
+
+  loadBookings();
 
   return container;
 }

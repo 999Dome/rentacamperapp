@@ -115,10 +115,9 @@ export function setupAuthLogic(page: HTMLElement) {
           "Erfolgreich eingeloggt, aber kein Token vom Server erhalten.",
         );
       }
-    } catch (err: any) {
-      showLoginError(
-        err.message || "Es ist ein unerwarteter Fehler aufgetreten.",
-      );
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Es ist ein unerwarteter Fehler aufgetreten.";
+      showLoginError(errMsg);
     }
   });
 
@@ -193,10 +192,9 @@ export function setupAuthLogic(page: HTMLElement) {
         pillLogin.click();
         registerForm.reset();
       }
-    } catch (err: any) {
-      showRegisterError(
-        err.message || "Es ist ein unerwarteter Fehler aufgetreten.",
-      );
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Es ist ein unerwarteter Fehler aufgetreten.";
+      showRegisterError(errMsg);
     }
   });
 }

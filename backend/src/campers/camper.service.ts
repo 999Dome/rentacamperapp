@@ -48,7 +48,6 @@ export class CampersService {
     endDateStr: string,
     selectedAddonIds: string[] = [],
   ) {
-    
     const { data: camper, error: camperError } = await this.supabase.client
       .from('campers')
       .select('price_per_night_base, cleaning_fee, deposit_amount')
@@ -57,7 +56,6 @@ export class CampersService {
     if (camperError)
       throw new Error(`Camper not found: ${camperError.message}`);
 
-    
     const { data: pricingRules, error: rulesError } = await this.supabase.client
       .from('pricing_rules')
       .select('*');
@@ -75,7 +73,6 @@ export class CampersService {
     const discountLevel2Days = getRule('discount_level_2_days', 14);
     const discountLevel2Factor = getRule('discount_level_2_factor', 0.9);
 
-    
     let addons: {
       id: string;
       name: string;
@@ -92,8 +89,6 @@ export class CampersService {
       addons = addonData || [];
     }
 
-    
-    
     let startObj: Date;
     let endObj: Date;
 
@@ -113,7 +108,6 @@ export class CampersService {
       throw new Error('Invalid dates provided');
     }
 
-    
     startObj.setHours(0, 0, 0, 0);
     endObj.setHours(0, 0, 0, 0);
 
@@ -124,12 +118,10 @@ export class CampersService {
       return { nights: 0, totalAmount: 0 };
     }
 
-    
-    const startMonth0 = startObj.getMonth(); 
+    const startMonth0 = startObj.getMonth();
     const isHighSeason = startMonth0 >= 5 && startMonth0 <= 7;
     const currentSeasonFactor = isHighSeason ? highSeasonFactor : 1.0;
 
-    
     let currentDiscountFactor = 1.0;
     if (nights >= discountLevel2Days) {
       currentDiscountFactor = discountLevel2Factor;
@@ -137,7 +129,6 @@ export class CampersService {
       currentDiscountFactor = discountLevel1Factor;
     }
 
-    
     const basePrice = Number(camper.price_per_night_base) || 0;
     const baseRentalPrice = basePrice * nights;
     const seasonSurchargeAmount = baseRentalPrice * (currentSeasonFactor - 1.0);
@@ -145,7 +136,6 @@ export class CampersService {
     const discountAmount = priceAfterSurcharge * (1.0 - currentDiscountFactor);
     const rawRentalPrice = priceAfterSurcharge - discountAmount;
 
-    
     let addonsTotal = 0;
     const addonDetails = addons.map((addon) => {
       const price = Number(addon.price) || 0;
@@ -160,7 +150,6 @@ export class CampersService {
       };
     });
 
-    
     const cleaningFee = Number(camper.cleaning_fee) || 0;
     const totalAmount = rawRentalPrice + addonsTotal + cleaningFee;
 
@@ -180,5 +169,40 @@ export class CampersService {
       depositAmount: Number(camper.deposit_amount) || 0,
       totalAmount,
     };
+  }
+
+  async create(dto: any) {
+    const { data, error } = await this.supabase.client
+      .from(this.table)
+      .insert(dto)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async update(id: string, dto: any) {
+    const { data, error } = await this.supabase.client
+      .from(this.table)
+      .update(dto)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  async delete(id: string) {
+    const { data, error } = await this.supabase.client
+      .from(this.table)
+      .delete()
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
   }
 }
