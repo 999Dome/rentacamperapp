@@ -26,6 +26,22 @@ export function CamperCard(camper: MockCamper) {
               Gesperrt / Wartung
             </div>
           )}
+          {camper.providerType === 'original' && (
+            <div
+              className="position-absolute top-0 start-0 m-3 badge bg-info text-white fs-6 py-2 px-3 rounded-pill"
+              style={{ zIndex: 2 }}
+            >
+              Rent-A-Camper Original
+            </div>
+          )}
+          {camper.providerType === 'privat' && (
+            <div
+              className="position-absolute top-0 start-0 m-3 badge bg-secondary text-white fs-6 py-2 px-3 rounded-pill"
+              style={{ zIndex: 2 }}
+            >
+              Privatanbieter
+            </div>
+          )}
         </div>
         <div className="card-body p-4 d-flex flex-column">
           <div className="d-flex flex-wrap gap-2 align-items-center mb-3">

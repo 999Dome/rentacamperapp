@@ -51,9 +51,9 @@ export function ProfileManagement() {
       if (!user) return;
       
       const emailInput = container.querySelector("input[name='email']") as HTMLInputElement;
-      if (emailInput) emailInput.value = user.email || "";
+      if (emailInput) emailInput.value = (user.email as string) || "";
 
-      const profile = await fetchProfile(user.id);
+      const profile = await fetchProfile(user.id as string);
       
       const fnInput = container.querySelector("input[name='firstname']") as HTMLInputElement;
       if (fnInput) fnInput.value = profile.first_name || "";
@@ -81,7 +81,7 @@ export function ProfileManagement() {
       const last_name = (form.elements.namedItem("lastname") as HTMLInputElement).value;
       const drivers_license_class = (form.elements.namedItem("driver_license_class") as HTMLSelectElement).value;
 
-      await updateProfile(user.id, {
+      await updateProfile(user.id as string, {
         first_name,
         last_name,
         drivers_license_class,

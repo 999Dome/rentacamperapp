@@ -1,6 +1,10 @@
 import type { Database } from "./supabase.ts";
 
-export type Camper = Database["public"]["Tables"]["campers"]["Row"];
+export type DatabaseCamper = Database["public"]["Tables"]["campers"]["Row"];
+export interface Camper extends DatabaseCamper {
+  providerType?: 'original' | 'privat';
+  ownerId?: string;
+}
 
 export type CamperInsert = Database["public"]["Tables"]["campers"]["Insert"];
 
@@ -16,3 +20,6 @@ export type Addon = Database["public"]["Tables"]["addons"]["Row"];
 export type PricingRule = Database["public"]["Tables"]["pricing_rules"]["Row"];
 
 export type DriversLicense = Database["public"]["Tables"]["drivers_license"]["Row"];
+
+export type CamperOwner = Database["public"]["Tables"]["camper_owner"]["Row"];
+export type CamperOwnerInsert = Database["public"]["Tables"]["camper_owner"]["Insert"];

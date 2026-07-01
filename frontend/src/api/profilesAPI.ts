@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+import { BaseAPIClient } from '../infrastructure/api/base-api-client';
+
+const client = new BaseAPIClient();
 
 export interface ProfileData {
   id: string;
@@ -12,28 +14,15 @@ export interface ProfileData {
 }
 
 export async function fetchProfile(userId: string): Promise<ProfileData> {
-  const url = new URL(`profiles/${userId}`, API_BASE_URL).toString();
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch profile");
-  }
-  return await response.json();
+  return await client.request<ProfileData>(`profiles/${userId}`);
 }
 
 export async function updateProfile(
   userId: string,
   data: Partial<ProfileData>,
 ): Promise<ProfileData> {
-  const url = new URL(`profiles/${userId}`, API_BASE_URL).toString();
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  return await client.request<ProfileData>(`profiles/${userId}`, {
+    method: 'PUT',
     body: JSON.stringify(data),
   });
-  if (!response.ok) {
-    throw new Error("Failed to update profile");
-  }
-  return await response.json();
 }

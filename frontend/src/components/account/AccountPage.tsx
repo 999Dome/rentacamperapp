@@ -101,7 +101,7 @@ export function AccountPage() {
     try {
       const user = await fetchCurrentUser();
       if (!user) return;
-      const profile = await fetchProfile(user.id);
+      const profile = await fetchProfile(user.id as string);
       
       const welcome = container.querySelector("header p") as HTMLElement;
       if (welcome) {

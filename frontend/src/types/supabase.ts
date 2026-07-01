@@ -187,6 +187,39 @@ export type Database = {
           },
         ]
       }
+      camper_owner: {
+        Row: {
+          camper_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          camper_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          camper_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camper_owner_camper_id_fkey"
+            columns: ["camper_id"]
+            isOneToOne: true
+            referencedRelation: "campers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "camper_owner_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campers: {
         Row: {
           beds: number | null

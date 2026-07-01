@@ -1,5 +1,6 @@
 import { createElement } from "../../utils/createElement.ts";
 import { getAllCampers, createCamper, updateCamper, deleteCamper as apiDeleteCamper } from "../../api/campersAPI.ts";
+import { assignCamperOwner, removeCamperOwner } from "../../api/camperOwnerAPI.ts";
 import type { MockCamper } from "../../utils/mockData.ts";
 
 interface CamperCRUDProps {
@@ -14,7 +15,7 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
   async function loadCampers() {
     try {
       const all = await getAllCampers();
-      campers = all.filter(c => c.owner_id === ownerId || c.owner_id === "user-1");
+      campers = all.filter(c => c.ownerId === ownerId || c.owner_id === ownerId);
       renderTable();
     } catch (err) {
       console.error(err);
@@ -174,11 +175,12 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
         await updateCamper(activeEditId, newCamperData);
       } else {
         const createData = {
-          owner_id: ownerId,
-          is_blocked: false,
           ...newCamperData
         };
-        await createCamper(createData);
+        const created = await createCamper(createData);
+        if (created && created.id) {
+          await assignCamperOwner({ camper_id: created.id, user_id: ownerId });
+        }
       }
 
       await loadCampers();
@@ -206,6 +208,7 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
     if (confirm("Möchtest du dieses Fahrzeug wirklich löschen?")) {
       try {
         await apiDeleteCamper(id);
+        await removeCamperOwner(id).catch(() => {}); // Optional cleanup
         await loadCampers();
         onDataChanged();
       } catch (err) {

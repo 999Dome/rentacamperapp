@@ -114,6 +114,22 @@ export function AuthPage() {
               role="alert"
             ></div>
 
+            <div className="register-success d-none text-center py-4">
+              <div className="mb-4" style={{ color: "#2E8B57" }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" className="bi bi-envelope-check" viewBox="0 0 16 16">
+                  <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-1-1V6.628l7 3.493 8-4.004V9.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2H2Zm3.436 3.004L2 3.123V4l3.436 1.004ZM2.5 3h11a.5.5 0 0 1 .5.5v1.07l-6 3.001-6-3V3.5a.5.5 0 0 1 .5-.5Z"/>
+                  <path d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm-1.993-1.679a.5.5 0 0 0-.686.172l-1.17 1.95-.547-.547a.5.5 0 0 0-.708.708l.774.773a.75.75 0 0 0 1.174-.144l1.335-2.226a.5.5 0 0 0-.172-.686Z"/>
+                </svg>
+              </div>
+              <h4 className="text-white custom-font-base fw-bold mb-3">Postfach überprüfen</h4>
+              <p className="text-white-50 custom-font-base small mb-4">
+                Dein Account wurde erfolgreich erstellt! Wir haben dir einen Bestätigungslink gesendet. Bitte verifiziere deine E-Mail-Adresse, bevor du dich einloggst.
+              </p>
+              <button type="button" className="btn btn-outline-light w-100 rounded-pill custom-font-base btn-back-to-login py-2">
+                Zurück zum Login
+              </button>
+            </div>
+
             <form className="register-form">
               <div className="row g-2 mb-3">
                 <div className="col-6">

@@ -33,6 +33,16 @@ export function CamperInfo(
             <span className="badge bg-custom-red text-white custom-font-base fs-6 px-3 py-2 rounded-pill">
               Führerschein {license.class || "B"}
             </span>
+            {camper.providerType === 'original' && (
+              <span className="badge bg-info text-white custom-font-base fs-6 px-3 py-2 rounded-pill">
+                Rent-A-Camper Original
+              </span>
+            )}
+            {camper.providerType === 'privat' && (
+              <span className="badge bg-secondary text-white custom-font-base fs-6 px-3 py-2 rounded-pill">
+                Privatanbieter
+              </span>
+            )}
           </div>
         </div>
 

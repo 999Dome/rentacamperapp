@@ -26,6 +26,9 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
       const emissionsClassText = card.querySelector("#btn-text-emissionsClass");
       if (emissionsClassText) emissionsClassText.textContent = "Alle Klassen";
 
+      const providerTypeText = card.querySelector("#btn-text-providerType");
+      if (providerTypeText) providerTypeText.textContent = "Alle Anbieter";
+
       // Reset hidden inputs
       const hiddenInputs = form.querySelectorAll("input[type='hidden']");
       hiddenInputs.forEach((inp) => {
@@ -196,6 +199,20 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
                 { value: "Elektro", label: "Elektro" }
               ],
               "Alle Klassen"
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label small text-uppercase text-muted fw-bold">Anbieter</label>
+            {renderDropdown(
+              "providerType",
+              "bi bi-person-badge",
+              [
+                { value: "", label: "Alle Anbieter" },
+                { value: "original", label: "Rent-A-Camper Original" },
+                { value: "privat", label: "Privatanbieter" }
+              ],
+              "Alle Anbieter"
             )}
           </div>
 

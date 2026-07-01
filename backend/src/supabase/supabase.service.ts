@@ -23,7 +23,7 @@ export class SupabaseService implements OnModuleInit {
       address: string,
       protocols?: string | string[],
       options?: unknown,
-    ) => any;
+    ) => WebSocket;
 
     this.supabaseClient = createClient<Database>(url, secretKey, {
       realtime: {

@@ -3,7 +3,10 @@ import { fetchCurrentUser, isLoggedIn } from "../../auth/auth.ts";
 import { getCamperById, calculatePrice } from "../../api/campersAPI.ts";
 import { getCamperPrimaryImageById } from "../../api/camperImagesAPI.ts";
 import { createBooking } from "../../api/bookingsAPI.ts";
+import { createStripeCheckoutSession, createPayPalOrder, capturePayPalOrder } from "../../api/paymentsAPI.ts";
 import type { MockCamper } from "../../utils/mockData.ts";
+import { getDriversLicenseById } from "../../api/driversLicenseAPI.ts";
+import { DriversLicenseValidator } from "../../domain/validators/drivers-license-validator.ts";
 
 interface UserProfile {
   id?: string;
@@ -87,6 +90,9 @@ export function CheckoutPage() {
         return;
       }
 
+      const license = await getDriversLicenseById(camperRaw.required_license);
+      const requiredLicenseClass = license?.class || "Klasse B";
+
       let image_url = "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7";
       try {
         const primaryImg = await getCamperPrimaryImageById(camperId);
@@ -112,6 +118,7 @@ export function CheckoutPage() {
         camper,
         priceData,
         pendingData,
+        requiredLicenseClass,
       );
     } catch (error) {
       console.error(error);
@@ -128,12 +135,27 @@ export function CheckoutPage() {
     camper: MockCamper,
     priceData: PriceCalculationResult,
     pendingData: PendingBookingData,
+    requiredLicenseClass: string,
   ) => {
     content.innerHTML = "";
 
-    
+    const userLicenseClass = user.profile?.driver_license_class;
+    const isLicensed = DriversLicenseValidator.isLicensedToDrive(userLicenseClass, requiredLicenseClass);
+
     const leftCol = document.createElement("div");
     leftCol.className = "col-lg-7";
+
+    if (!isLicensed) {
+      leftCol.appendChild(
+        <div className="alert alert-danger rounded-4 p-3 mb-4">
+          <h5 className="fw-bold mb-2 text-danger">Führerscheinprüfung fehlgeschlagen</h5>
+          <p className="mb-0 small">
+            Deine hinterlegte Führerscheinklasse <strong>({userLicenseClass || "Keine"})</strong> reicht für diesen Camper nicht aus.
+            Dieses Fahrzeug erfordert mindestens die Klasse <strong>{requiredLicenseClass}</strong>.
+          </p>
+        </div>
+      );
+    }
 
     leftCol.appendChild(
       <div className="card border-0 shadow-sm rounded-4 mb-4">
@@ -201,10 +223,14 @@ export function CheckoutPage() {
               <input
                 type="radio"
                 name="payment"
-                className="form-check-input mt-0"
+                value="stripe"
+                className="form-check-input mt-0 payment-method"
                 defaultChecked
               />
-              <span className="fw-medium">Kreditkarte (Dummy)</span>
+              <div>
+                <span className="fw-medium d-block">💳 Kreditkarte (Stripe)</span>
+                <small className="text-muted">Sicher bezahlen mit Mastercard, Visa oder American Express</small>
+              </div>
             </label>
             <label
               className="border rounded-3 p-3 d-flex align-items-center gap-3"
@@ -213,11 +239,16 @@ export function CheckoutPage() {
               <input
                 type="radio"
                 name="payment"
-                className="form-check-input mt-0"
+                value="paypal"
+                className="form-check-input mt-0 payment-method"
               />
-              <span className="fw-medium">PayPal (Dummy)</span>
+              <div>
+                <span className="fw-medium d-block">🅿️ PayPal</span>
+                <small className="text-muted">Schnell und sicher mit deinem PayPal Konto</small>
+              </div>
             </label>
           </div>
+          <div id="paypal-buttons-container" style={{ display: "none", marginTop: "20px" }}></div>
         </div>
       </div>,
     );
@@ -276,33 +307,140 @@ export function CheckoutPage() {
     const confirmButton = (
       <button
         className="btn w-100 py-3 fw-bold fs-4 text-white custom-font-base mt-4"
+        id="confirm-payment-btn"
         style={{
-          backgroundColor: "var(--bs-primary, #ea5d42)",
+          backgroundColor: isLicensed ? "var(--bs-primary, #ea5d42)" : "#6c757d",
           letterSpacing: "2px",
         }}
+        disabled={!isLicensed}
       >
-        Zahlungspflichtig buchen
+        {isLicensed ? "Zahlungspflichtig buchen" : "Führerschein unzureichend"}
       </button>
     ) as HTMLButtonElement;
 
+    const getSelectedPaymentMethod = (): string => {
+      const selected = document.querySelector(
+        'input[name="payment"]:checked'
+      ) as HTMLInputElement;
+      return selected?.value || "stripe";
+    };
+
+    // Initialisiere PayPal Smart Buttons nur einmal
+    const initPayPalButtons = async () => {
+      const container = document.getElementById("paypal-buttons-container");
+      if (!container || container.innerHTML !== "") return;
+
+      try {
+        const paypalScript = document.createElement("script");
+        paypalScript.src =
+          "https://www.paypal.com/sdk/js?client-id=" +
+          (import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb");
+        paypalScript.async = true;
+        paypalScript.onload = () => {
+          if ((window as any).paypal) {
+            (window as any).paypal
+              .Buttons({
+                createOrder: async () => {
+                  const response = await createPayPalOrder(
+                    camper.id,
+                    priceData.totalAmount,
+                    pendingData.startDate,
+                    pendingData.endDate
+                  );
+                  return response.id;
+                },
+                onApprove: async (data: any) => {
+                  try {
+                    confirmButton.disabled = true;
+                    confirmButton.textContent = "Zahlung wird verarbeitet...";
+
+                    await capturePayPalOrder(data.orderID);
+
+                    await createBooking({
+                      camper_id: camper.id,
+                      user_id: user.id!,
+                      start_date: pendingData.startDate,
+                      end_date: pendingData.endDate,
+                      total_price: priceData.totalAmount,
+                      addons: pendingData.addons,
+                    });
+
+                    alert("Zahlung erfolgreich! Buchung abgeschlossen.");
+                    sessionStorage.removeItem("pendingCheckout");
+                    window.location.href = "/pages/account/";
+                  } catch (err) {
+                    console.error(err);
+                    alert("Fehler bei der Zahlungsbestätigung. Bitte versuchen Sie es erneut.");
+                    confirmButton.disabled = false;
+                    confirmButton.textContent = "Zahlungspflichtig buchen";
+                  }
+                },
+                onError: () => {
+                  alert("Fehler bei der PayPal-Zahlung. Bitte versuchen Sie es erneut.");
+                  confirmButton.disabled = false;
+                  confirmButton.textContent = "Zahlungspflichtig buchen";
+                },
+              })
+              .render(container);
+          }
+        };
+        document.head.appendChild(paypalScript);
+      } catch (err) {
+        console.error("Error initializing PayPal buttons:", err);
+      }
+    };
+
+    // Payment method change handler
+    const updatePaymentDisplay = () => {
+      const method = getSelectedPaymentMethod();
+      const paypalContainer = document.getElementById(
+        "paypal-buttons-container"
+      );
+
+      if (method === "paypal") {
+        if (paypalContainer) {
+          paypalContainer.style.display = "block";
+        }
+        confirmButton.style.display = "none";
+        initPayPalButtons();
+      } else {
+        if (paypalContainer) {
+          paypalContainer.style.display = "none";
+        }
+        confirmButton.style.display = "block";
+      }
+    };
+
+    // Add payment method change listeners
+    document.addEventListener("change", (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.name === "payment") {
+        updatePaymentDisplay();
+      }
+    });
+
     confirmButton.addEventListener("click", async () => {
       try {
-        confirmButton.disabled = true;
-        confirmButton.textContent = "Wird gebucht...";
-        await createBooking({
-          camper_id: camper.id,
-          user_id: user.id!,
-          start_date: pendingData.startDate,
-          end_date: pendingData.endDate,
-          total_price: priceData.totalAmount,
-          addons: pendingData.addons,
-        });
-        alert("Buchung erfolgreich!");
-        sessionStorage.removeItem("pendingCheckout");
-        window.location.href = "/pages/account/";
+        const method = getSelectedPaymentMethod();
+
+        if (method === "stripe") {
+          confirmButton.disabled = true;
+          confirmButton.textContent = "Wird zu Stripe weitergeleitet...";
+
+          const session = await createStripeCheckoutSession(
+            camper.id,
+            priceData.totalAmount,
+            pendingData.startDate,
+            pendingData.endDate
+          );
+
+          if (session.url) {
+            window.location.href = session.url;
+          }
+        }
       } catch (err) {
         console.error(err);
-        alert("Fehler bei der Buchung. Bitte versuchen Sie es erneut.");
+        alert("Fehler beim Zahlungsprozess. Bitte versuchen Sie es erneut.");
         confirmButton.disabled = false;
         confirmButton.textContent = "Zahlungspflichtig buchen";
       }

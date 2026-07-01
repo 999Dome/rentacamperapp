@@ -4,7 +4,7 @@ import "../../scss/camper-details-v2.scss";
 import { MainHeader } from "../../components/mainheader.tsx";
 import { MainFooter } from "../../components/mainfooter.tsx";
 
-import { getCamperById } from "../../api/campersAPI.ts";
+import { CampersAPIClient } from '../../infrastructure/api/camper-api-client';
 import { getAllCamperImagesById } from "../../api/camperImagesAPI.ts";
 import { getCamperFeaturesByCamperId } from "../../api/camperFeaturesAPI.ts";
 import { getAllAddons } from "../../api/addonsAPI.ts";
@@ -35,15 +35,26 @@ async function renderCamperDetails() {
   }
 
   try {
+    const campersClient = new CampersAPIClient();
+
     const [camper, image, features, addons, pricingRules] = await Promise.all([
-      getCamperById(camperId),
+      campersClient.getCamperById(camperId),
       getAllCamperImagesById(camperId),
       getCamperFeaturesByCamperId(camperId),
       getAllAddons(),
       getAllPricingRules()
     ]);
 
-    const license = await getDriversLicenseById(camper.required_license);
+    const licenseRaw = await getDriversLicenseById(camper.required_license);
+    const license = licenseRaw || {
+      id: camper.required_license,
+      created_at: new Date().toISOString(),
+      class: "Klasse B" as const,
+      value: 100,
+      max_vehicle_wieght: 3500,
+      max_trailer_weight: 750,
+      total_weight: 3500
+    };
 
     const mainContainer = document.createElement("main");
     mainContainer.className = "container camper-details-v2-container my-5";

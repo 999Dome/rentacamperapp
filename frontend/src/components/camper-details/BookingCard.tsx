@@ -3,7 +3,8 @@ import type { Camper, Addon, PricingRule } from '../../types/interface.ts';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import { German } from 'flatpickr/dist/l10n/de.js';
-import { isLoggedIn } from '../../auth/auth.ts';
+import { isLoggedIn, fetchCurrentUser } from '../../auth/auth.ts';
+import { DriversLicenseValidator } from '../../domain/validators/drivers-license-validator.ts';
 
 export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: PricingRule[]) {
   const pricePerNight = camper.price_per_night_base || camper.engine_power || 0;
@@ -80,6 +81,28 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
   let endDateStr = "";
   const bookButton = card.querySelector('#bookButton') as HTMLButtonElement;
   bookButton.disabled = true;
+
+  if (isLoggedIn()) {
+    Promise.all([
+      fetchCurrentUser(),
+      import('../../api/driversLicenseAPI.ts').then(m => m.getDriversLicenseById(camper.required_license))
+    ]).then(([user, license]) => {
+      if (user && license) {
+        const userLicenseClass = (user as any).profile?.driver_license_class;
+        const requiredLicenseClass = license.class;
+        const isLicensed = DriversLicenseValidator.isLicensedToDrive(userLicenseClass, requiredLicenseClass);
+        if (!isLicensed) {
+          const container = card.querySelector('#booking-card-container') as HTMLElement;
+          const warningDiv = (
+            <div className="alert alert-warning rounded-3 p-2 mb-3 mt-3 text-center" style={{ fontSize: "13px" }}>
+              <strong>Hinweis:</strong> Deine Führerscheinklasse ({userLicenseClass || "Keine"}) ist unzureichend (benötigt: {requiredLicenseClass}).
+            </div>
+          ) as HTMLElement;
+          container.insertBefore(warningDiv, bookButton);
+        }
+      }
+    });
+  }
 
   bookButton.addEventListener('click', () => {
     const checkoutData = {

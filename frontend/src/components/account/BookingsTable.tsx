@@ -151,7 +151,7 @@ export function BookingsTable() {
     try {
       const user = await fetchCurrentUser();
       if (!user) return;
-      const bookings = await fetchBookingsByRenter(user.id);
+      const bookings = await fetchBookingsByRenter(user.id as string);
       renderTable(bookings);
     } catch (err) {
       console.error(err);

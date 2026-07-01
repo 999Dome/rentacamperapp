@@ -1,200 +1,228 @@
-export function setupAuthLogic(page: HTMLElement) {
-  const track = page.querySelector(".auth-slider-track") as HTMLElement;
-  const loginForm = page.querySelector(".login-form") as HTMLFormElement;
-  const registerForm = page.querySelector(".register-form") as HTMLFormElement;
+import { CredentialValidator } from '../../domain/validators/credential-validator';
+import type { ValidationResult } from '../../domain/validators/credential-validator';
+import { AuthAPIClient } from '../../infrastructure/api/auth-api-client';
+import { SessionStorage } from '../../infrastructure/session-storage';
+import { UIHelper } from '../../ui/helpers/ui-helper';
+import type { AuthResponse } from '../../domain/models/auth.model';
 
-  const pillLogin = page.querySelector("#pill-login") as HTMLButtonElement;
-  const pillRegister = page.querySelector(
-    "#pill-register",
-  ) as HTMLButtonElement;
+interface AuthPageElements {
+  loginForm: HTMLFormElement;
+  registerForm: HTMLFormElement;
+  pillLogin: HTMLButtonElement;
+  pillRegister: HTMLButtonElement;
+  loginErrorBox: HTMLElement;
+  registerErrorBox: HTMLElement;
+  forgotPwLink: HTMLAnchorElement;
+}
 
-  const forgotPwLink = page.querySelector(
-    ".forgot-password-link",
-  ) as HTMLAnchorElement;
+class AuthPageLogic {
+  private page: HTMLElement;
+  private elements: AuthPageElements;
+  private apiClient: AuthAPIClient;
+  private isProcessing = false;
 
-  const loginErrorBox = page.querySelector(".login-error") as HTMLElement;
-  const registerErrorBox = page.querySelector(".register-error") as HTMLElement;
+  constructor(page: HTMLElement) {
+    this.page = page;
+    this.elements = this.initializeElements();
+    this.apiClient = new AuthAPIClient();
+    this.setupEventListeners();
+  }
 
-  const showLoginError = (msg: string | null) => {
-    if (msg) {
-      loginErrorBox.textContent = msg;
-      loginErrorBox.classList.remove("d-none");
-    } else {
-      loginErrorBox.classList.add("d-none");
-      loginErrorBox.textContent = "";
-    }
-  };
+  private initializeElements(): AuthPageElements {
+    return {
+      loginForm: this.getElement('.login-form') as HTMLFormElement,
+      registerForm: this.getElement('.register-form') as HTMLFormElement,
+      pillLogin: this.getElement('#pill-login') as HTMLButtonElement,
+      pillRegister: this.getElement('#pill-register') as HTMLButtonElement,
+      loginErrorBox: this.getElement('.login-error') as HTMLElement,
+      registerErrorBox: this.getElement('.register-error') as HTMLElement,
+      forgotPwLink: this.getElement('.forgot-password-link') as HTMLAnchorElement,
+    };
+  }
 
-  const showRegisterError = (msg: string | null) => {
-    if (msg) {
-      registerErrorBox.textContent = msg;
-      registerErrorBox.classList.remove("d-none");
-    } else {
-      registerErrorBox.classList.add("d-none");
-      registerErrorBox.textContent = "";
-    }
-  };
+  private setupEventListeners(): void {
+    this.setupFormToggle();
+    this.setupLoginForm();
+    this.setupRegisterForm();
+    this.setupForgotPasswordLink();
+  }
 
-  pillRegister.addEventListener("click", (e) => {
-    e.preventDefault();
-    track.classList.add("show-register");
+  private setupFormToggle(): void {
+    this.elements.pillRegister.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.switchToRegisterForm();
+    });
 
-    pillRegister.classList.add("active-pill");
-    pillRegister.classList.remove("text-white-50");
+    this.elements.pillLogin.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.switchToLoginForm();
+    });
+  }
 
-    pillLogin.classList.remove("active-pill");
-    pillLogin.classList.add("text-white-50");
+  private setupLoginForm(): void {
+    this.elements.loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      void this.handleLoginSubmit();
+    });
+  }
 
-    showLoginError(null);
-    showRegisterError(null);
-  });
+  private setupRegisterForm(): void {
+    this.elements.registerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      void this.handleRegisterSubmit();
+    });
+  }
 
-  pillLogin.addEventListener("click", (e) => {
-    e.preventDefault();
-    track.classList.remove("show-register");
+  private setupForgotPasswordLink(): void {
+    this.elements.forgotPwLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.handleForgotPassword();
+    });
+  }
 
-    
-    pillLogin.classList.add("active-pill");
-    pillLogin.classList.remove("text-white-50");
+  private switchToRegisterForm(): void {
+    UIHelper.toggleAuthForm(true, this.page);
+    UIHelper.showError(this.elements.loginErrorBox, null);
+    UIHelper.showError(this.elements.registerErrorBox, null);
+  }
 
-    pillRegister.classList.remove("active-pill");
-    pillRegister.classList.add("text-white-50");
+  private switchToLoginForm(): void {
+    UIHelper.toggleAuthForm(false, this.page);
+    UIHelper.showError(this.elements.loginErrorBox, null);
+    UIHelper.showError(this.elements.registerErrorBox, null);
+  }
 
-    showLoginError(null);
-    showRegisterError(null);
-  });
+  private async handleLoginSubmit(): Promise<void> {
+    if (this.isProcessing) return;
 
-  
-  forgotPwLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    console.warn(
-      "Password reset functionality is not implemented yet. Triggered placeholder log.",
-    );
-    alert(
-      "Passwort-Reset-Funktion ist in Vorbereitung! Bitte wende dich an den Support.",
-    );
-  });
+    UIHelper.showError(this.elements.loginErrorBox, null);
 
-  
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    showLoginError(null);
+    const email = UIHelper.getFormValue(this.elements.loginForm, 'loginEmail');
+    const password = UIHelper.getFormValue(this.elements.loginForm, 'loginPassword');
 
-    const email = (
-      loginForm.elements.namedItem("loginEmail") as HTMLInputElement
-    ).value;
-    const password = (
-      loginForm.elements.namedItem("loginPassword") as HTMLInputElement
-    ).value;
-
-    try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
-      const url = new URL("auth/login", API_BASE_URL).toString();
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Ungültige E-Mail oder falsches Passwort.");
-      }
-
-      const data = await response.json();
-      if (data.token || data.access_token) {
-        const tokenToStore = data.token || data.access_token;
-        localStorage.setItem("token", tokenToStore);
-        document.cookie = `token=${tokenToStore}; path=/; max-age=86400; SameSite=Strict`;
-        if (sessionStorage.getItem("pendingCheckout")) {
-          window.location.href = "/pages/checkout/";
-        } else {
-          window.location.href = "/";
-        }
-      } else {
-        throw new Error(
-          "Erfolgreich eingeloggt, aber kein Token vom Server erhalten.",
-        );
-      }
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : "Es ist ein unerwarteter Fehler aufgetreten.";
-      showLoginError(errMsg);
-    }
-  });
-
-  registerForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    showRegisterError(null);
-
-    const firstName = (
-      registerForm.elements.namedItem("regFirstName") as HTMLInputElement
-    ).value;
-    const lastName = (
-      registerForm.elements.namedItem("regLastName") as HTMLInputElement
-    ).value;
-    const email = (
-      registerForm.elements.namedItem("regEmail") as HTMLInputElement
-    ).value;
-    const password = (
-      registerForm.elements.namedItem("regPassword") as HTMLInputElement
-    ).value;
-    const confirmPassword = (
-      registerForm.elements.namedItem("regPasswordConfirm") as HTMLInputElement
-    ).value;
-    const role = (
-      registerForm.elements.namedItem("regRole") as HTMLSelectElement
-    ).value;
-    const license = (
-      registerForm.elements.namedItem("regLicense") as HTMLSelectElement
-    ).value;
-
-    if (password !== confirmPassword) {
-      showRegisterError("Die Passwörter stimmen nicht überein.");
+    const validation = this.validateLoginCredentials(email, password);
+    if (!validation.isValid) {
+      UIHelper.showError(this.elements.loginErrorBox, validation.errors[0]?.message ?? 'Validierungsfehler');
       return;
     }
 
+    this.isProcessing = true;
+
     try {
-      const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
-      const url = new URL("auth/register", API_BASE_URL).toString();
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          password,
-          role,
-          driversLicenseClass: license,
-        }),
-      });
+      const response = (await this.apiClient.login(email, password)) as AuthResponse;
+      const token = response.token || response.access_token;
 
-      if (!response.ok) {
-        if (response.status === 409) {
-          throw new Error("Diese E-Mail ist bereits vergeben.");
-        }
-        throw new Error(
-          "Registrierung fehlgeschlagen. Bitte überprüfe deine Eingaben.",
-        );
+      if (!token) {
+        throw new Error('Erfolgreich eingeloggt, aber kein Token vom Server erhalten.');
       }
 
-      const data = await response.json();
-      if (data.token || data.access_token) {
-        const tokenToStore = data.token || data.access_token;
-        localStorage.setItem("token", tokenToStore);
-        document.cookie = `token=${tokenToStore}; path=/; max-age=86400; SameSite=Strict`;
-        if (sessionStorage.getItem("pendingCheckout")) {
-          window.location.href = "/pages/checkout/";
-        } else {
-          window.location.href = "/";
-        }
-      } else {
-        alert("Account erfolgreich erstellt! Du kannst dich nun einloggen.");
-        pillLogin.click();
-        registerForm.reset();
-      }
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : "Es ist ein unerwarteter Fehler aufgetreten.";
-      showRegisterError(errMsg);
+      SessionStorage.storeAuthToken(token);
+      window.location.href = SessionStorage.getRedirectAfterAuth();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Es ist ein unerwarteter Fehler aufgetreten.';
+      UIHelper.showError(this.elements.loginErrorBox, errorMessage);
+    } finally {
+      this.isProcessing = false;
     }
-  });
+  }
+
+  private async handleRegisterSubmit(): Promise<void> {
+    if (this.isProcessing) return;
+
+    UIHelper.showError(this.elements.registerErrorBox, null);
+
+    const firstName = UIHelper.getFormValue(this.elements.registerForm, 'regFirstName');
+    const lastName = UIHelper.getFormValue(this.elements.registerForm, 'regLastName');
+    const email = UIHelper.getFormValue(this.elements.registerForm, 'regEmail');
+    const password = UIHelper.getFormValue(this.elements.registerForm, 'regPassword');
+    const confirmPassword = UIHelper.getFormValue(this.elements.registerForm, 'regPasswordConfirm');
+    const role = UIHelper.getFormValue(this.elements.registerForm, 'regRole');
+    const license = UIHelper.getFormValue(this.elements.registerForm, 'regLicense');
+
+    const validation = CredentialValidator.validateRegistrationForm(
+      firstName,
+      lastName,
+      email,
+      password,
+      confirmPassword,
+    );
+
+    if (!validation.isValid) {
+      UIHelper.showError(this.elements.registerErrorBox, validation.errors[0]?.message ?? 'Validierungsfehler');
+      return;
+    }
+
+    this.isProcessing = true;
+
+    try {
+      const response = (await this.apiClient.register(
+        firstName,
+        lastName,
+        email,
+        password,
+        role,
+        license,
+      )) as AuthResponse;
+      const token = response.token || response.access_token;
+
+      if (token) {
+        SessionStorage.storeAuthToken(token);
+        window.location.href = SessionStorage.getRedirectAfterAuth();
+      } else {
+        this.elements.registerForm.classList.add('d-none');
+        const successDiv = this.page.querySelector('.register-success') as HTMLElement;
+        if (successDiv) {
+          successDiv.classList.remove('d-none');
+          
+          const backBtn = successDiv.querySelector('.btn-back-to-login');
+          if (backBtn) {
+            backBtn.addEventListener('click', () => {
+              successDiv.classList.add('d-none');
+              this.elements.registerForm.classList.remove('d-none');
+              this.elements.pillLogin.click();
+              UIHelper.clearForms(this.elements.registerForm);
+            });
+          }
+        }
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Es ist ein unerwarteter Fehler aufgetreten.';
+      UIHelper.showError(this.elements.registerErrorBox, errorMessage);
+    } finally {
+      this.isProcessing = false;
+    }
+  }
+
+  private handleForgotPassword(): void {
+    console.warn('Password reset functionality is not implemented yet.');
+    alert(
+      'Passwort-Reset-Funktion ist in Vorbereitung! Bitte wende dich an den Support.',
+    );
+  }
+
+  private validateLoginCredentials(email: string, password: string): ValidationResult {
+    const emailValidation = CredentialValidator.validateEmail(email);
+    if (!emailValidation.isValid) {
+      return emailValidation;
+    }
+
+    const passwordValidation = CredentialValidator.validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return passwordValidation;
+    }
+
+    return { isValid: true, errors: [] };
+  }
+
+  private getElement(selector: string): Element {
+    const element = this.page.querySelector(selector);
+    if (!element) {
+      throw new Error(`Element with selector "${selector}" not found in auth page`);
+    }
+    return element;
+  }
+}
+
+export function setupAuthLogic(page: HTMLElement): void {
+  new AuthPageLogic(page);
 }

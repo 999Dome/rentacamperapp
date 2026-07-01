@@ -190,7 +190,7 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
   const loadData = async () => {
     try {
       const allCampers = await getAllCampers();
-      campers = allCampers.filter(c => c.owner_id === ownerId || c.owner_id === "user-1");
+      campers = allCampers.filter(c => c.ownerId === ownerId || c.owner_id === ownerId);
       camperIds = campers.map(c => c.id);
 
       const select = container.querySelector("#statsCamperSelect") as HTMLSelectElement;

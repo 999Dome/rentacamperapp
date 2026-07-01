@@ -3,6 +3,7 @@ import { getAllCampers } from "../../api/campersAPI.ts";
 import { FilterBar } from "./FilterBar.tsx";
 import { CamperCard } from "./CamperCard.tsx";
 import type { MockCamper } from "../../utils/mockData.ts";
+import { CamperFilterService } from "../../domain/services/camper-filter.service.ts";
 
 export function RentPage() {
   let campersList: MockCamper[] = [];
@@ -51,7 +52,7 @@ export function RentPage() {
     const form = container.querySelector("form") as HTMLFormElement;
     if (!form) return;
 
-    const query = ((form.elements.namedItem("searchQuery") as HTMLInputElement)?.value || "").toLowerCase().trim();
+    const query = ((form.elements.namedItem("searchQuery") as HTMLInputElement)?.value || "");
     const manufacturer = (form.elements.namedItem("manufacturer") as HTMLSelectElement)?.value;
     const fuelType = (form.elements.namedItem("fuelType") as HTMLSelectElement)?.value;
     const emissionsClass = (form.elements.namedItem("emissionsClass") as HTMLSelectElement)?.value;
@@ -70,54 +71,26 @@ export function RentPage() {
 
     const checkboxes = form.querySelectorAll("input[name='features']:checked");
     const selectedFeatures = Array.from(checkboxes).map((cb) => (cb as HTMLInputElement).value);
-
-    const filtered = campersList.filter((camper) => {
-      if (query) {
-        const nameMatch = camper.name?.toLowerCase().includes(query);
-        const descMatch = camper.description?.toLowerCase().includes(query) || camper.short_desc?.toLowerCase().includes(query);
-        const manufacturerMatch = camper.manufacturer?.toLowerCase().includes(query);
-        if (!nameMatch && !descMatch && !manufacturerMatch) return false;
-      }
-
-      if (manufacturer && camper.manufacturer !== manufacturer) return false;
-
-      if (fuelType) {
-        if (fuelType === "Diesel" && camper.fuel_type !== "Diesel") return false;
-        if (fuelType === "Benzine" && !["Super", "Super Plus", "Super E10"].includes(camper.fuel_type)) return false;
-        if (fuelType === "Electric" && camper.fuel_consumption !== 0) return false;
-      }
-
-      if (emissionsClass) {
-        if (emissionsClass === "Elektro" && camper.fuel_consumption !== 0) return false;
-        if (emissionsClass === "Euro 6" && camper.fuel_consumption === 0) return false;
-      }
-
-      if (camper.price_per_night_base < priceMin || camper.price_per_night_base > priceMax) return false;
-
-      const beds = camper.beds || 0;
-      if (beds < bedsMin || beds > bedsMax) return false;
-
-      if (heightMax && camper.height_cm && camper.height_cm > heightMax) return false;
-      if (widthMax && camper.width_cm && camper.width_cm > widthMax) return false;
-      if (weightMax && camper.max_weight_kg && camper.max_weight_kg > weightMax) return false;
-
-      if (hasTowHitch && !camper.has_tow_hitch) return false;
-
-      if (selectedFeatures.length > 0) {
-        const hasAllFeatures = selectedFeatures.every((f) => camper.features_list.includes(f));
-        if (!hasAllFeatures) return false;
-      }
-
-      return true;
-    });
-
+    
+    const providerType = (form.elements.namedItem("providerType") as HTMLSelectElement)?.value;
     const sortVal = (container.querySelector("#sortSelect") as HTMLSelectElement).value;
-    filtered.sort((a, b) => {
-      if (sortVal === "priceAsc") return a.price_per_night_base - b.price_per_night_base;
-      if (sortVal === "priceDesc") return b.price_per_night_base - a.price_per_night_base;
-      if (sortVal === "nameAsc") return (a.name || "").localeCompare(b.name || "");
-      if (sortVal === "nameDesc") return (b.name || "").localeCompare(a.name || "");
-      return 0;
+
+    const filtered = CamperFilterService.filterAndSort(campersList, {
+      query,
+      manufacturer,
+      fuelType,
+      emissionsClass,
+      priceMin,
+      priceMax,
+      bedsMin,
+      bedsMax,
+      heightMax,
+      widthMax,
+      weightMax,
+      hasTowHitch,
+      selectedFeatures,
+      providerType,
+      sortVal,
     });
 
     const grid = container.querySelector("#camper-grid-container") as HTMLElement;
