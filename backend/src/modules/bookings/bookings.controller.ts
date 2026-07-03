@@ -33,4 +33,9 @@ export class BookingsController {
   ): Promise<unknown> {
     return await this.bookingsService.updateBookingStatus(id, dto.status);
   }
+
+  @Get('campers/:camperId/blocked-dates')
+  async getBlockedDates(@Param('camperId') camperId: string): Promise<unknown> {
+    return await this.bookingsService.getBlockedDates(camperId);
+  }
 }

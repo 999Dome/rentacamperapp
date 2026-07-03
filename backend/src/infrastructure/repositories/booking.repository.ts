@@ -17,6 +17,9 @@ interface BookingRawData {
   end_date: string;
   total_price: number;
   status: BookingStatus;
+  expires_at: string | null;
+  pickup_location_id: string | null;
+  return_location_id: string | null;
   created_at: string;
   updated_at: string;
   campers: {
@@ -28,6 +31,16 @@ interface BookingRawData {
       name: string;
     } | null;
   }>;
+  pickup_location?: {
+    city: string;
+    street: string;
+    name?: string;
+  } | null;
+  return_location?: {
+    city: string;
+    street: string;
+    name?: string;
+  } | null;
 }
 
 @Injectable()
@@ -46,6 +59,9 @@ export class BookingRepository implements IBookingRepository {
         end_date: command.endDate,
         total_price: command.totalPrice,
         status: 'pending' as BookingStatus,
+        expires_at: new Date(Date.now() + 15 * 60000).toISOString(),
+        pickup_location_id: command.pickupLocationId,
+        return_location_id: command.returnLocationId,
       })
       .select()
       .single();
@@ -55,10 +71,65 @@ export class BookingRepository implements IBookingRepository {
     }
 
     if (command.addonIds && command.addonIds.length > 0) {
-      await this.attachAddons(booking.id, command.addonIds);
+      try {
+        await this.attachAddons(booking.id, command.addonIds);
+      } catch (error) {
+        // Manual rollback to ensure atomicity
+        await this.supabase.client
+          .from(this.tableName)
+          .delete()
+          .eq('id', booking.id);
+        throw new Error(
+          `Booking aborted because addon attachment failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
 
     return booking as Booking;
+  }
+
+  async findValidBookingsByCamperId(camperId: string): Promise<Booking[]> {
+    const now = new Date().toISOString();
+
+    const { data, error } = await this.supabase.client
+      .from(this.tableName)
+      .select('*')
+      .eq('camper_id', camperId)
+      .or(
+        `status.eq.confirmed,status.eq.completed,and(status.eq.pending,expires_at.gt.${now})`,
+      );
+
+    if (error) {
+      throw new Error(`Failed to fetch valid bookings: ${error.message}`);
+    }
+
+    return (data || []) as Booking[];
+  }
+
+  async findOverlappingBookings(
+    camperId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<Booking[]> {
+    const now = new Date().toISOString();
+
+    // Condition: existing.start_date <= new.endDate AND existing.end_date >= new.startDate
+    // And (status == 'confirmed' OR status == 'completed' OR (status == 'pending' AND expires_at > NOW))
+    const { data, error } = await this.supabase.client
+      .from(this.tableName)
+      .select('*')
+      .eq('camper_id', camperId)
+      .or(
+        `status.eq.confirmed,status.eq.completed,and(status.eq.pending,expires_at.gt.${now})`,
+      )
+      .lte('start_date', endDate)
+      .gte('end_date', startDate);
+
+    if (error) {
+      throw new Error(`Failed to check overlapping bookings: ${error.message}`);
+    }
+
+    return (data || []) as Booking[];
   }
 
   async findById(bookingId: string): Promise<Booking | null> {
@@ -79,7 +150,7 @@ export class BookingRepository implements IBookingRepository {
     const { data, error } = await this.supabase.client
       .from(this.tableName)
       .select(
-        '*, campers(name), booking_addons(price_at_booking, addons(name))',
+        '*, campers(name), booking_addons(price_at_booking, addons(name)), pickup_location:locations!bookings_pickup_location_id_fkey(city, street), return_location:locations!bookings_return_location_id_fkey(city, street)',
       )
       .eq('user_id', userId);
 
@@ -96,7 +167,7 @@ export class BookingRepository implements IBookingRepository {
     const { data, error } = await this.supabase.client
       .from(this.tableName)
       .select(
-        '*, campers(name), booking_addons(price_at_booking, addons(name))',
+        '*, campers(name), booking_addons(price_at_booking, addons(name)), pickup_location:locations!bookings_pickup_location_id_fkey(city, street), return_location:locations!bookings_return_location_id_fkey(city, street)',
       );
 
     if (error) {
@@ -176,6 +247,10 @@ export class BookingRepository implements IBookingRepository {
       end_date: booking.end_date,
       total_price: booking.total_price,
       status: booking.status,
+      expires_at: booking.expires_at,
+      pickup_location_id: booking.pickup_location_id,
+      return_location_id: booking.return_location_id,
+      created_at: booking.created_at,
       addons_price:
         booking.booking_addons?.reduce(
           (sum: number, ba) => sum + ba.price_at_booking,
@@ -186,6 +261,24 @@ export class BookingRepository implements IBookingRepository {
           name: ba.addons?.name || 'Zusatz',
           price: ba.price_at_booking,
         })) || [],
+      pickup_location: booking.pickup_location
+        ? {
+            city: booking.pickup_location.city,
+            street: booking.pickup_location.street,
+            name:
+              booking.pickup_location.name ||
+              `${booking.pickup_location.city} Station`,
+          }
+        : undefined,
+      return_location: booking.return_location
+        ? {
+            city: booking.return_location.city,
+            street: booking.return_location.street,
+            name:
+              booking.return_location.name ||
+              `${booking.return_location.city} Station`,
+          }
+        : undefined,
     }));
   }
 }

@@ -35,11 +35,11 @@ export class StripeService {
           },
         ],
         mode: 'payment',
-        // In a real application, these URLs would be dynamic based on the environment
-        success_url: `http://localhost:5173/pages/checkout-success/?session_id={CHECKOUT_SESSION_ID}&camper=${camperId}`,
+        success_url: `http://localhost:5173/pages/checkout-success/?session_id={CHECKOUT_SESSION_ID}&bookingId=${String((bookingDetails.bookingId as string) || '')}&camper=${camperId}`,
         cancel_url: `http://localhost:5173/pages/checkout/`,
         metadata: {
           camperId: camperId,
+          bookingId: String((bookingDetails.bookingId as string) || ''),
           startDate: String((bookingDetails.startDate as string) || ''),
           endDate: String((bookingDetails.endDate as string) || ''),
         },

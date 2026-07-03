@@ -1,6 +1,8 @@
 import { createElement } from "../../utils/createElement.ts";
 import { getAllCampers, createCamper, updateCamper, deleteCamper as apiDeleteCamper } from "../../api/campersAPI.ts";
 import { assignCamperOwner, removeCamperOwner } from "../../api/camperOwnerAPI.ts";
+import { fetchCamperBlockings, createCamperBlocking, deleteCamperBlocking } from "../../api/camperBlockingsAPI.ts";
+import type { BlockingResponse } from "../../infrastructure/api/camper-blockings-api-client.ts";
 import type { MockCamper } from "../../utils/mockData.ts";
 
 interface CamperCRUDProps {
@@ -11,6 +13,8 @@ interface CamperCRUDProps {
 export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
   let campers: MockCamper[] = [];
   let activeEditId: string | null = null;
+  let activeBlockingCamperId: string | null = null;
+  let currentBlockings: BlockingResponse[] = [];
 
   async function loadCampers() {
     try {
@@ -65,13 +69,13 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
       );
       row.appendChild(<td>{statusBadge}</td>);
 
-      const blockBtnText = camper.is_blocked ? "Freigeben" : "Blockieren";
-      const blockBtnClass = camper.is_blocked ? "btn-outline-success" : "btn-outline-warning";
+      const blockBtnText = "Sperrzeiten";
+      const blockBtnClass = "btn-outline-warning";
 
       row.appendChild(
         <td className="text-end">
           <div className="d-inline-flex gap-2">
-            <button className={`btn btn-sm ${blockBtnClass} rounded-pill px-3`} onclick={() => toggleBlock(camper.id)}>
+            <button className={`btn btn-sm ${blockBtnClass} rounded-pill px-3`} onclick={() => openBlockingModal(camper.id)}>
               {blockBtnText}
             </button>
             <button className="btn btn-sm btn-outline-primary rounded-pill px-3" onclick={() => openModal(camper.id)}>
@@ -192,15 +196,145 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
     }
   }
 
-  async function toggleBlock(id: string) {
-    const camper = campers.find(c => c.id === id);
-    if (!camper) return;
+  async function loadBlockings(camperId: string) {
     try {
-      await updateCamper(id, { is_blocked: !camper.is_blocked });
-      await loadCampers();
-      onDataChanged();
+      currentBlockings = await fetchCamperBlockings(ownerId, camperId);
+      renderBlockingsList();
     } catch (err) {
       console.error(err);
+      const list = container.querySelector("#blockings-list") as HTMLElement;
+      list.innerHTML = `<div class="alert alert-danger">Fehler beim Laden der Sperrzeiten.</div>`;
+    }
+  }
+
+  function renderBlockingsList() {
+    const list = container.querySelector("#blockings-list") as HTMLElement;
+    list.innerHTML = "";
+
+    if (currentBlockings.length === 0) {
+      list.innerHTML = `<p class="text-muted small mb-0">Keine aktiven Sperrzeiten vorhanden.</p>`;
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.className = "table table-sm table-hover mt-3";
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Von</th>
+          <th>Bis</th>
+          <th>Grund</th>
+          <th class="text-end"></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+
+    const tbody = table.querySelector("tbody") as HTMLElement;
+    currentBlockings.forEach(b => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${b.start_date}</td>
+        <td>${b.end_date}</td>
+        <td>${b.reason || '-'}</td>
+      `;
+      const tdAction = document.createElement("td");
+      tdAction.className = "text-end";
+      const delBtn = document.createElement("button");
+      delBtn.className = "btn btn-sm btn-outline-danger border-0";
+      delBtn.innerHTML = `<i class="bi bi-trash"></i>`;
+      delBtn.onclick = () => handleDeleteBlocking(b.id);
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction);
+      tbody.appendChild(tr);
+    });
+
+    list.appendChild(table);
+  }
+
+  async function openBlockingModal(camperId: string) {
+    activeBlockingCamperId = camperId;
+    const modal = container.querySelector("#blocking-modal") as HTMLElement;
+    const backdrop = container.querySelector("#crud-modal-backdrop") as HTMLElement;
+    const form = container.querySelector("#blocking-form") as HTMLFormElement;
+    
+    form.reset();
+    const errorContainer = container.querySelector("#blocking-error-container") as HTMLElement;
+    errorContainer.innerHTML = "";
+
+    modal.classList.remove("d-none");
+    backdrop.classList.remove("d-none");
+
+    const list = container.querySelector("#blockings-list") as HTMLElement;
+    list.innerHTML = `<div class="spinner-border spinner-border-sm text-primary"></div>`;
+    
+    await loadBlockings(camperId);
+  }
+
+  function closeBlockingModal() {
+    const modal = container.querySelector("#blocking-modal") as HTMLElement;
+    const backdrop = container.querySelector("#crud-modal-backdrop") as HTMLElement;
+    modal.classList.add("d-none");
+    backdrop.classList.add("d-none");
+    activeBlockingCamperId = null;
+    currentBlockings = [];
+  }
+
+  async function handleBlockingSubmit(e: Event) {
+    e.preventDefault();
+    if (!activeBlockingCamperId) return;
+
+    const form = e.target as HTMLFormElement;
+    const startDate = (form.elements.namedItem("blockStart") as HTMLInputElement).value;
+    const endDate = (form.elements.namedItem("blockEnd") as HTMLInputElement).value;
+    const reason = (form.elements.namedItem("blockReason") as HTMLInputElement).value;
+
+    const errorContainer = container.querySelector("#blocking-error-container") as HTMLElement;
+    errorContainer.innerHTML = "";
+
+    try {
+      await createCamperBlocking(ownerId, {
+        camper_id: activeBlockingCamperId,
+        start_date: startDate,
+        end_date: endDate,
+        reason: reason || undefined
+      });
+      form.reset();
+      await loadBlockings(activeBlockingCamperId);
+    } catch (err) {
+      console.error(err);
+      let displayMsg = "Fehler beim Erstellen der Sperrzeit.";
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      if (errorMsg.includes("400")) {
+        try {
+          const match = errorMsg.match(/\{.*\}/);
+          if (match) {
+            const parsed = JSON.parse(match[0]) as { message?: string | string[] };
+            if (parsed.message) displayMsg = Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message;
+          }
+        } catch {
+          // ignore
+        }
+      }
+      errorContainer.innerHTML = `
+        <div class="alert alert-danger py-2 px-3 mt-3 mb-0 small">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          ${displayMsg}
+        </div>
+      `;
+    }
+  }
+
+  async function handleDeleteBlocking(blockingId: string) {
+    if (!confirm("Sperrzeit wirklich löschen?")) return;
+    try {
+      await deleteCamperBlocking(ownerId, blockingId);
+      if (activeBlockingCamperId) {
+        await loadBlockings(activeBlockingCamperId);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Fehler beim Löschen der Sperrzeit.");
     }
   }
 
@@ -257,6 +391,7 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
             </div>
             <form id="camper-form" onsubmit={handleFormSubmit}>
               <div className="modal-body p-4" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                {/* ... (Existing form fields omitted for brevity, but I will include them full in the replacement to avoid breaking) */}
                 <div className="row g-3">
                   <div className="col-md-6">
                     <label className="form-label small text-uppercase text-muted fw-bold">Name des Campers</label>
@@ -372,6 +507,42 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
                 <button type="submit" className="btn btn-primary rounded-pill px-4" id="submit-btn-text">Speichern</button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      <div className="modal fade show d-none" id="blocking-modal" tabIndex={-1} style={{ display: "block", zIndex: 1050 }}>
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content rounded-4 border-0 shadow-lg">
+            <div className="modal-header border-bottom px-4 bg-light rounded-top-4">
+              <h5 className="modal-title fw-bold text-dark custom-font-base">Sperrzeiten verwalten</h5>
+              <button type="button" className="btn-close" aria-label="Schließen" onclick={closeBlockingModal}></button>
+            </div>
+            <div className="modal-body p-4">
+              <form id="blocking-form" onsubmit={handleBlockingSubmit} className="mb-4">
+                <div className="row g-2 align-items-end">
+                  <div className="col-md-6">
+                    <label className="form-label small text-muted fw-bold">Von</label>
+                    <input type="date" name="blockStart" className="form-control form-control-sm" required />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label small text-muted fw-bold">Bis</label>
+                    <input type="date" name="blockEnd" className="form-control form-control-sm" required />
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label small text-muted fw-bold mt-2">Grund (optional)</label>
+                    <input type="text" name="blockReason" className="form-control form-control-sm" placeholder="z. B. Werkstatt, Eigenbedarf" />
+                  </div>
+                  <div className="col-12 mt-3">
+                    <button type="submit" className="btn btn-primary btn-sm w-100 rounded-pill">Zeitraum sperren</button>
+                  </div>
+                </div>
+                <div id="blocking-error-container"></div>
+              </form>
+              <hr />
+              <h6 className="fw-bold mb-3">Aktive Sperrzeiten</h6>
+              <div id="blockings-list"></div>
+            </div>
           </div>
         </div>
       </div>

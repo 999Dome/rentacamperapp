@@ -79,7 +79,10 @@ export type Database = {
           camper_id: string
           created_at: string | null
           end_date: string
+          expires_at: string | null
           id: string
+          pickup_location_id: string | null
+          return_location_id: string | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
           total_price: number
@@ -89,7 +92,10 @@ export type Database = {
           camper_id: string
           created_at?: string | null
           end_date: string
+          expires_at?: string | null
           id?: string
+          pickup_location_id?: string | null
+          return_location_id?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_price: number
@@ -99,7 +105,10 @@ export type Database = {
           camper_id?: string
           created_at?: string | null
           end_date?: string
+          expires_at?: string | null
           id?: string
+          pickup_location_id?: string | null
+          return_location_id?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_price?: number
@@ -114,10 +123,53 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookings_pickup_location_id_fkey"
+            columns: ["pickup_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_return_location_id_fkey"
+            columns: ["return_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      camper_blockings: {
+        Row: {
+          camper_id: string
+          end_date: string
+          id: string
+          start_date: string
+        }
+        Insert: {
+          camper_id: string
+          end_date: string
+          id?: string
+          start_date: string
+        }
+        Update: {
+          camper_id?: string
+          end_date?: string
+          id?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camper_blockings_camper_id_fkey"
+            columns: ["camper_id"]
+            isOneToOne: false
+            referencedRelation: "campers"
             referencedColumns: ["id"]
           },
         ]
@@ -345,6 +397,30 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string | null
+        }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          city: string
+          housenumber: number
+          id: string
+          plz: number
+          street: string
+        }
+        Insert: {
+          city?: string
+          housenumber?: number
+          id?: string
+          plz?: number
+          street?: string
+        }
+        Update: {
+          city?: string
+          housenumber?: number
+          id?: string
+          plz?: number
+          street?: string
         }
         Relationships: []
       }

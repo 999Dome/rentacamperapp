@@ -12,7 +12,7 @@ export function BookingsTable() {
           <thead className="table-light">
             <tr>
               <th>Fahrzeug</th>
-              <th>Zeitraum</th>
+              <th>Zeitraum & Orte</th>
               <th>Status</th>
               <th>Gesamtpreis</th>
               <th className="text-end">Preisdetails</th>
@@ -56,7 +56,19 @@ export function BookingsTable() {
 
       row.appendChild(
         <td>
-          <div>{booking.start_date} bis {booking.end_date}</div>
+          <div className="fw-medium mb-1">{booking.start_date} <i className="bi bi-arrow-right mx-1 text-muted"></i> {booking.end_date}</div>
+          {booking.pickup_location && (
+            <div className="small text-muted mb-1">
+              <i className="bi bi-geo-alt-fill text-primary me-1"></i>
+              <strong>Abholung:</strong> {booking.pickup_location.name} ({booking.pickup_location.street}, {booking.pickup_location.city})
+            </div>
+          )}
+          {booking.return_location && (
+            <div className="small text-muted">
+              <i className="bi bi-geo-alt me-1"></i>
+              <strong>Rückgabe:</strong> {booking.return_location.name} ({booking.return_location.street}, {booking.return_location.city})
+            </div>
+          )}
         </td>
       );
 

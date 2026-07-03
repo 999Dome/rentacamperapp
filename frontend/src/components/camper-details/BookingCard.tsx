@@ -5,8 +5,9 @@ import 'flatpickr/dist/flatpickr.min.css';
 import { German } from 'flatpickr/dist/l10n/de.js';
 import { isLoggedIn, fetchCurrentUser } from '../../auth/auth.ts';
 import { DriversLicenseValidator } from '../../domain/validators/drivers-license-validator.ts';
+import type { LocationResponse } from '../../infrastructure/api/location-api-client.ts';
 
-export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: PricingRule[]) {
+export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: PricingRule[], locations: LocationResponse[]) {
   const pricePerNight = camper.price_per_night_base || camper.engine_power || 0;
   const card = (
     <div className="col-12 col-lg-4">
@@ -27,6 +28,24 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
               <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px", pointerEvents: "none" }}>Rückgabedatum</label>
               <div id="checkout-display" className="fw-medium text-dark text-truncate" style={{ paddingLeft: "4px", fontSize: "15px", minHeight: "22px" }}>Datum auswählen</div>
             </div>
+          </div>
+          <div className="p-2 pt-1 bg-white border-bottom border-dark-subtle">
+            <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px" }}>Abholort</label>
+            <select id="pickup-location" className="form-select border-0 shadow-none fw-medium text-dark" style={{ fontSize: "14px", paddingLeft: "4px", paddingRight: "4px", paddingTop: "0" }}>
+              <option value="">Bitte wählen...</option>
+              {locations.map(loc => (
+                <option value={loc.id}>{loc.name || loc.city}</option>
+              ))}
+            </select>
+          </div>
+          <div className="p-2 pt-1 bg-white border-bottom border-dark-subtle">
+            <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px" }}>Rückgabeort</label>
+            <select id="return-location" className="form-select border-0 shadow-none fw-medium text-dark" style={{ fontSize: "14px", paddingLeft: "4px", paddingRight: "4px", paddingTop: "0" }}>
+              <option value="">Bitte wählen...</option>
+              {locations.map(loc => (
+                <option value={loc.id}>{loc.name || loc.city}</option>
+              ))}
+            </select>
           </div>
           <div className="p-2 pt-1 bg-white">
             <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px" }}>Extras</label>
@@ -79,6 +98,9 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
 
   let startDateStr = "";
   let endDateStr = "";
+  let apiStartDate = "";
+  let apiEndDate = "";
+  let currentTotalPrice = 0;
   const bookButton = card.querySelector('#bookButton') as HTMLButtonElement;
   bookButton.disabled = true;
 
@@ -88,7 +110,8 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       import('../../api/driversLicenseAPI.ts').then(m => m.getDriversLicenseById(camper.required_license))
     ]).then(([user, license]) => {
       if (user && license) {
-        const userLicenseClass = (user as any).profile?.driver_license_class;
+        const userProfile = user as unknown as { profile?: { driver_license_class?: string | null } | null };
+        const userLicenseClass = userProfile.profile?.driver_license_class;
         const requiredLicenseClass = license.class;
         const isLicensed = DriversLicenseValidator.isLicensedToDrive(userLicenseClass, requiredLicenseClass);
         if (!isLicensed) {
@@ -104,19 +127,57 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
     });
   }
 
-  bookButton.addEventListener('click', () => {
-    const checkoutData = {
-      camperId: camper.id,
-      startDate: startDateStr,
-      endDate: endDateStr,
-      addons: selectedAddons
-    };
-    sessionStorage.setItem('pendingCheckout', JSON.stringify(checkoutData));
-
-    if (isLoggedIn()) {
-      window.location.href = '/pages/checkout/';
-    } else {
+  bookButton.addEventListener('click', async () => {
+    if (!isLoggedIn()) {
       window.location.href = '/pages/account/';
+      return;
+    }
+
+    const pickupSelect = card.querySelector('#pickup-location') as HTMLSelectElement;
+    const returnSelect = card.querySelector('#return-location') as HTMLSelectElement;
+    
+    try {
+      bookButton.disabled = true;
+      bookButton.textContent = 'Reserviert...';
+
+      const user = await fetchCurrentUser();
+      if (!user || !user.id) throw new Error('User not found');
+
+      const { createBooking } = await import('../../api/bookingsAPI.ts');
+      
+      const bookingData = {
+        camper_id: camper.id,
+        user_id: user.id,
+        start_date: apiStartDate,
+        end_date: apiEndDate,
+        total_price: currentTotalPrice,
+        addons: selectedAddons,
+        pickup_location_id: pickupSelect?.value || undefined,
+        return_location_id: returnSelect?.value || undefined,
+      };
+
+      const booking = await createBooking(bookingData);
+
+      const checkoutData = {
+        bookingId: booking.id,
+        expiresAt: booking.expires_at,
+        camperId: camper.id,
+        startDate: startDateStr,
+        endDate: endDateStr,
+        apiStartDate: apiStartDate,
+        apiEndDate: apiEndDate,
+        addons: selectedAddons,
+        pickupLocationId: pickupSelect?.value || undefined,
+        returnLocationId: returnSelect?.value || undefined,
+      };
+      
+      sessionStorage.setItem('pendingCheckout', JSON.stringify(checkoutData));
+      window.location.href = '/pages/checkout/';
+    } catch (err) {
+      console.error(err);
+      alert('Fehler bei der Reservierung. Möglicherweise ist das Fahrzeug in diesem Zeitraum bereits ausgebucht.');
+      bookButton.disabled = false;
+      bookButton.textContent = 'Reservieren';
     }
   });
 
@@ -125,7 +186,10 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
   const receiptTotal = card.querySelector('#receipt-total') as HTMLElement;
 
   const triggerCalculation = async () => {
-    if (!startDateStr || !endDateStr) {
+    const pickupSelect = card.querySelector('#pickup-location') as HTMLSelectElement;
+    const returnSelect = card.querySelector('#return-location') as HTMLSelectElement;
+    
+    if (!startDateStr || !endDateStr || !pickupSelect?.value || !returnSelect?.value) {
       receiptContainer.classList.add('d-none');
       bookButton.disabled = true;
       updateStickyPosition();
@@ -174,6 +238,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
         addRow(`${addon.name}`, `${addon.cost.toFixed(2)} €`);
       });
 
+      currentTotalPrice = result.totalAmount;
       receiptTotal.textContent = `${result.totalAmount.toFixed(2)} €`;
       
       const receiptDeposit = card.querySelector('#receipt-deposit') as HTMLElement;
@@ -194,7 +259,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
   };
 
   if (wrapper) {
-    flatpickr(wrapper, {
+    const fp = flatpickr(wrapper, {
       mode: "range",
       minDate: "today",
       showMonths: window.innerWidth > 768 ? 2 : 1,
@@ -203,22 +268,34 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       onChange: function(selectedDates, _dateStr, instance) {
         if (selectedDates.length > 0) {
           startDateStr = instance.formatDate(selectedDates[0], "d.m.Y");
+          apiStartDate = instance.formatDate(selectedDates[0], "Y-m-d");
           checkinDisplay.textContent = startDateStr;
         } else {
           startDateStr = "";
+          apiStartDate = "";
           checkinDisplay.textContent = "Datum auswählen";
         }
         
         if (selectedDates.length > 1) {
           endDateStr = instance.formatDate(selectedDates[1], "d.m.Y");
+          apiEndDate = instance.formatDate(selectedDates[1], "Y-m-d");
           checkoutDisplay.textContent = endDateStr;
         } else {
           endDateStr = "";
+          apiEndDate = "";
           checkoutDisplay.textContent = "Datum auswählen";
         }
         
         triggerCalculation();
       }
+    });
+
+    import('../../api/bookingsAPI.ts').then(({ getBlockedDates }) => {
+      getBlockedDates(camper.id).then(response => {
+        if (response.blockedRanges && response.blockedRanges.length > 0) {
+          fp.set('disable', response.blockedRanges);
+        }
+      }).catch(console.error);
     });
   }
 
@@ -250,6 +327,11 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       }
     }
   };
+
+  const pickupSelect = card.querySelector('#pickup-location') as HTMLSelectElement;
+  const returnSelect = card.querySelector('#return-location') as HTMLSelectElement;
+  if (pickupSelect) pickupSelect.addEventListener('change', triggerCalculation);
+  if (returnSelect) returnSelect.addEventListener('change', triggerCalculation);
 
   setTimeout(updateStickyPosition, 100);
   window.addEventListener('resize', updateStickyPosition);

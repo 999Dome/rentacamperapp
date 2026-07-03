@@ -5,6 +5,8 @@ export class CreateBookingDto {
   end_date: string;
   total_price: number;
   addons?: string[];
+  pickup_location_id?: string;
+  return_location_id?: string;
 }
 
 export class UpdateBookingStatusDto {

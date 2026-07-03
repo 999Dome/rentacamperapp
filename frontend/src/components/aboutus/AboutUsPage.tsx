@@ -1,17 +1,19 @@
 import { createElement } from "../../utils/createElement.ts";
 import {
   AboutUsHero,
-  Location,
+  LocationSection,
   OpeningHours,
   Staff,
   Impressum
 } from "./AboutUsComponents.tsx";
 
-export function AboutUsPage() {
+import type { LocationResponse } from "../../infrastructure/api/location-api-client.ts";
+
+export function AboutUsPage(locations: LocationResponse[]) {
   return (
     <div className="container py-5" style={{ minHeight: "80vh" }}>
       <AboutUsHero />
-      <Location />
+      <LocationSection locations={locations} />
       <OpeningHours />
       <Staff />
       <Impressum />

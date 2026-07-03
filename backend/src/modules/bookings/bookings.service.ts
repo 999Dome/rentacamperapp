@@ -10,6 +10,11 @@ import { CampersRepository } from '../../infrastructure/repositories/camper.repo
 import type { IProfileRepository } from '../../infrastructure/repositories/profile.repository';
 import { PROFILE_REPOSITORY_TOKEN } from '../../infrastructure/repositories/profile.repository';
 import { DriversLicenseService } from '../drivers_license/drivers_license.service';
+import { CamperBlockingRepository } from '../../infrastructure/repositories/camper_blocking.repository';
+import { PdfService } from '../pdf/pdf.service';
+import { MailService } from '../mail/mail.service';
+import { SupabaseService } from '../../supabase/supabase.service';
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class BookingsService {
@@ -20,7 +25,13 @@ export class BookingsService {
     @Inject(PROFILE_REPOSITORY_TOKEN)
     private readonly profileRepository: IProfileRepository,
     private readonly driversLicenseService: DriversLicenseService,
+    private readonly camperBlockingRepository: CamperBlockingRepository,
+    private readonly pdfService: PdfService,
+    private readonly mailService: MailService,
+    private readonly supabaseService: SupabaseService,
   ) {}
+
+  private readonly logger = new Logger(BookingsService.name);
 
   async createBooking(createBookingDto: CreateBookingDto) {
     // 1. Validate drivers license class
@@ -42,6 +53,56 @@ export class BookingsService {
       );
     }
 
+    // 2. Validate dates
+    const startDate = new Date(createBookingDto.start_date);
+    const endDate = new Date(createBookingDto.end_date);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    if (startDate < now) {
+      throw new BadRequestException('Startdatum muss in der Zukunft liegen.');
+    }
+    if (startDate >= endDate) {
+      throw new BadRequestException('Startdatum muss vor dem Enddatum liegen.');
+    }
+
+    // 3. Buffer calculation (3 days before and after)
+    const bufferedStartDate = new Date(startDate);
+    bufferedStartDate.setDate(startDate.getDate() - 3);
+
+    const bufferedEndDate = new Date(endDate);
+    bufferedEndDate.setDate(endDate.getDate() + 3);
+
+    const bufferedStartStr = bufferedStartDate.toISOString().split('T')[0];
+    const bufferedEndStr = bufferedEndDate.toISOString().split('T')[0];
+
+    // 4. Overlap Check
+    const overlappingBookings =
+      await this.bookingRepository.findOverlappingBookings(
+        createBookingDto.camper_id,
+        bufferedStartStr,
+        bufferedEndStr,
+      );
+
+    if (overlappingBookings && overlappingBookings.length > 0) {
+      throw new BadRequestException(
+        'Wohnmobil inklusive logistischer Pufferzeit im gewählten Zeitraum nicht verfügbar',
+      );
+    }
+
+    const overlappingBlockings =
+      await this.camperBlockingRepository.findOverlappingBlockings(
+        createBookingDto.camper_id,
+        bufferedStartStr,
+        bufferedEndStr,
+      );
+
+    if (overlappingBlockings && overlappingBlockings.length > 0) {
+      throw new BadRequestException(
+        'Wohnmobil ist in diesem Zeitraum durch den Vermieter blockiert.',
+      );
+    }
+
     const command: CreateBookingCommand = {
       camperId: createBookingDto.camper_id,
       userId: createBookingDto.user_id,
@@ -49,10 +110,13 @@ export class BookingsService {
       endDate: createBookingDto.end_date,
       totalPrice: createBookingDto.total_price,
       addonIds: createBookingDto.addons,
+      pickupLocationId: createBookingDto.pickup_location_id,
+      returnLocationId: createBookingDto.return_location_id,
     };
 
     try {
-      return await this.bookingRepository.create(command);
+      const newBooking = await this.bookingRepository.create(command);
+      return newBooking;
     } catch (error) {
       throw new BadRequestException(
         error instanceof Error ? error.message : 'Failed to create booking',
@@ -85,7 +149,78 @@ export class BookingsService {
     status: 'pending' | 'confirmed' | 'completed' | 'cancelled',
   ) {
     try {
-      return await this.bookingRepository.updateStatus(bookingId, status);
+      const updatedBooking = await this.bookingRepository.updateStatus(
+        bookingId,
+        status,
+      );
+
+      if (status === 'confirmed') {
+        try {
+          const booking = await this.bookingRepository.findById(bookingId);
+          if (booking) {
+            const camper = await this.campersRepository.findById(
+              booking.camper_id,
+            );
+            const profile = await this.profileRepository.findById(
+              booking.user_id,
+            );
+
+            const { data: userData } =
+              await this.supabaseService.client.auth.admin.getUserById(
+                booking.user_id,
+              );
+            const customerEmail = userData?.user?.email || 'kunde@example.com';
+
+            const invoiceData = {
+              invoiceNumber: `RE-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+              invoiceDate: new Date(),
+              customerName: `${profile.first_name} ${profile.last_name}`,
+              customerEmail: customerEmail,
+              camperName: camper.name || 'Wohnmobil',
+              startDate: booking.start_date,
+              endDate: booking.end_date,
+              pickupLocation:
+                (booking.pickup_location_id as string) || undefined,
+              returnLocation:
+                (booking.return_location_id as string) || undefined,
+              netPrice: booking.total_price / 1.19,
+              taxAmount: booking.total_price - booking.total_price / 1.19,
+              grossPrice: booking.total_price,
+              paymentMethod: 'Vorkasse / Stripe / PayPal',
+            };
+
+            const pdfBuffer =
+              await this.pdfService.generateInvoice(invoiceData);
+
+            await this.mailService.sendEmail({
+              to: customerEmail,
+              subject: 'Ihre Buchungsbestätigung & Rechnung - Rent-A-Camper',
+              html: `<h1>Vielen Dank für Ihre Buchung!</h1>
+                     <p>Hallo ${profile.first_name},</p>
+                     <p>Ihre Buchung für das Wohnmobil "${camper.name || 'Wohnmobil'}" war erfolgreich.</p>
+                     <p>Im Anhang finden Sie Ihre Rechnung als PDF-Dokument.</p>
+                     <p>Gute Reise!</p>`,
+              attachments: [
+                {
+                  filename: `Rechnung_${invoiceData.invoiceNumber}.pdf`,
+                  content: pdfBuffer,
+                },
+              ],
+            });
+
+            this.logger.log(
+              `Invoice sent successfully for confirmed booking ${bookingId}`,
+            );
+          }
+        } catch (emailError) {
+          this.logger.error(
+            'Error generating PDF or sending email for confirmed booking',
+            emailError,
+          );
+        }
+      }
+
+      return updatedBooking;
     } catch (error) {
       throw new BadRequestException(
         error instanceof Error
@@ -93,5 +228,38 @@ export class BookingsService {
           : 'Failed to update booking status',
       );
     }
+  }
+
+  async getBlockedDates(
+    camperId: string,
+  ): Promise<{ blockedRanges: { from: string; to: string }[] }> {
+    const validBookings =
+      await this.bookingRepository.findValidBookingsByCamperId(camperId);
+    const manualBlockings =
+      await this.camperBlockingRepository.findByCamperId(camperId);
+
+    const blockedRanges: { from: string; to: string }[] = [];
+
+    for (const booking of validBookings) {
+      const fromDate = new Date(booking.start_date);
+      fromDate.setDate(fromDate.getDate() - 3);
+
+      const toDate = new Date(booking.end_date);
+      toDate.setDate(toDate.getDate() + 3);
+
+      blockedRanges.push({
+        from: fromDate.toISOString().split('T')[0],
+        to: toDate.toISOString().split('T')[0],
+      });
+    }
+
+    for (const blocking of manualBlockings) {
+      blockedRanges.push({
+        from: new Date(blocking.start_date).toISOString().split('T')[0],
+        to: new Date(blocking.end_date).toISOString().split('T')[0],
+      });
+    }
+
+    return { blockedRanges };
   }
 }

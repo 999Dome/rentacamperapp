@@ -8,6 +8,9 @@ export interface Booking {
   end_date: string;
   total_price: number;
   status: BookingStatus;
+  expires_at?: string | null;
+  pickup_location_id?: string | null;
+  return_location_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +22,8 @@ export interface CreateBookingCommand {
   endDate: string;
   totalPrice: number;
   addonIds?: string[];
+  pickupLocationId?: string;
+  returnLocationId?: string;
 }
 
 export interface BookingWithRelations {
@@ -30,9 +35,20 @@ export interface BookingWithRelations {
   end_date: string;
   total_price: number;
   status: BookingStatus;
+  expires_at?: string | null;
   addons_price: number;
   addons_detail: Array<{
     name: string;
     price: number;
   }>;
+  pickup_location?: {
+    city: string;
+    street: string;
+    name?: string;
+  };
+  return_location?: {
+    city: string;
+    street: string;
+    name?: string;
+  };
 }

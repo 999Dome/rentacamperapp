@@ -37,12 +37,13 @@ async function renderCamperDetails() {
   try {
     const campersClient = new CampersAPIClient();
 
-    const [camper, image, features, addons, pricingRules] = await Promise.all([
+    const [camper, image, features, addons, pricingRules, locations] = await Promise.all([
       campersClient.getCamperById(camperId),
       getAllCamperImagesById(camperId),
       getCamperFeaturesByCamperId(camperId),
       getAllAddons(),
-      getAllPricingRules()
+      getAllPricingRules(),
+      import('../../api/locationsAPI.ts').then(m => m.getAllLocations())
     ]);
 
     const licenseRaw = await getDriversLicenseById(camper.required_license);
@@ -65,7 +66,7 @@ async function renderCamperDetails() {
     contentLayout.className = "row g-4 mt-4 mb-5";
 
     contentLayout.appendChild(CamperInfo(camper, features, license));
-    contentLayout.appendChild(BookingCard(camper, addons, pricingRules));
+    contentLayout.appendChild(BookingCard(camper, addons, pricingRules, locations));
 
     mainContainer.appendChild(contentLayout);
     document.body.appendChild(mainContainer);

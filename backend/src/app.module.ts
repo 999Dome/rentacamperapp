@@ -14,6 +14,12 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { BookingAddonsModule } from './modules/booking_addons/booking_addons.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 
+import { LocationsModule } from './modules/locations/locations.module';
+import { CamperBlockingsModule } from './modules/camper_blockings/camper_blockings.module';
+import { MailModule } from './modules/mail/mail.module';
+import { PdfModule } from './modules/pdf/pdf.module';
+import { SupportModule } from './modules/support/support.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -33,6 +39,11 @@ import { PaymentsModule } from './modules/payments/payments.module';
     BookingAddonsModule,
     PaymentsModule,
     CamperOwnerModule,
+    LocationsModule,
+    CamperBlockingsModule,
+    MailModule,
+    PdfModule,
+    SupportModule,
   ],
 })
 export class AppModule {}

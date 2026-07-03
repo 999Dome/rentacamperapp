@@ -7,6 +7,7 @@ export async function createStripeCheckoutSession(
   amount: number,
   startDate: string,
   endDate: string,
+  bookingId: string,
 ): Promise<{ url: string }> {
   return client.createStripeSession({
     camperId,
@@ -14,6 +15,7 @@ export async function createStripeCheckoutSession(
     bookingDetails: {
       startDate,
       endDate,
+      bookingId,
     },
   });
 }

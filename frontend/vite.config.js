@@ -56,6 +56,7 @@ export default defineConfig({
         aboutus: resolve(__dirname, "src/pages/aboutus/index.html"),
         account: resolve(__dirname, "src/pages/account/index.html"),
         camperDetails: resolve(__dirname, "src/pages/camper-details/index.html"),
+        contact: resolve(__dirname, "src/pages/contact/index.html"),
       },
     },
   },

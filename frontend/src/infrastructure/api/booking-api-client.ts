@@ -7,6 +7,8 @@ export interface BookingCreateRequest {
   end_date: string;
   total_price: number;
   addons?: string[];
+  pickup_location_id?: string;
+  return_location_id?: string;
 }
 
 export interface BookingAddonDetail {
@@ -24,6 +26,16 @@ export interface BookingResponse {
   addons_price: number;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   addons_detail: BookingAddonDetail[];
+  pickup_location?: {
+    city: string;
+    street: string;
+    name?: string;
+  };
+  return_location?: {
+    city: string;
+    street: string;
+    name?: string;
+  };
 }
 
 export class BookingAPIClient extends BaseAPIClient {
@@ -47,5 +59,9 @@ export class BookingAPIClient extends BaseAPIClient {
       method: 'PUT',
       body: JSON.stringify({ status }),
     });
+  }
+
+  async getBlockedDates(camperId: string): Promise<{ blockedRanges: { from: string; to: string }[] }> {
+    return await this.request<{ blockedRanges: { from: string; to: string }[] }>(`bookings/campers/${camperId}/blocked-dates`);
   }
 }

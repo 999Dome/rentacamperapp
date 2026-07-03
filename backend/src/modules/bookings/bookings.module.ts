@@ -7,6 +7,9 @@ import { BOOKING_REPOSITORY_TOKEN } from '../../infrastructure/repositories/book
 import { DriversLicenseModule } from '../drivers_license/drivers_license.module';
 import { ProfilesModule } from '../profiles/profiles.module';
 import { CampersModule } from '../campers/camper.module';
+import { CamperBlockingsModule } from '../camper_blockings/camper_blockings.module';
+import { PdfModule } from '../pdf/pdf.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { CampersModule } from '../campers/camper.module';
     DriversLicenseModule,
     ProfilesModule,
     CampersModule,
+    CamperBlockingsModule,
+    PdfModule,
+    MailModule,
   ],
   controllers: [BookingsController],
   providers: [

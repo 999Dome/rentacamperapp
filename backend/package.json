@@ -29,7 +29,9 @@
     "@paypal/checkout-server-sdk": "^1.0.3",
     "@supabase/supabase-js": "^2.108.2",
     "axios": "^1.16.1",
+    "pdfkit": "^0.19.1",
     "reflect-metadata": "^0.2.2",
+    "resend": "^6.16.0",
     "rxjs": "^7.8.1",
     "stripe": "^22.3.0",
     "ws": "^8.21.0"
@@ -43,6 +45,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
+    "@types/pdfkit": "^0.17.6",
     "@types/supertest": "^7.0.0",
     "@types/ws": "^8.18.1",
     "eslint": "^9.18.0",

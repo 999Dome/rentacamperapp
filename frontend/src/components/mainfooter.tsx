@@ -1,4 +1,5 @@
 import { createElement, createSVGElement } from "../utils/createElement.ts";
+import { initCookieBanner } from "./common/CookieBanner.tsx";
 
 function createInstagramIcon() {
   return createSVGElement(
@@ -35,7 +36,7 @@ function createTwitterIcon() {
 }
 
 export function MainFooter() {
-  return (
+  const footer = (
     <footer className="bg-dark text-white pt-5 pb-4 mt-auto border-top border-secondary border-opacity-25">
       <div className="container">
         <div className="row gy-4">
@@ -154,4 +155,11 @@ export function MainFooter() {
       </div>
     </footer>
   );
+  
+  // Initialize the cookie banner globally when footer is created
+  setTimeout(() => {
+    initCookieBanner();
+  }, 500);
+
+  return footer;
 }

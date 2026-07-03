@@ -16,7 +16,18 @@ export interface BookingResponse {
   total_price: number;
   addons_price: number;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  expires_at?: string | null;
   addons_detail: BookingAddonDetail[];
+  pickup_location?: {
+    city: string;
+    street: string;
+    name?: string;
+  };
+  return_location?: {
+    city: string;
+    street: string;
+    name?: string;
+  };
 }
 
 export async function createBooking(data: {
@@ -26,6 +37,8 @@ export async function createBooking(data: {
   end_date: string;
   total_price: number;
   addons?: string[];
+  pickup_location_id?: string;
+  return_location_id?: string;
 }): Promise<BookingResponse> {
   return await client.createBooking(data);
 }
@@ -47,4 +60,8 @@ export async function updateBookingStatus(
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled',
 ): Promise<BookingResponse> {
   return await client.updateBookingStatus(bookingId, status);
+}
+
+export async function getBlockedDates(camperId: string): Promise<{ blockedRanges: { from: string; to: string }[] }> {
+  return await client.getBlockedDates(camperId);
 }

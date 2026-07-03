@@ -2,7 +2,7 @@ import { createElement } from "../../utils/createElement.ts";
 import { fetchCurrentUser, isLoggedIn } from "../../auth/auth.ts";
 import { getCamperById, calculatePrice } from "../../api/campersAPI.ts";
 import { getCamperPrimaryImageById } from "../../api/camperImagesAPI.ts";
-import { createBooking } from "../../api/bookingsAPI.ts";
+import { updateBookingStatus } from "../../api/bookingsAPI.ts";
 import { createStripeCheckoutSession, createPayPalOrder, capturePayPalOrder } from "../../api/paymentsAPI.ts";
 import type { MockCamper } from "../../utils/mockData.ts";
 import { getDriversLicenseById } from "../../api/driversLicenseAPI.ts";
@@ -38,10 +38,16 @@ interface PriceCalculationResult {
 }
 
 interface PendingBookingData {
+  bookingId: string;
+  expiresAt: string;
   camperId: string;
   startDate: string;
   endDate: string;
+  apiStartDate: string;
+  apiEndDate: string;
   addons: string[];
+  pickupLocationId?: string;
+  returnLocationId?: string;
 }
 
 export function CheckoutPage() {
@@ -52,6 +58,7 @@ export function CheckoutPage() {
         <p className="text-muted fs-5">
           Fast geschafft! Überprüfe deine Daten und schließe die Buchung ab.
         </p>
+        <div id="countdown-timer-container" className="mt-3"></div>
       </div>
       <div className="row g-5" id="checkout-content">
         <div className="col-12 text-center py-5">
@@ -76,13 +83,13 @@ export function CheckoutPage() {
     }
 
     const pendingData = JSON.parse(pendingDataStr) as PendingBookingData;
-    const { camperId, startDate, endDate, addons } = pendingData;
+    const { camperId, apiStartDate, apiEndDate, addons } = pendingData;
 
     try {
       const [user, camperRaw, priceDataRaw] = await Promise.all([
         fetchCurrentUser(),
         getCamperById(camperId),
-        calculatePrice(camperId, startDate, endDate, addons),
+        calculatePrice(camperId, apiStartDate, apiEndDate, addons),
       ]);
 
       if (!user) {
@@ -138,6 +145,53 @@ export function CheckoutPage() {
     requiredLicenseClass: string,
   ) => {
     content.innerHTML = "";
+    
+    // Timer Logic
+    const timerContainer = document.getElementById("countdown-timer-container");
+    let timerInterval: number | null = null;
+
+    if (timerContainer && pendingData.expiresAt) {
+      const updateTimer = () => {
+        const now = new Date().getTime();
+        const expireTime = new Date(pendingData.expiresAt).getTime();
+        const distance = expireTime - now;
+
+        if (distance < 0) {
+          if (timerInterval) clearInterval(timerInterval);
+          timerContainer.innerHTML = `<div class="alert alert-danger d-inline-block fw-bold">Die Reservierungszeit ist abgelaufen. Bitte starte die Buchung erneut.</div>`;
+          
+          const confirmBtn = document.getElementById("confirm-payment-btn") as HTMLButtonElement;
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = "Reservierung abgelaufen";
+          }
+          
+          const paypalContainer = document.getElementById("paypal-buttons-container");
+          if (paypalContainer) paypalContainer.style.display = "none";
+          
+          setTimeout(() => {
+            sessionStorage.removeItem("pendingCheckout");
+            window.location.href = `/pages/camper-details/?id=${camper.id}`;
+          }, 3000);
+          return;
+        }
+
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        const formattedMin = minutes.toString().padStart(2, '0');
+        const formattedSec = seconds.toString().padStart(2, '0');
+
+        timerContainer.innerHTML = `
+          <div class="alert alert-warning d-inline-block fw-bold shadow-sm" style="border-radius: 12px; font-size: 1.1rem;">
+            ⏳ Deine Reservierung läuft ab in: <span class="text-danger fs-4">${formattedMin}:${formattedSec}</span> Minuten
+          </div>
+        `;
+      };
+      
+      updateTimer();
+      timerInterval = window.setInterval(updateTimer, 1000);
+    }
 
     const userLicenseClass = user.profile?.driver_license_class;
     const isLicensed = DriversLicenseValidator.isLicensedToDrive(userLicenseClass, requiredLicenseClass);
@@ -337,40 +391,68 @@ export function CheckoutPage() {
           (import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb");
         paypalScript.async = true;
         paypalScript.onload = () => {
-          if ((window as any).paypal) {
-            (window as any).paypal
+          const paypalWindow = window as unknown as {
+            paypal?: {
+              Buttons: (options: {
+                createOrder: () => Promise<string>;
+                onApprove: (data: { orderID: string }) => Promise<void>;
+                onError: () => void;
+              }) => {
+                render: (container: HTMLElement | null) => void;
+              };
+            };
+          };
+
+          if (paypalWindow.paypal) {
+            paypalWindow.paypal
               .Buttons({
                 createOrder: async () => {
                   const response = await createPayPalOrder(
                     camper.id,
                     priceData.totalAmount,
-                    pendingData.startDate,
-                    pendingData.endDate
+                    pendingData.apiStartDate,
+                    pendingData.apiEndDate
                   );
                   return response.id;
                 },
-                onApprove: async (data: any) => {
+                onApprove: async (data: { orderID: string }) => {
                   try {
                     confirmButton.disabled = true;
                     confirmButton.textContent = "Zahlung wird verarbeitet...";
 
                     await capturePayPalOrder(data.orderID);
 
-                    await createBooking({
-                      camper_id: camper.id,
-                      user_id: user.id!,
-                      start_date: pendingData.startDate,
-                      end_date: pendingData.endDate,
-                      total_price: priceData.totalAmount,
-                      addons: pendingData.addons,
-                    });
+                    await updateBookingStatus(pendingData.bookingId, 'confirmed');
 
                     alert("Zahlung erfolgreich! Buchung abgeschlossen.");
                     sessionStorage.removeItem("pendingCheckout");
-                    window.location.href = "/pages/account/";
+                    window.location.href = `/pages/checkout-success/?bookingId=${pendingData.bookingId}&camper=${pendingData.camperId}`;
                   } catch (err) {
                     console.error(err);
-                    alert("Fehler bei der Zahlungsbestätigung. Bitte versuchen Sie es erneut.");
+                    const errorMsg = err instanceof Error ? err.message : String(err);
+                    let displayMsg = "Fehler bei der Zahlungsbestätigung. Bitte versuchen Sie es erneut.";
+                    if (errorMsg.includes("400")) {
+                      try {
+                        const match = errorMsg.match(/\{.*\}/);
+                        if (match) {
+                          const parsed = JSON.parse(match[0]) as { message?: string | string[] };
+                          if (parsed.message) displayMsg = Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message;
+                        }
+                      } catch {
+                        // Ignore JSON parse errors
+                      }
+                    }
+                    
+                    const existingAlert = document.getElementById("booking-error-alert");
+                    if (existingAlert) existingAlert.remove();
+                    
+                    const errorAlert = document.createElement("div");
+                    errorAlert.id = "booking-error-alert";
+                    errorAlert.className = "alert alert-danger mt-3";
+                    errorAlert.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${displayMsg}`;
+                    
+                    confirmButton.parentElement?.insertBefore(errorAlert, confirmButton);
+
                     confirmButton.disabled = false;
                     confirmButton.textContent = "Zahlungspflichtig buchen";
                   }
@@ -430,8 +512,9 @@ export function CheckoutPage() {
           const session = await createStripeCheckoutSession(
             camper.id,
             priceData.totalAmount,
-            pendingData.startDate,
-            pendingData.endDate
+            pendingData.apiStartDate,
+            pendingData.apiEndDate,
+            pendingData.bookingId
           );
 
           if (session.url) {
@@ -440,7 +523,30 @@ export function CheckoutPage() {
         }
       } catch (err) {
         console.error(err);
-        alert("Fehler beim Zahlungsprozess. Bitte versuchen Sie es erneut.");
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        let displayMsg = "Fehler beim Zahlungsprozess. Bitte versuchen Sie es erneut.";
+        if (errorMsg.includes("400")) {
+          try {
+            const match = errorMsg.match(/\{.*\}/);
+            if (match) {
+              const parsed = JSON.parse(match[0]) as { message?: string | string[] };
+              if (parsed.message) displayMsg = Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message;
+            }
+          } catch {
+            // Ignore JSON parse errors
+          }
+        }
+        
+        const existingAlert = document.getElementById("booking-error-alert");
+        if (existingAlert) existingAlert.remove();
+        
+        const errorAlert = document.createElement("div");
+        errorAlert.id = "booking-error-alert";
+        errorAlert.className = "alert alert-danger mt-3";
+        errorAlert.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${displayMsg}`;
+        
+        confirmButton.parentElement?.insertBefore(errorAlert, confirmButton);
+
         confirmButton.disabled = false;
         confirmButton.textContent = "Zahlungspflichtig buchen";
       }
