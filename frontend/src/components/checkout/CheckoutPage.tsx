@@ -396,6 +396,7 @@ export function CheckoutPage() {
           const paypalWindow = window as unknown as {
             paypal?: {
               Buttons: (options: {
+                onClick?: (data: unknown, actions: { resolve: () => Promise<void>; reject: () => Promise<void> }) => void | Promise<void>;
                 createOrder: () => Promise<string>;
                 onApprove: (data: { orderID: string }) => Promise<void>;
                 onError: () => void;
@@ -408,7 +409,7 @@ export function CheckoutPage() {
           if (paypalWindow.paypal) {
             paypalWindow.paypal
               .Buttons({
-                onClick: (data: unknown, actions: any) => {
+                onClick: (data: unknown, actions: { resolve: () => Promise<void>; reject: () => Promise<void> }) => {
                   if (!checkoutTermsAccepted) {
                     alert("Bitte akzeptieren Sie die AGB und Datenschutzerklärung, um fortzufahren.");
                     return actions.reject();
