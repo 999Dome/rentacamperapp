@@ -3,10 +3,17 @@ export const Fragment = Symbol('Fragment');
 type Attrs = Record<string, unknown> | null;
 
 export function createElement(
-  tag: string | typeof Fragment,
+  tag:
+    | string
+    | typeof Fragment
+    | ((attrs: Attrs, ...children: unknown[]) => Element | DocumentFragment),
   attrs: Attrs,
   ...children: unknown[]
 ): Element | DocumentFragment {
+  if (typeof tag === 'function') {
+    return tag(attrs, ...children);
+  }
+
   if (tag === Fragment) {
     const frag = document.createDocumentFragment();
     children.forEach((c) => appendChild(frag, c));

@@ -7,8 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
-  
-  
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -37,6 +37,142 @@ export type Database = {
           price?: number
         }
         Relationships: []
+      }
+      booking_addons: {
+        Row: {
+          addon_id: string
+          booking_id: string
+          id: string
+          price_at_booking: number
+        }
+        Insert: {
+          addon_id: string
+          booking_id: string
+          id?: string
+          price_at_booking: number
+        }
+        Update: {
+          addon_id?: string
+          booking_id?: string
+          id?: string
+          price_at_booking?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_addons_addon_id_fkey"
+            columns: ["addon_id"]
+            isOneToOne: false
+            referencedRelation: "addons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_addons_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          camper_id: string
+          created_at: string | null
+          end_date: string
+          expires_at: string | null
+          id: string
+          pickup_location_id: string | null
+          return_location_id: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["booking_status"]
+          total_price: number
+          user_id: string
+        }
+        Insert: {
+          camper_id: string
+          created_at?: string | null
+          end_date: string
+          expires_at?: string | null
+          id?: string
+          pickup_location_id?: string | null
+          return_location_id?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_price: number
+          user_id: string
+        }
+        Update: {
+          camper_id?: string
+          created_at?: string | null
+          end_date?: string
+          expires_at?: string | null
+          id?: string
+          pickup_location_id?: string | null
+          return_location_id?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_price?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_camper_id_fkey"
+            columns: ["camper_id"]
+            isOneToOne: false
+            referencedRelation: "campers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_pickup_location_id_fkey"
+            columns: ["pickup_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_return_location_id_fkey"
+            columns: ["return_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      camper_blockings: {
+        Row: {
+          camper_id: string
+          end_date: string
+          id: string
+          start_date: string
+        }
+        Insert: {
+          camper_id: string
+          end_date: string
+          id?: string
+          start_date: string
+        }
+        Update: {
+          camper_id?: string
+          end_date?: string
+          id?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camper_blockings_camper_id_fkey"
+            columns: ["camper_id"]
+            isOneToOne: false
+            referencedRelation: "campers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       camper_features: {
         Row: {
@@ -99,6 +235,39 @@ export type Database = {
             columns: ["camper_id"]
             isOneToOne: false
             referencedRelation: "campers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      camper_owner: {
+        Row: {
+          camper_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          camper_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          camper_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camper_owner_camper_id_fkey"
+            columns: ["camper_id"]
+            isOneToOne: true
+            referencedRelation: "campers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "camper_owner_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -185,7 +354,7 @@ export type Database = {
       }
       drivers_license: {
         Row: {
-          class: Database["public"]["Enums"][" driver's licenses"] | null
+          class: Database["public"]["Enums"]["drivers_licenses"] | null
           created_at: string
           id: string
           max_trailer_weight: number | null
@@ -194,7 +363,7 @@ export type Database = {
           value: number | null
         }
         Insert: {
-          class?: Database["public"]["Enums"][" driver's licenses"] | null
+          class?: Database["public"]["Enums"]["drivers_licenses"] | null
           created_at?: string
           id?: string
           max_trailer_weight?: number | null
@@ -203,7 +372,7 @@ export type Database = {
           value?: number | null
         }
         Update: {
-          class?: Database["public"]["Enums"][" driver's licenses"] | null
+          class?: Database["public"]["Enums"]["drivers_licenses"] | null
           created_at?: string
           id?: string
           max_trailer_weight?: number | null
@@ -231,6 +400,30 @@ export type Database = {
         }
         Relationships: []
       }
+      locations: {
+        Row: {
+          city: string
+          housenumber: number
+          id: string
+          plz: number
+          street: string
+        }
+        Insert: {
+          city?: string
+          housenumber?: number
+          id?: string
+          plz?: number
+          street?: string
+        }
+        Update: {
+          city?: string
+          housenumber?: number
+          id?: string
+          plz?: number
+          street?: string
+        }
+        Relationships: []
+      }
       pricing_rules: {
         Row: {
           description: string | null
@@ -254,36 +447,44 @@ export type Database = {
       }
       profiles: {
         Row: {
-          created_at: string
-          driver_license_class: string | null
-          firstname: string | null
+          drivers_license_class: string | null
+          first_name: string
           id: string
-          lastname: string | null
-          phone: string | null
-          role: string | null
-          user: string | null
+          is_admin: boolean
+          is_provider: boolean
+          is_renter: boolean
+          last_name: string
+          updated_at: string | null
         }
         Insert: {
-          created_at?: string
-          driver_license_class?: string | null
-          firstname?: string | null
-          id?: string
-          lastname?: string | null
-          phone?: string | null
-          role?: string | null
-          user?: string | null
+          drivers_license_class?: string | null
+          first_name: string
+          id: string
+          is_admin?: boolean
+          is_provider?: boolean
+          is_renter?: boolean
+          last_name: string
+          updated_at?: string | null
         }
         Update: {
-          created_at?: string
-          driver_license_class?: string | null
-          firstname?: string | null
+          drivers_license_class?: string | null
+          first_name?: string
           id?: string
-          lastname?: string | null
-          phone?: string | null
-          role?: string | null
-          user?: string | null
+          is_admin?: boolean
+          is_provider?: boolean
+          is_renter?: boolean
+          last_name?: string
+          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_drivers_license_class_fkey"
+            columns: ["drivers_license_class"]
+            isOneToOne: false
+            referencedRelation: "drivers_license"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -293,7 +494,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      " driver's licenses":
+      booking_status: "pending" | "confirmed" | "completed" | "cancelled"
+      drivers_licenses:
         | "Klasse B"
         | "Klasse B96"
         | "Klasse BE"
@@ -443,7 +645,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      " driver's licenses": [
+      booking_status: ["pending", "confirmed", "completed", "cancelled"],
+      drivers_licenses: [
         "Klasse B",
         "Klasse B96",
         "Klasse BE",

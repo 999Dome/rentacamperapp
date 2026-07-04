@@ -17,25 +17,36 @@ export function AboutUsHero() {
   );
 }
 
-export function Location() {
+import type { LocationResponse } from "../../infrastructure/api/location-api-client.ts";
+
+export function LocationSection({ locations }: { locations: LocationResponse[] }) {
   return (
     <section id="standort" className="panel reveal mb-5 p-4 rounded-4 bg-dark bg-opacity-25 border">
-      <h2 className="h3 fw-bold text-custom-red mb-3 custom-font-base">Standort</h2>
+      <h2 className="h3 fw-bold text-custom-red mb-3 custom-font-base">Unsere Stationen</h2>
       <div className="content split row g-4 align-items-center">
         <div className="text col-12 col-md-7">
           <p className="fs-5">
-            Unsere Zentrale befindet sich zentral gelegen — leicht erreichbar, mit ausreichend Parkplätzen für deinen Pkw während des Mietzeitraums.
+            Unsere Camper-Stationen befinden sich an zentralen Standorten — leicht erreichbar, mit ausreichend Parkplätzen für deinen Pkw während des Mietzeitraums.
           </p>
-          <address className="fs-5 fw-bold text-white mb-0">
-            Musterstraße 1<br />
-            12345 Musterstadt
-          </address>
+          <div className="locations-list d-flex flex-column gap-3">
+            {locations.length > 0 ? locations.map((loc) => (
+              <div className="location-item p-3 border rounded-3 bg-white bg-opacity-10 text-white">
+                <h5 className="fw-bold text-custom-light-blue mb-1"><i className="bi bi-geo-alt-fill me-2"></i>{loc.name || loc.city}</h5>
+                <address className="mb-0 text-white-50">
+                  {loc.street} {loc.housenumber || ''}<br />
+                  {loc.plz || ''} {loc.city}
+                </address>
+              </div>
+            )) : (
+              <p className="text-white-50">Stationen werden geladen...</p>
+            )}
+          </div>
         </div>
         <div className="map col-12 col-md-5">
           <iframe
-            src="https://www.openstreetmap.org/export/embed.html?bbox=9.0%2C48.0%2C9.1%2C48.1&amp;layer=mapnik"
+            src="https://www.openstreetmap.org/export/embed.html?bbox=8.0%2C47.0%2C10.0%2C49.0&amp;layer=mapnik"
             className="w-100 rounded-3 border shadow-sm"
-            style={{ height: "250px" }}
+            style={{ height: "100%", minHeight: "350px" }}
             loading="lazy"
           ></iframe>
         </div>

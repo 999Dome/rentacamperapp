@@ -8,7 +8,7 @@ COPY shared/package*.json ./shared/
 
 # install
 WORKDIR /app/backend
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # copy source code
 WORKDIR /app

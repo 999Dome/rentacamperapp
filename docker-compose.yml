@@ -9,6 +9,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+    env_file:
+      - backend/.env
     networks:
       - camper-network
 
@@ -22,6 +24,8 @@ services:
       - backend
     networks:
       - camper-network
+    environment:
+      - VITE_BACKEND_URL=http://localhost:3000
 
 networks:
   camper-network:

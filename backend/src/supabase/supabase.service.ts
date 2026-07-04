@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '../types/supabase';
+import ws from 'ws';
 
 @Injectable()
 export class SupabaseService implements OnModuleInit {
@@ -17,6 +18,17 @@ export class SupabaseService implements OnModuleInit {
     if (!url || !secretKey) {
       throw new Error('Supabase variables are missing!');
     }
-    this.supabaseClient = createClient<Database>(url, secretKey);
+
+    const transportConstructor = ws as unknown as new (
+      address: string,
+      protocols?: string | string[],
+      options?: unknown,
+    ) => WebSocket;
+
+    this.supabaseClient = createClient<Database>(url, secretKey, {
+      realtime: {
+        transport: transportConstructor,
+      },
+    });
   }
 }

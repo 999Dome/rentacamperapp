@@ -1,22 +1,15 @@
+import { BaseAPIClient } from '../infrastructure/api/base-api-client';
 import type { CamperFeature } from "../types/interface.ts";
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+const client = new BaseAPIClient();
 
 export async function getCamperFeaturesByCamperId(
   camperId: string,
 ): Promise<CamperFeature[]> {
   try {
-    const url = new URL(`camper-features/${camperId}`, API_BASE_URL).toString();
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`Fetch error ${response.status} for ${url}:`, text);
-    }
-
-    return await response.json();
+    return await client.request<CamperFeature[]>(`camper-features/${camperId}`);
   } catch (error) {
-    console.error("Error while loading the camper features:", error);
+    console.error('Error while loading the camper features:', error);
     return [];
   }
 }

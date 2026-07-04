@@ -1,21 +1,13 @@
+import { BaseAPIClient } from '../infrastructure/api/base-api-client';
 import type { DriversLicense } from "../types/interface.ts";
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+const client = new BaseAPIClient();
 
-export async function getDriversLicenseById(id: string): Promise<DriversLicense> {
+export async function getDriversLicenseById(id: string): Promise<DriversLicense | null> {
   try {
-    const url = new URL(`drivers-license/${id}`, API_BASE_URL).toString();
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`Fetch error ${response.status} for ${url}:`, text);
-      return null as unknown as DriversLicense;
-    }
-
-    return await response.json();
+    return await client.request<DriversLicense>(`drivers-license/${id}`);
   } catch (error) {
-    console.error("Error while loading the drivers license:", error);
-    return null as unknown as DriversLicense;
+    console.error('Error while loading the drivers license:', error);
+    return null;
   }
 }

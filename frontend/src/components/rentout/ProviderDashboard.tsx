@@ -1,12 +1,8 @@
 import { createElement } from "../../utils/createElement.ts";
-import {
-  getMockCampers,
-  getMockBookings,
-  saveMockBookings,
-  getMockInquiries,
-  saveMockInquiries
-} from "../../utils/mockData.ts";
-import type { MockBooking } from "../../utils/mockData.ts";
+import { getAllCampers } from "../../api/campersAPI.ts";
+import { fetchBookingsByProvider, updateBookingStatus } from "../../api/bookingsAPI.ts";
+import type { BookingResponse } from "../../api/bookingsAPI.ts";
+import type { MockCamper } from "../../utils/mockData.ts";
 
 interface ProviderDashboardProps {
   ownerId: string;
@@ -14,8 +10,9 @@ interface ProviderDashboardProps {
 }
 
 export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardProps) {
-  const campers = getMockCampers().filter(c => c.owner_id === ownerId || c.owner_id === "user-1");
-  const camperIds = campers.map(c => c.id);
+  let campers: MockCamper[] = [];
+  let camperIds: string[] = [];
+  let bookings: BookingResponse[] = [];
 
   const container = (
     <div className="row g-4">
@@ -29,9 +26,6 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
             <div className="d-flex gap-2">
               <select id="statsCamperSelect" className="form-select form-select-sm rounded-pill" style={{ width: "180px" }}>
                 <option value="all">Alle Fahrzeuge</option>
-                {campers.map(c => (
-                  <option value={c.id}>{c.name}</option>
-                ))}
               </select>
               <select id="statsTimeSelect" className="form-select form-select-sm rounded-pill" style={{ width: "130px" }}>
                 <option value="year">Dieses Jahr</option>
@@ -47,7 +41,7 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
         <div className="card border-0 shadow-sm rounded-4 p-4 bg-white text-center h-100">
           <h5 className="text-muted small text-uppercase fw-bold mb-3">Gesamteinnahmen</h5>
           <div className="display-4 fw-bold text-custom-light-blue mb-2 custom-font-base" id="total-earnings-val">0.00 €</div>
-          <p className="text-muted small mb-0" id="earnings-sub">Basierend auf bestätigten und abgeschlossenen Buchungen</p>
+          <p className="text-muted small mb-0" id="earnings-sub">Umsatz in den letzten 365 Tagen</p>
         </div>
       </div>
 
@@ -58,14 +52,31 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
           <div className="progress rounded-pill mb-2" style={{ height: "10px" }}>
             <div className="progress-bar bg-custom-red" role="progressbar" style={{ width: "0%" }} id="occupancy-progress"></div>
           </div>
-          <p className="text-muted small mb-0" id="occupancy-sub">Auslastung im gewählten Zeitraum</p>
+          <p className="text-muted small mb-0" id="occupancy-sub">Buchungsgrad in den letzten 365 Tagen</p>
         </div>
       </div>
 
       <div className="col-12">
         <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
           <h4 className="fw-bold text-dark mb-4 custom-font-base">Mietanfragen</h4>
-          <div className="row g-3" id="inquiries-container"></div>
+          <div className="row g-3" id="inquiries-container">
+            {Array.from({ length: 2 }, () => (
+              <div className="col-12 col-md-6">
+                <div className="card border rounded-3 p-3 bg-light h-100 placeholder-glow">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="placeholder rounded-pill" style={{ width: "120px", height: "22px" }} />
+                    <span className="placeholder rounded" style={{ width: "140px", height: "14px" }} />
+                  </div>
+                  <div className="placeholder rounded mb-1" style={{ width: "60%", height: "20px" }} />
+                  <div className="placeholder rounded mb-3" style={{ width: "80%", height: "14px" }} />
+                  <div className="d-flex gap-2">
+                    <span className="placeholder rounded-pill w-50" style={{ height: "36px" }} />
+                    <span className="placeholder rounded-pill w-50" style={{ height: "36px" }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -75,7 +86,7 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
     const selectedCamper = (container.querySelector("#statsCamperSelect") as HTMLSelectElement).value;
     const selectedTime = (container.querySelector("#statsTimeSelect") as HTMLSelectElement).value;
 
-    const bookings = getMockBookings().filter(b => {
+    const filteredBookings = bookings.filter(b => {
       if (selectedCamper === "all") {
         return camperIds.includes(b.camper_id);
       } else {
@@ -92,8 +103,8 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
 
     const now = new Date();
 
-    bookings.forEach(b => {
-      if (b.status === "Cancelled") return;
+    filteredBookings.forEach(b => {
+      if (b.status === "cancelled") return;
 
       const start = new Date(b.start_date);
       const end = new Date(b.end_date);
@@ -134,11 +145,10 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
   };
 
   const renderInquiries = () => {
-    const list = getMockInquiries().filter(inq => camperIds.includes(inq.camper_id));
     const listContainer = container.querySelector("#inquiries-container") as HTMLElement;
     listContainer.innerHTML = "";
 
-    const pendingList = list.filter(i => i.status === "Pending");
+    const pendingList = bookings.filter(b => b.status === "pending" && camperIds.includes(b.camper_id));
 
     if (pendingList.length === 0) {
       listContainer.innerHTML = `
@@ -151,15 +161,15 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
 
     pendingList.forEach((inq) => {
       const inqCard = (
-        <div className="col-12 col-md-6">
+        <div className="col-12 col-md-6 fade-in">
           <div className="card border rounded-3 p-3 bg-light h-100 d-flex flex-column justify-content-between">
             <div>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="badge bg-custom-red text-white">{inq.camper_name}</span>
                 <span className="text-muted small">{inq.start_date} bis {inq.end_date}</span>
               </div>
-              <h5 className="fw-bold text-dark mb-1">{inq.renter_name}</h5>
-              <p className="text-muted small mb-3">{inq.message}</p>
+              <h5 className="fw-bold text-dark mb-1">Mietanfrage #{inq.id.slice(0, 8)}</h5>
+              <p className="text-muted small mb-3">Gesamtsumme der Buchungsanfrage: {inq.total_price.toFixed(2)} €</p>
             </div>
             <div className="d-flex gap-2">
               <button className="btn btn-sm btn-success w-50 rounded-pill py-2" onclick={() => handleDecision(inq.id, true)}>
@@ -176,47 +186,48 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
     });
   };
 
-  const handleDecision = (id: string, accept: boolean) => {
-    const inquiries = getMockInquiries();
-    const inq = inquiries.find(i => i.id === id);
-    if (!inq) return;
-
-    if (accept) {
-      inq.status = "Accepted";
-      const campersList = getMockCampers();
-      const camper = campersList.find(c => c.id === inq.camper_id) || campers[0];
-
-      const start = new Date(inq.start_date);
-      const end = new Date(inq.end_date);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-
-      const baseCost = camper.price_per_night_base * nights;
-      const totalCost = baseCost + camper.cleaning_fee;
-
-      const bookings = getMockBookings();
-      const newBooking: MockBooking = {
-        id: `booking-${Date.now()}`,
-        camper_id: inq.camper_id,
-        camper_name: inq.camper_name,
-        start_date: inq.start_date,
-        end_date: inq.end_date,
-        total_price: totalCost,
-        addons_price: 0,
-        status: "Confirmed",
-        addons_detail: []
-      };
-
-      bookings.push(newBooking);
-      saveMockBookings(bookings);
-    } else {
-      inq.status = "Declined";
+  const handleDecision = async (id: string, accept: boolean) => {
+    try {
+      const nextStatus = accept ? "confirmed" : "cancelled";
+      await updateBookingStatus(id, nextStatus);
+      await loadData();
+      onDataChanged();
+    } catch (err) {
+      console.error(err);
+      alert("Fehler bei der Aktualisierung des Buchungsstatus.");
     }
+  };
 
-    saveMockInquiries(inquiries);
-    renderInquiries();
-    calculateStats();
-    onDataChanged();
+  const loadData = async () => {
+    try {
+      const allCampers = await getAllCampers();
+      campers = allCampers.filter(c => c.ownerId === ownerId || c.owner_id === ownerId);
+      camperIds = campers.map(c => c.id);
+
+      const select = container.querySelector("#statsCamperSelect") as HTMLSelectElement;
+      if (select) {
+        select.innerHTML = '<option value="all">Alle Fahrzeuge</option>';
+        campers.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c.id;
+          opt.textContent = c.name;
+          select.appendChild(opt);
+        });
+      }
+
+      bookings = await fetchBookingsByProvider(ownerId);
+
+      calculateStats();
+      renderInquiries();
+    } catch (err) {
+      console.error(err);
+      const listContainer = container.querySelector("#inquiries-container") as HTMLElement;
+      listContainer.innerHTML = `
+        <div class="col-12 text-center py-4 text-danger">
+          Fehler beim Laden des Dashboards.
+        </div>
+      `;
+    }
   };
 
   const camperSelect = container.querySelector("#statsCamperSelect") as HTMLSelectElement;
@@ -225,10 +236,7 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
   camperSelect.addEventListener("change", calculateStats);
   timeSelect.addEventListener("change", calculateStats);
 
-  setTimeout(() => {
-    calculateStats();
-    renderInquiries();
-  }, 0);
+  loadData();
 
   return container;
 }

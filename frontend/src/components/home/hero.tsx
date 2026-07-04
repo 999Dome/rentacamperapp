@@ -40,7 +40,7 @@ export function Hero() {
               <span className="text-custom-yellow">. </span>
             </p>
 
-            <a className="btn btn-outline-light btn-lg" href="#!" role="button">
+            <a className="btn btn-outline-light btn-lg" href="/pages/rent/" role="button">
               Jetzt ein Wohnmobil mieten
             </a>
           </div>

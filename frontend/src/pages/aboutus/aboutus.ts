@@ -5,9 +5,24 @@ import { MainHeader } from "../../components/mainheader.tsx";
 import { MainFooter } from "../../components/mainfooter.tsx";
 import { AboutUsPage } from "../../components/aboutus/AboutUsPage.tsx";
 
-document.body.appendChild(MainHeader());
-document.body.appendChild(AboutUsPage());
-document.body.appendChild(MainFooter());
+import { getAllLocations } from "../../api/locationsAPI.ts";
+
+async function renderAboutUs() {
+  document.body.appendChild(MainHeader());
+  
+  try {
+    const locations = await getAllLocations();
+    document.body.appendChild(AboutUsPage(locations));
+  } catch (error) {
+    console.error("Failed to load locations", error);
+    document.body.appendChild(AboutUsPage([]));
+  }
+
+  document.body.appendChild(MainFooter());
+  
+  // Call animations setup after everything is in the DOM
+  setupAnimations();
+}
 
 const setupAnimations = () => {
   const observer = new IntersectionObserver(
@@ -39,4 +54,4 @@ const setupAnimations = () => {
   }
 };
 
-setTimeout(setupAnimations, 50);
+renderAboutUs();
