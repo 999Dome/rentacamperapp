@@ -2,6 +2,7 @@ import { createElement } from "../../utils/createElement.ts";
 import { getAllCampers } from "../../api/campersAPI.ts";
 import { FilterBar } from "./FilterBar.tsx";
 import { CamperCard } from "./CamperCard.tsx";
+import { SkeletonCard } from "../common/SkeletonCard.tsx";
 import type { MockCamper } from "../../utils/mockData.ts";
 import { CamperFilterService } from "../../domain/services/camper-filter.service.ts";
 
@@ -38,7 +39,9 @@ export function RentPage() {
             </div>
           </div>
 
-          <div className="row" id="camper-grid-container"></div>
+          <div className="row" id="camper-grid-container">
+            {Array.from({ length: 6 }, () => SkeletonCard())}
+          </div>
           <div className="text-center py-5 d-none" id="empty-state">
             <div className="fs-3 text-muted mb-3">Keine passenden Camper gefunden</div>
             <p className="text-muted">Passe deine Filter an, um andere Fahrzeuge zu sehen.</p>
@@ -105,7 +108,9 @@ export function RentPage() {
     } else {
       emptyState.classList.add("d-none");
       filtered.forEach((camper) => {
-        grid.appendChild(CamperCard(camper));
+        const card = CamperCard(camper);
+        card.classList.add("fade-in");
+        grid.appendChild(card);
       });
     }
   };

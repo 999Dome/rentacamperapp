@@ -89,10 +89,16 @@ export function AccountPage() {
     if (tab === "profile") {
       btnProfile.classList.add("active");
       paneProfile.classList.remove("d-none");
+      paneProfile.classList.remove("fade-in");
+      void (paneProfile as HTMLElement).offsetWidth; // trigger reflow
+      paneProfile.classList.add("fade-in");
       paneBookings.classList.add("d-none");
     } else {
       btnBookings.classList.add("active");
       paneBookings.classList.remove("d-none");
+      paneBookings.classList.remove("fade-in");
+      void (paneBookings as HTMLElement).offsetWidth; // trigger reflow
+      paneBookings.classList.add("fade-in");
       paneProfile.classList.add("d-none");
     }
   };

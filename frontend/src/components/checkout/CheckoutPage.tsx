@@ -146,6 +146,8 @@ export function CheckoutPage() {
   ) => {
     content.innerHTML = "";
     
+    let checkoutTermsAccepted = false;
+
     // Timer Logic
     const timerContainer = document.getElementById("countdown-timer-container");
     let timerInterval: number | null = null;
@@ -360,13 +362,13 @@ export function CheckoutPage() {
 
     const confirmButton = (
       <button
-        className="btn w-100 py-3 fw-bold fs-4 text-white custom-font-base mt-4"
+        className="btn w-100 py-3 fw-bold fs-4 text-white custom-font-base mt-2"
         id="confirm-payment-btn"
         style={{
           backgroundColor: isLicensed ? "var(--bs-primary, #ea5d42)" : "#6c757d",
           letterSpacing: "2px",
         }}
-        disabled={!isLicensed}
+        disabled={true}
       >
         {isLicensed ? "Zahlungspflichtig buchen" : "Führerschein unzureichend"}
       </button>
@@ -406,6 +408,13 @@ export function CheckoutPage() {
           if (paypalWindow.paypal) {
             paypalWindow.paypal
               .Buttons({
+                onClick: (data: unknown, actions: any) => {
+                  if (!checkoutTermsAccepted) {
+                    alert("Bitte akzeptieren Sie die AGB und Datenschutzerklärung, um fortzufahren.");
+                    return actions.reject();
+                  }
+                  return actions.resolve();
+                },
                 createOrder: async () => {
                   const response = await createPayPalOrder(
                     camper.id,
@@ -418,7 +427,7 @@ export function CheckoutPage() {
                 onApprove: async (data: { orderID: string }) => {
                   try {
                     confirmButton.disabled = true;
-                    confirmButton.textContent = "Zahlung wird verarbeitet...";
+                    confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Zahlung wird verarbeitet...';
 
                     await capturePayPalOrder(data.orderID);
 
@@ -507,7 +516,7 @@ export function CheckoutPage() {
 
         if (method === "stripe") {
           confirmButton.disabled = true;
-          confirmButton.textContent = "Wird zu Stripe weitergeleitet...";
+          confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Wird zu Stripe weitergeleitet...';
 
           const session = await createStripeCheckoutSession(
             camper.id,
@@ -620,15 +629,26 @@ export function CheckoutPage() {
             </div>
           </div>
 
+          <div className="form-check mt-4 mb-3 p-3 bg-light rounded border border-secondary-subtle d-flex align-items-center">
+            <input 
+              className="form-check-input ms-0 me-3" 
+              type="checkbox" 
+              id="checkoutTermsCheckbox" 
+              onchange={(e: Event) => {
+                const target = e.target as HTMLInputElement;
+                checkoutTermsAccepted = target.checked;
+                if (isLicensed) {
+                  confirmButton.disabled = !checkoutTermsAccepted;
+                }
+              }}
+            />
+            <label className="form-check-label small text-muted" htmlFor="checkoutTermsCheckbox" style={{ flex: 1, paddingLeft: "10px" }}>
+              Ich habe die <a href="/right/agb.html" target="_blank" rel="noopener noreferrer" className="text-decoration-underline fw-medium text-dark">Allgemeine Geschäftsbedingungen (AGB)</a> und die <a href="/right/privacy-policies.html" target="_blank" rel="noopener noreferrer" className="text-decoration-underline fw-medium text-dark">Datenschutzerklärung</a> gelesen und akzeptiere diese.
+            </label>
+          </div>
+
           {confirmButton}
 
-          <p
-            className="text-center text-muted mt-3 mb-0"
-            style={{ fontSize: "12px" }}
-          >
-            Mit dem Klick auf "Zahlungspflichtig buchen" akzeptierst du unsere
-            AGBs und Datenschutzbestimmungen.
-          </p>
         </div>
       </div>,
     );

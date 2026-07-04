@@ -59,7 +59,7 @@ export function ProviderOnboarding({ userId, onSuccess }: ProviderOnboardingProp
             onchange={handleCheckboxChange} 
           />
           <label className="form-check-label fs-6 text-dark" htmlFor="termsCheckbox">
-            Ich akzeptiere die <a href="/assets/docs/vermieterbedingungen.pdf" target="_blank" className="text-primary text-decoration-none fw-medium">Vermieterbedingungen</a>.
+            Ich akzeptiere die offiziellen <a href="/right/renter-agb.html" target="_blank" rel="noopener noreferrer" className="text-decoration-underline text-primary">Vermieterbedingungen</a> von Rent-A-Camper.
           </label>
         </div>
 

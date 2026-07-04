@@ -1,7 +1,8 @@
 import { createElement } from "../../utils/createElement.ts";
 import { fetchCurrentUser } from "../../auth/auth.ts";
-import { fetchBookingsByRenter } from "../../api/bookingsAPI.ts";
+import { fetchBookingsByRenter, cancelBooking } from "../../api/bookingsAPI.ts";
 import type { BookingResponse } from "../../api/bookingsAPI.ts";
+import { SkeletonTableRow } from "../common/SkeletonTableRow.tsx";
 
 export function BookingsTable() {
   const container = (
@@ -19,18 +20,85 @@ export function BookingsTable() {
             </tr>
           </thead>
           <tbody id="bookings-tbody">
-            <tr>
-              <td colspan={5} className="text-center py-4">
-                <div className="spinner-border spinner-border-sm text-primary" role="status">
-                  <span className="visually-hidden">Laden...</span>
-                </div>
-              </td>
-            </tr>
+            {Array.from({ length: 3 }, () => SkeletonTableRow(5))}
           </tbody>
         </table>
       </div>
     </div>
   ) as HTMLElement;
+
+  let bookingToCancel: BookingResponse | null = null;
+
+  const modalHTML = (
+    <div className="modal" id="cancelBookingModal" tabIndex={-1} aria-hidden="true" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title text-danger"><i className="bi bi-exclamation-triangle-fill me-2"></i>Buchung stornieren</h5>
+            <button type="button" className="btn-close" aria-label="Schließen" onclick={() => closeCancelModal()}></button>
+          </div>
+          <div className="modal-body">
+            <p>Möchtest du diese Buchung wirklich unwiderruflich stornieren?</p>
+            <p className="small text-muted">Es wird automatisch ein Stornierungsbeleg generiert und an deine E-Mail-Adresse gesendet.</p>
+            <div id="cancel-error" className="text-danger small d-none mt-2"></div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-secondary" onclick={() => closeCancelModal()}>Abbrechen</button>
+            <button type="button" className="btn btn-danger" id="btn-confirm-cancel" onclick={(e: Event) => handleCancelConfirm(e)}>Stornieren</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) as HTMLElement;
+
+  container.appendChild(modalHTML);
+
+  const showCancelModal = (e: Event, booking: BookingResponse) => {
+    e.preventDefault();
+    bookingToCancel = booking;
+    modalHTML.classList.add('show', 'd-block');
+    const errorEl = modalHTML.querySelector('#cancel-error') as HTMLElement;
+    errorEl.classList.add('d-none');
+    errorEl.textContent = '';
+  };
+
+  const closeCancelModal = () => {
+    bookingToCancel = null;
+    modalHTML.classList.remove('show', 'd-block');
+    const btnConfirm = modalHTML.querySelector('#btn-confirm-cancel') as HTMLButtonElement;
+    btnConfirm.disabled = false;
+    btnConfirm.innerHTML = 'Stornieren';
+  };
+
+  const handleCancelConfirm = async (e: Event) => {
+    e.preventDefault();
+    if (!bookingToCancel) return;
+
+    const btn = e.target as HTMLButtonElement;
+    const originalText = btn.innerHTML;
+    const errorEl = modalHTML.querySelector('#cancel-error') as HTMLElement;
+
+    try {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Bitte warten...';
+      errorEl.classList.add('d-none');
+
+      const user = await fetchCurrentUser();
+      if (!user || !user.id) throw new Error("Not logged in");
+
+      await cancelBooking(bookingToCancel.id, user.id);
+      
+      closeCancelModal();
+      await loadBookings(); // Reload to update status and hide button
+    } catch (err) {
+      console.error("Cancel failed", err);
+      errorEl.textContent = err instanceof Error ? err.message : "Stornierung fehlgeschlagen.";
+      errorEl.classList.remove('d-none');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  };
+
 
   const renderTable = (bookings: BookingResponse[]) => {
     const tbody = container.querySelector("#bookings-tbody") as HTMLElement;
@@ -98,13 +166,25 @@ export function BookingsTable() {
         </td>
       );
 
-      row.appendChild(
-        <td className="text-end">
-          <button className="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick={(e: Event) => toggleDetails(e, booking)}>
-            Details
+      const actionsTd = (<td className="text-end"></td>) as HTMLElement;
+
+      if (booking.status === "confirmed") {
+        const cancelBtn = (
+          <button className="btn btn-sm btn-outline-danger rounded-pill px-3 me-2" onclick={(e: Event) => showCancelModal(e, booking)}>
+            Buchung stornieren
           </button>
-        </td>
-      );
+        ) as HTMLElement;
+        actionsTd.appendChild(cancelBtn);
+      }
+
+      const detailsBtn = (
+        <button className="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick={(e: Event) => toggleDetails(e, booking)}>
+          Details
+        </button>
+      ) as HTMLElement;
+      actionsTd.appendChild(detailsBtn);
+
+      row.appendChild(actionsTd);
 
       tbody.appendChild(row);
 

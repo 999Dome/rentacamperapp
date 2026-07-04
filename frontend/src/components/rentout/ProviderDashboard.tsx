@@ -60,11 +60,22 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
         <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
           <h4 className="fw-bold text-dark mb-4 custom-font-base">Mietanfragen</h4>
           <div className="row g-3" id="inquiries-container">
-            <div className="col-12 text-center py-4">
-              <div className="spinner-border spinner-border-sm text-primary" role="status">
-                <span className="visually-hidden">Laden...</span>
+            {Array.from({ length: 2 }, () => (
+              <div className="col-12 col-md-6">
+                <div className="card border rounded-3 p-3 bg-light h-100 placeholder-glow">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span className="placeholder rounded-pill" style={{ width: "120px", height: "22px" }} />
+                    <span className="placeholder rounded" style={{ width: "140px", height: "14px" }} />
+                  </div>
+                  <div className="placeholder rounded mb-1" style={{ width: "60%", height: "20px" }} />
+                  <div className="placeholder rounded mb-3" style={{ width: "80%", height: "14px" }} />
+                  <div className="d-flex gap-2">
+                    <span className="placeholder rounded-pill w-50" style={{ height: "36px" }} />
+                    <span className="placeholder rounded-pill w-50" style={{ height: "36px" }} />
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -150,7 +161,7 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
 
     pendingList.forEach((inq) => {
       const inqCard = (
-        <div className="col-12 col-md-6">
+        <div className="col-12 col-md-6 fade-in">
           <div className="card border rounded-3 p-3 bg-light h-100 d-flex flex-column justify-content-between">
             <div>
               <div className="d-flex justify-content-between align-items-center mb-2">

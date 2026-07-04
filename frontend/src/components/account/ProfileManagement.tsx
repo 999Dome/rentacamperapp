@@ -73,6 +73,11 @@ export function ProfileManagement() {
   async function handleSubmit(e: Event) {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
+    const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Wird gespeichert...';
+
     try {
       const user = await fetchCurrentUser();
       if (!user) return;
@@ -95,6 +100,9 @@ export function ProfileManagement() {
     } catch (err) {
       console.error(err);
       alert("Fehler beim Speichern des Profils.");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
     }
   }
 

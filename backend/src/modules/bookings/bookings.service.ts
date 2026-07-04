@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+} from '@nestjs/common';
 import type { IBookingRepository } from '../../infrastructure/repositories/booking-repository.interface';
 import { BOOKING_REPOSITORY_TOKEN } from '../../infrastructure/repositories/booking-repository.interface';
 import {
@@ -226,6 +231,93 @@ export class BookingsService {
         error instanceof Error
           ? error.message
           : 'Failed to update booking status',
+      );
+    }
+  }
+
+  async cancelBooking(bookingId: string, userId: string) {
+    try {
+      const booking = await this.bookingRepository.findById(bookingId);
+      if (!booking) {
+        throw new BadRequestException('Buchung nicht gefunden');
+      }
+
+      if (booking.user_id !== userId) {
+        throw new ForbiddenException(
+          'Keine Berechtigung, diese Buchung zu stornieren',
+        );
+      }
+
+      if (booking.status === 'cancelled') {
+        throw new BadRequestException('Buchung ist bereits storniert');
+      }
+
+      if (booking.status !== 'confirmed' && booking.status !== 'pending') {
+        throw new BadRequestException(
+          'Nur bestätigte oder ausstehende Buchungen können storniert werden',
+        );
+      }
+
+      const updatedBooking = await this.bookingRepository.updateStatus(
+        bookingId,
+        'cancelled',
+      );
+
+      // Generate PDF & Send Email
+      try {
+        const camper = await this.campersRepository.findById(booking.camper_id);
+        const profile = await this.profileRepository.findById(booking.user_id);
+        const { data: userData } =
+          await this.supabaseService.client.auth.admin.getUserById(
+            booking.user_id,
+          );
+
+        const customerEmail = userData?.user?.email || 'kunde@example.com';
+
+        const cancellationData = {
+          cancellationNumber: `ST-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+          cancellationDate: new Date(),
+          originalInvoiceNumber: `RE-XXXX`, // In a real app we'd fetch the actual invoice number from DB
+          customerName: `${profile.first_name} ${profile.last_name}`,
+          customerEmail: customerEmail,
+          camperName: camper.name || 'Wohnmobil',
+          startDate: booking.start_date,
+          endDate: booking.end_date,
+          netRefundAmount: booking.total_price / 1.19,
+          taxRefundAmount: booking.total_price - booking.total_price / 1.19,
+          grossRefundAmount: booking.total_price,
+        };
+
+        const pdfBuffer =
+          await this.pdfService.generateCancellationPdf(cancellationData);
+        await this.mailService.sendCancellationEmail(
+          customerEmail,
+          pdfBuffer,
+          cancellationData,
+        );
+
+        this.logger.log(
+          `Cancellation email sent successfully for booking ${bookingId}`,
+        );
+      } catch (err) {
+        this.logger.error(
+          'Error generating cancellation PDF or sending email',
+          err,
+        );
+      }
+
+      return updatedBooking;
+    } catch (error) {
+      if (
+        error instanceof ForbiddenException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException(
+        error instanceof Error
+          ? error.message
+          : 'Fehler beim Stornieren der Buchung',
       );
     }
   }

@@ -10,7 +10,7 @@ export function CamperCard(camper: MockCamper) {
 
   return (
     <div className="col-12 col-md-6 col-lg-4 mb-4">
-      <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-zoom bg-beige">
+      <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden card-hover-lift bg-beige">
         <div style={{ position: "relative", height: "220px", overflow: "hidden" }}>
           <img
             src={imageSrc}
@@ -45,9 +45,9 @@ export function CamperCard(camper: MockCamper) {
         </div>
         <div className="card-body p-4 d-flex flex-column">
           <div className="d-flex flex-wrap gap-2 align-items-center mb-3">
-            <span className="badge bg-light text-dark border rounded-pill px-2.5 py-1.5">{camper.manufacturer}</span>
-            <span className="badge bg-light text-dark border rounded-pill px-2.5 py-1.5">{licenseText}</span>
-            <span className="badge bg-custom-light-blue text-white rounded-pill px-3 py-1.5">{bedsText}</span>
+            <span className="badge bg-light text-dark border rounded-pill px-3 py-1">{camper.manufacturer}</span>
+            <span className="badge bg-light text-dark border rounded-pill px-3 py-1">{licenseText}</span>
+            <span className="badge bg-custom-light-blue text-white rounded-pill px-3 py-1">{bedsText}</span>
           </div>
 
           <h4 className="card-title fw-bold text-dark mb-2 custom-font-base">

@@ -30,3 +30,20 @@ export async function getAllCamperImagesById(camperId: string): Promise<CamperIm
   }
 }
 
+export async function uploadCamperImages(camperId: string, files: File[]): Promise<CamperImage[]> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append('images', file);
+  }
+
+  try {
+    return await client.request<CamperImage[]>(`camper-images/${camperId}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+  } catch (error) {
+    console.error('Error while uploading camper images:', error);
+    throw error;
+  }
+}
+

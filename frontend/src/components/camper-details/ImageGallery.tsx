@@ -4,49 +4,40 @@ import type { CamperImage } from '../../types/interface.ts';
 export function ImageGallery(images: CamperImage[]) {
   const placeholderUrl = 'https://www.freeiconspng.com/uploads/no-image-icon-4.png';
   
-  const mainImage = images.find(img => img.is_primary === true) || images[0];
-  const mainImgSrc = mainImage?.image_path || placeholderUrl;
-
-  const secondaryImages = images.filter(img => img.id !== mainImage?.id);
-  
-  const gridImages = [];
-  for (let i = 0; i < 4; i++) {
-    if (secondaryImages[i]) {
-      gridImages.push(secondaryImages[i].image_path);
-    } else {
-      gridImages.push(placeholderUrl);
-    }
+  let carouselImages = [...(images || [])];
+  if (carouselImages.length === 0) {
+    carouselImages = [{ id: 'placeholder', camper_id: '', image_path: placeholderUrl, is_primary: true, created_at: '' }];
+  } else {
+    carouselImages.sort((a, b) => (a.is_primary ? -1 : (b.is_primary ? 1 : 0)));
   }
 
   return (
-    <section className="mb-4 rounded-4 overflow-hidden shadow-lg bg-white d-flex" style={{ height: "500px", gap: "8px" }}>
-      
-      <div className="w-100 h-100" style={{ flex: "1 1 50%" }}>
-        <img 
-          src={mainImgSrc} 
-          alt="Camper Main" 
-          className="w-100 h-100" 
-          style={{ objectFit: "cover", transition: "transform 0.3s ease", cursor: "pointer" }}
-          onmouseover={(e: Event) => { (e.target as HTMLImageElement).style.filter = "brightness(0.9)"; }}
-          onmouseout={(e: Event) => { (e.target as HTMLImageElement).style.filter = "brightness(1)"; }}
-        />
-      </div>
-
-      <div className="d-none d-md-grid h-100" style={{ flex: "1 1 50%", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr 1fr", gap: "8px" }}>
-        {gridImages.map((src, index) => (
-          <div className="w-100 h-100 overflow-hidden">
+    <div id="camperImageCarousel" className="carousel slide shadow-lg rounded-4 overflow-hidden mb-4 bg-dark" data-bs-ride="carousel" style={{ height: "500px" }}>
+      <div className="carousel-inner h-100">
+        {carouselImages.map((img, index) => (
+          <div className={`carousel-item h-100 ${index === 0 ? 'active' : ''}`}>
             <img 
-              src={src} 
-              alt={`Camper Detail ${index + 1}`} 
-              className="w-100 h-100" 
-              style={{ objectFit: "cover", transition: "transform 0.3s ease", cursor: "pointer" }}
-              onmouseover={(e: Event) => { (e.target as HTMLImageElement).style.filter = "brightness(0.9)"; }}
-              onmouseout={(e: Event) => { (e.target as HTMLImageElement).style.filter = "brightness(1)"; }}
+              src={img.image_path || placeholderUrl} 
+              className="d-block w-100 h-100" 
+              style={{ objectFit: "cover" }} 
+              alt={`Fahrzeug Bild ${index + 1}`} 
             />
           </div>
         ))}
       </div>
-
-    </section>
+      
+      {carouselImages.length > 1 ? (
+        <>
+          <button className="carousel-control-prev" type="button" data-bs-target="#camperImageCarousel" data-bs-slide="prev">
+            <span className="carousel-control-prev-icon" aria-hidden="true" style={{ filter: "drop-shadow(0px 0px 4px rgba(0,0,0,0.8))" }}></span>
+            <span className="visually-hidden">Vorheriges</span>
+          </button>
+          <button className="carousel-control-next" type="button" data-bs-target="#camperImageCarousel" data-bs-slide="next">
+            <span className="carousel-control-next-icon" aria-hidden="true" style={{ filter: "drop-shadow(0px 0px 4px rgba(0,0,0,0.8))" }}></span>
+            <span className="visually-hidden">Nächstes</span>
+          </button>
+        </>
+      ) : null}
+    </div>
   );
 }

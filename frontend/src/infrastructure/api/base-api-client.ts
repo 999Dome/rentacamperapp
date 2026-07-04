@@ -39,11 +39,14 @@ export class BaseAPIClient {
     const url = new URL(endpoint, this.baseUrl).toString();
 
     try {
+      const isFormData = options?.body instanceof FormData;
+      const headers = { ...options?.headers } as Record<string, string>;
+      if (!isFormData && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+      }
+
       const response = await fetch(url, {
-        headers: {
-          'Content-Type': 'application/json',
-          ...options?.headers,
-        },
+        headers,
         ...options,
       });
 

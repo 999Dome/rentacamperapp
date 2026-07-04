@@ -61,6 +61,13 @@ export class BookingAPIClient extends BaseAPIClient {
     });
   }
 
+  async cancelBooking(bookingId: string, userId: string): Promise<BookingResponse> {
+    return await this.request<BookingResponse>(`bookings/${bookingId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    });
+  }
+
   async getBlockedDates(camperId: string): Promise<{ blockedRanges: { from: string; to: string }[] }> {
     return await this.request<{ blockedRanges: { from: string; to: string }[] }>(`bookings/campers/${camperId}/blocked-dates`);
   }

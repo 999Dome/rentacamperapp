@@ -1,8 +1,17 @@
-import { Controller, Get, Post, Put, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Param,
+  Body,
+  ForbiddenException,
+} from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import {
   CreateBookingDto,
   UpdateBookingStatusDto,
+  CancelBookingDto,
 } from './dto/create-booking.dto';
 
 @Controller('bookings')
@@ -32,6 +41,17 @@ export class BookingsController {
     @Body() dto: UpdateBookingStatusDto,
   ): Promise<unknown> {
     return await this.bookingsService.updateBookingStatus(id, dto.status);
+  }
+
+  @Post(':id/cancel')
+  async cancelBooking(
+    @Param('id') id: string,
+    @Body() dto: CancelBookingDto,
+  ): Promise<unknown> {
+    if (!dto.user_id) {
+      throw new ForbiddenException('User ID is required');
+    }
+    return await this.bookingsService.cancelBooking(id, dto.user_id);
   }
 
   @Get('campers/:camperId/blocked-dates')

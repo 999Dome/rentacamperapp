@@ -107,6 +107,10 @@ class AuthPageLogic {
     }
 
     this.isProcessing = true;
+    const loginBtn = this.elements.loginForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalLoginText = loginBtn.innerHTML;
+    loginBtn.disabled = true;
+    loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Wird eingeloggt...';
 
     try {
       const response = (await this.apiClient.login(email, password)) as AuthResponse;
@@ -123,6 +127,8 @@ class AuthPageLogic {
       UIHelper.showError(this.elements.loginErrorBox, errorMessage);
     } finally {
       this.isProcessing = false;
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = originalLoginText;
     }
   }
 
@@ -153,6 +159,10 @@ class AuthPageLogic {
     }
 
     this.isProcessing = true;
+    const registerBtn = this.elements.registerForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalRegisterText = registerBtn.innerHTML;
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Wird registriert...';
 
     try {
       const response = (await this.apiClient.register(
@@ -190,6 +200,8 @@ class AuthPageLogic {
       UIHelper.showError(this.elements.registerErrorBox, errorMessage);
     } finally {
       this.isProcessing = false;
+      registerBtn.disabled = false;
+      registerBtn.innerHTML = originalRegisterText;
     }
   }
 

@@ -12,3 +12,7 @@ export class CreateBookingDto {
 export class UpdateBookingStatusDto {
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
 }
+
+export class CancelBookingDto {
+  user_id: string;
+}

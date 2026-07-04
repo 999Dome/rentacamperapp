@@ -60,7 +60,7 @@ export function ContactForm() {
     
     const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
     submitBtn.disabled = true;
-    submitBtn.innerText = 'Wird gesendet...';
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Wird gesendet...';
     
     alertContainer.innerHTML = '';
 

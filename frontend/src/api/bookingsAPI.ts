@@ -62,6 +62,13 @@ export async function updateBookingStatus(
   return await client.updateBookingStatus(bookingId, status);
 }
 
+export async function cancelBooking(
+  bookingId: string,
+  userId: string,
+): Promise<BookingResponse> {
+  return await client.cancelBooking(bookingId, userId);
+}
+
 export async function getBlockedDates(camperId: string): Promise<{ blockedRanges: { from: string; to: string }[] }> {
   return await client.getBlockedDates(camperId);
 }

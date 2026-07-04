@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend, CreateEmailOptions } from 'resend';
+import type { CancellationPdfData } from '../pdf/pdf.service';
 
 export interface SendEmailOptions {
   to: string;
@@ -58,5 +59,33 @@ export class MailService {
       this.logger.error(`Error sending email to ${options.to}`, error);
       throw error;
     }
+  }
+
+  async sendCancellationEmail(
+    to: string,
+    pdfBuffer: Buffer,
+    data: CancellationPdfData,
+  ): Promise<void> {
+    const html = `
+      <h1>Ihre Stornierungsbestätigung</h1>
+      <p>Hallo ${data.customerName},</p>
+      <p>hiermit bestätigen wir Ihnen die Stornierung Ihrer Buchung für das Wohnmobil "${data.camperName}".</p>
+      <p>Im Anhang finden Sie Ihren Stornierungsbeleg als PDF-Dokument.</p>
+      <p>Der Erstattungsbetrag von ${data.grossRefundAmount.toFixed(2)} € wird Ihnen in den nächsten Tagen gutgeschrieben.</p>
+      <p>Wir hoffen, Sie bald wieder bei uns begrüßen zu dürfen.</p>
+      <p>Viele Grüße,<br>Ihr Rent-A-Camper Team</p>
+    `;
+
+    await this.sendEmail({
+      to,
+      subject: 'Deine Stornierungsbestätigung - Rent-A-Camper 🚐',
+      html,
+      attachments: [
+        {
+          filename: `Stornierung_${data.cancellationNumber}.pdf`,
+          content: pdfBuffer,
+        },
+      ],
+    });
   }
 }

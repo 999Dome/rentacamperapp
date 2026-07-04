@@ -335,3 +335,69 @@ input[type="date"].filter-control {
     }
   }
 }
+
+/* ─── Visual Polish: Fade-In Animation ─── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out both;
+}
+
+/* ─── Visual Polish: Card Hover Lift ─── */
+.card-hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* ─── Visual Polish: Button Hover Lift ─── */
+.btn-hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* ─── Visual Polish: Skeleton Placeholder ─── */
+.skeleton-img-placeholder {
+  background-color: #dee2e6;
+  height: 220px;
+}
+
+.skeleton-badge {
+  display: inline-block;
+  width: 80px;
+  height: 24px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 65%;
+}
+
+.skeleton-text {
+  height: 14px;
+}
+
+.skeleton-text-sm {
+  height: 12px;
+}
+
+.skeleton-price {
+  height: 28px;
+  width: 80px;
+}

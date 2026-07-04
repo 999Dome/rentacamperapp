@@ -148,7 +148,7 @@ export function MainFooter() {
         <div className="row mt-5 pt-4 border-top border-secondary border-opacity-25 text-center">
           <div className="col-12">
             <p className="text-white-50 small mb-0">
-              &copy; 2026 Rent-A-Camper. Alle Rechte vorbehalten.
+              &copy; 2026 Rent-A-Camper. Alle Rechte vorbehalten. | <a href="/right/agb.html" target="_blank" rel="noopener noreferrer" className="text-white-50 text-decoration-none">AGB</a> | <a href="/right/privacy-policies.html" target="_blank" rel="noopener noreferrer" className="text-white-50 text-decoration-none">Datenschutz</a>
             </p>
           </div>
         </div>

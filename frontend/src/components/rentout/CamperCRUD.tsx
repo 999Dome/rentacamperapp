@@ -1,5 +1,6 @@
 import { createElement } from "../../utils/createElement.ts";
 import { getAllCampers, createCamper, updateCamper, deleteCamper as apiDeleteCamper } from "../../api/campersAPI.ts";
+import { uploadCamperImages } from "../../api/camperImagesAPI.ts";
 import { assignCamperOwner, removeCamperOwner } from "../../api/camperOwnerAPI.ts";
 import { fetchCamperBlockings, createCamperBlocking, deleteCamperBlocking } from "../../api/camperBlockingsAPI.ts";
 import type { BlockingResponse } from "../../infrastructure/api/camper-blockings-api-client.ts";
@@ -15,6 +16,60 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
   let activeEditId: string | null = null;
   let activeBlockingCamperId: string | null = null;
   let currentBlockings: BlockingResponse[] = [];
+  let selectedFiles: File[] = [];
+  let objectUrls: string[] = [];
+
+  function handleImageChange(e: Event) {
+    const input = e.target as HTMLInputElement;
+    if (input.files) {
+      const newFiles = Array.from(input.files);
+      selectedFiles = [...selectedFiles, ...newFiles];
+      
+      const newUrls = newFiles.map(f => URL.createObjectURL(f));
+      objectUrls = [...objectUrls, ...newUrls];
+      
+      renderImagePreviews();
+      input.value = ''; // Reset input so same file can be selected again if needed
+    }
+  }
+
+  function removeFile(index: number) {
+    selectedFiles.splice(index, 1);
+    URL.revokeObjectURL(objectUrls[index]);
+    objectUrls.splice(index, 1);
+    renderImagePreviews();
+  }
+
+  function renderImagePreviews() {
+    const previewContainer = container.querySelector("#image-preview-container");
+    if (!previewContainer) return;
+    previewContainer.innerHTML = '';
+
+    objectUrls.forEach((url, index) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "position-relative";
+      wrapper.style.width = "80px";
+      wrapper.style.height = "80px";
+
+      const img = document.createElement("img");
+      img.src = url;
+      img.className = "w-100 h-100 rounded-3 object-fit-cover shadow-sm border";
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn btn-danger btn-sm position-absolute rounded-circle p-0 d-flex align-items-center justify-content-center shadow";
+      btn.style.width = "20px";
+      btn.style.height = "20px";
+      btn.style.top = "-5px";
+      btn.style.right = "-5px";
+      btn.innerHTML = "&times;";
+      btn.onclick = () => removeFile(index);
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(btn);
+      previewContainer.appendChild(wrapper);
+    });
+  }
 
   async function loadCampers() {
     try {
@@ -101,6 +156,10 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
     const form = container.querySelector("#camper-form") as HTMLFormElement;
 
     form.reset();
+    selectedFiles = [];
+    objectUrls.forEach(url => URL.revokeObjectURL(url));
+    objectUrls = [];
+    renderImagePreviews();
 
     if (id) {
       const camper = campers.find((c) => c.id === id);
@@ -124,7 +183,6 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
         (form.elements.namedItem("camperHeight") as HTMLInputElement).value = String(camper.height_cm || 200);
         (form.elements.namedItem("camperEmptyWeight") as HTMLInputElement).value = String(camper.empty_weight_kg || 2000);
         (form.elements.namedItem("camperMaxWeight") as HTMLInputElement).value = String(camper.max_weight_kg || 3000);
-        (form.elements.namedItem("camperImage") as HTMLInputElement).value = camper.image_url || "";
         (form.elements.namedItem("camperShortDesc") as HTMLInputElement).value = camper.short_desc || "";
         (form.elements.namedItem("camperDesc") as HTMLTextAreaElement).value = camper.description || "";
       }
@@ -166,7 +224,7 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
       height_cm: parseInt((form.elements.namedItem("camperHeight") as HTMLInputElement).value),
       empty_weight_kg: parseInt((form.elements.namedItem("camperEmptyWeight") as HTMLInputElement).value),
       max_weight_kg: parseInt((form.elements.namedItem("camperMaxWeight") as HTMLInputElement).value),
-      image_url: (form.elements.namedItem("camperImage") as HTMLInputElement).value,
+      image_url: "", // Ignored by backend now
       short_desc: (form.elements.namedItem("camperShortDesc") as HTMLInputElement).value,
       description: (form.elements.namedItem("camperDesc") as HTMLTextAreaElement).value,
       features_list: ["Küche", "Heizung", "Klimaanlage"],
@@ -175,6 +233,7 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
     };
 
     try {
+      let currentCamperId = activeEditId;
       if (activeEditId) {
         await updateCamper(activeEditId, newCamperData);
       } else {
@@ -183,7 +242,17 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
         };
         const created = await createCamper(createData);
         if (created && created.id) {
+          currentCamperId = created.id;
           await assignCamperOwner({ camper_id: created.id, user_id: ownerId });
+        }
+      }
+
+      if (currentCamperId && selectedFiles.length > 0) {
+        try {
+          await uploadCamperImages(currentCamperId, selectedFiles);
+        } catch (uploadErr) {
+          console.error(uploadErr);
+          alert("Fehler beim Hochladen der Bilder. Die restlichen Camper-Daten wurden gespeichert.");
         }
       }
 
@@ -487,8 +556,9 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
                   </div>
 
                   <div className="col-12">
-                    <label className="form-label small text-uppercase text-muted fw-bold">Bild URL</label>
-                    <input type="url" name="camperImage" className="form-control" placeholder="https://..." required />
+                    <label className="form-label small text-uppercase text-muted fw-bold">Bilder</label>
+                    <input type="file" name="camperImages" className="form-control" accept="image/*" multiple onchange={handleImageChange} />
+                    <div id="image-preview-container" className="d-flex flex-wrap gap-2 mt-3"></div>
                   </div>
 
                   <div className="col-12">
