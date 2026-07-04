@@ -129,7 +129,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
 
   bookButton.addEventListener('click', async () => {
     if (!isLoggedIn()) {
-      window.location.href = '/pages/account/';
+      window.location.href = `/pages/account/?redirectTo=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
 

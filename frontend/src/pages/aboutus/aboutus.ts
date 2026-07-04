@@ -19,9 +19,10 @@ async function renderAboutUs() {
   }
 
   document.body.appendChild(MainFooter());
+  
+  // Call animations setup after everything is in the DOM
+  setupAnimations();
 }
-
-renderAboutUs();
 
 const setupAnimations = () => {
   const observer = new IntersectionObserver(
@@ -53,4 +54,4 @@ const setupAnimations = () => {
   }
 };
 
-setTimeout(setupAnimations, 50);
+renderAboutUs();

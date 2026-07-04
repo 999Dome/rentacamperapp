@@ -116,12 +116,14 @@ class AuthPageLogic {
       const response = (await this.apiClient.login(email, password)) as AuthResponse;
       const token = response.token || response.access_token;
 
-      if (!token) {
-        throw new Error('Erfolgreich eingeloggt, aber kein Token vom Server erhalten.');
+      if (token) {
+        SessionStorage.storeAuthToken(token);
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get('redirectTo');
+        window.location.href = redirectTo || SessionStorage.getRedirectAfterAuth();
+        return;
       }
-
-      SessionStorage.storeAuthToken(token);
-      window.location.href = SessionStorage.getRedirectAfterAuth();
+      throw new Error('Erfolgreich eingeloggt, aber kein Token vom Server erhalten.');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Es ist ein unerwarteter Fehler aufgetreten.';
       UIHelper.showError(this.elements.loginErrorBox, errorMessage);
@@ -177,7 +179,10 @@ class AuthPageLogic {
 
       if (token) {
         SessionStorage.storeAuthToken(token);
-        window.location.href = SessionStorage.getRedirectAfterAuth();
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get('redirectTo');
+        window.location.href = redirectTo || SessionStorage.getRedirectAfterAuth();
+        return;
       } else {
         this.elements.registerForm.classList.add('d-none');
         const successDiv = this.page.querySelector('.register-success') as HTMLElement;

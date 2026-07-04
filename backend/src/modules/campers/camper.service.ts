@@ -53,8 +53,11 @@ export class CampersService {
     private readonly addonRepository: IAddonRepository,
   ) {}
 
-  async findAllCampers() {
-    return await this.campersRepository.findAll();
+  async findAllCampers(requiredLicense?: string, emissionsClass?: string) {
+    return await this.campersRepository.findAll(
+      requiredLicense,
+      emissionsClass,
+    );
   }
 
   async findHighlights() {

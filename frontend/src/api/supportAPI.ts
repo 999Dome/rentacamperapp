@@ -1,4 +1,5 @@
-import { SupportAPIClient, ContactRequestPayload } from '../infrastructure/api/support-api-client';
+import { SupportAPIClient } from '../infrastructure/api/support-api-client';
+import type { ContactRequestPayload } from '../infrastructure/api/support-api-client';
 
 const client = new SupportAPIClient();
 

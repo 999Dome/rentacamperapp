@@ -58,8 +58,17 @@ export class CampersAPIClient extends BaseAPIClient {
   /**
    * Abrufen aller verfügbaren Camper
    */
-  async getAllCampers(): Promise<Camper[]> {
-    return await this.request<Camper[]>('campers/all');
+  async getAllCampers(filters?: { requiredLicense?: string; emissionsClass?: string }): Promise<Camper[]> {
+    let url = 'campers/all';
+    if (filters) {
+      const params = new URLSearchParams();
+      if (filters.requiredLicense) params.append('requiredLicense', filters.requiredLicense);
+      if (filters.emissionsClass) params.append('emissionsClass', filters.emissionsClass);
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+    }
+    return await this.request<Camper[]>(url);
   }
 
   /**

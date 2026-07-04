@@ -4,6 +4,7 @@ export interface CamperFilterCriteria {
   query?: string;
   manufacturer?: string;
   fuelType?: string;
+  requiredLicense?: string;
   emissionsClass?: string;
   priceMin?: number;
   priceMax?: number;
@@ -24,6 +25,7 @@ export class CamperFilterService {
       query,
       manufacturer,
       fuelType,
+      requiredLicense,
       emissionsClass,
       priceMin = 0,
       priceMax = Infinity,
@@ -57,6 +59,8 @@ export class CamperFilterService {
         if (fuelType === 'Benzine' && !['Super', 'Super Plus', 'Super E10'].includes(camper.fuel_type)) return false;
         if (fuelType === 'Electric' && camper.fuel_consumption !== 0) return false;
       }
+
+      if (requiredLicense && camper.required_license !== requiredLicense) return false;
 
       if (emissionsClass) {
         if (emissionsClass === 'Elektro' && camper.fuel_consumption !== 0) return false;

@@ -17,8 +17,8 @@ export async function calculatePrice(camperId: string, startDate: string, endDat
   return await client.calculatePrice({ camperId, startDate, endDate, selectedAddonIds });
 }
 
-export async function getAllCampers(): Promise<MockCamper[]> {
-  const campers = await client.getAllCampers();
+export async function getAllCampers(filters?: { requiredLicense?: string; emissionsClass?: string }): Promise<MockCamper[]> {
+  const campers = await client.getAllCampers(filters);
   const transformer = new CamperDetailTransformer();
   return await transformer.transformMultipleCampersWithDetails(campers);
 }

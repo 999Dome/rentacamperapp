@@ -1,5 +1,5 @@
-import {
-  CamperBlockingsApiClient,
+import { CamperBlockingsApiClient } from '../infrastructure/api/camper-blockings-api-client';
+import type {
   CreateBlockingRequest,
   BlockingResponse,
 } from '../infrastructure/api/camper-blockings-api-client';

@@ -6,6 +6,7 @@ import {
   Put,
   Delete,
   Body,
+  Query,
 } from '@nestjs/common';
 import { CampersService } from './camper.service';
 import type {
@@ -18,8 +19,14 @@ export class CampersController {
   constructor(private readonly campersService: CampersService) {}
 
   @Get('all')
-  async getAll(): Promise<unknown> {
-    return await this.campersService.findAllCampers();
+  async getAll(
+    @Query('requiredLicense') requiredLicense?: string,
+    @Query('emissionsClass') emissionsClass?: string,
+  ): Promise<unknown> {
+    return await this.campersService.findAllCampers(
+      requiredLicense,
+      emissionsClass,
+    );
   }
 
   @Get('highlights')

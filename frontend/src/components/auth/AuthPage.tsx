@@ -195,6 +195,23 @@ export function AuthPage() {
 
               <div className="mb-4">
                 <label className="form-label text-white-50 small text-uppercase fw-bold custom-font-base">
+                  Rolle
+                </label>
+                <select
+                  name="regRole"
+                  className="form-select custom-input custom-font-base"
+                  required
+                >
+                  <option value="" disabled selected>
+                    Bitte wählen
+                  </option>
+                  <option value="renter">Mieter</option>
+                  <option value="provider">Vermieter</option>
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label text-white-50 small text-uppercase fw-bold custom-font-base">
                   Führerschein
                 </label>
                 <select

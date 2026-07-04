@@ -409,7 +409,7 @@ export function CheckoutPage() {
           if (paypalWindow.paypal) {
             paypalWindow.paypal
               .Buttons({
-                onClick: (data: unknown, actions: { resolve: () => Promise<void>; reject: () => Promise<void> }) => {
+                onClick: (_data: unknown, actions: { resolve: () => Promise<void>; reject: () => Promise<void> }) => {
                   if (!checkoutTermsAccepted) {
                     alert("Bitte akzeptieren Sie die AGB und Datenschutzerklärung, um fortzufahren.");
                     return actions.reject();

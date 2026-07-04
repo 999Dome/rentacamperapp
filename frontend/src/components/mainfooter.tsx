@@ -115,15 +115,17 @@ export function MainFooter() {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="/right/agb.html"
+                  target="_blank"
                   className="text-white-50 text-decoration-none footer-link"
                 >
-                  Impressum
+                  AGB
                 </a>
               </li>
               <li>
                 <a
-                  href="#"
+                  href="/right/privacy-policy.html"
+                  target="_blank"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Datenschutz

@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { SupportService } from './support.service';
-import { ContactRequestDto } from './dto/contact-request.dto';
+import type { ContactRequestDto } from './dto/contact-request.dto';
 
 @Controller('support')
 export class SupportController {

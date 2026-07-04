@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../../scss/custom.scss";
+import "../../scss/theme.scss";
 
 import { MainHeader } from "../../components/mainheader.tsx";
 import { MainFooter } from "../../components/mainfooter.tsx";

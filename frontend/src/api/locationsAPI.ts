@@ -1,4 +1,4 @@
-import { LocationAPIClient, LocationResponse } from '../infrastructure/api/location-api-client';
+import { LocationAPIClient, type LocationResponse } from '../infrastructure/api/location-api-client';
 
 const client = new LocationAPIClient();
 

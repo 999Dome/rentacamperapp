@@ -29,7 +29,11 @@ export class CamperImagesService {
     if (!files || files.length === 0) return [];
 
     const uploadedFileNames: string[] = [];
-    const imageRows = [];
+    const imageRows: {
+      camper_id: string;
+      image_path: string;
+      is_primary: boolean;
+    }[] = [];
 
     try {
       for (let i = 0; i < files.length; i++) {

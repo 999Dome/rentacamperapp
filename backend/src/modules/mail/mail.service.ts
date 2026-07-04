@@ -38,7 +38,7 @@ export class MailService {
       const payload: CreateEmailOptions = {
         from: this.defaultFrom,
         to: options.to,
-        reply_to: options.replyTo || this.defaultReplyTo,
+        replyTo: options.replyTo || this.defaultReplyTo,
         subject: options.subject,
         html: options.html,
       };

@@ -57,6 +57,7 @@ export function RentPage() {
 
     const query = ((form.elements.namedItem("searchQuery") as HTMLInputElement)?.value || "");
     const manufacturer = (form.elements.namedItem("manufacturer") as HTMLSelectElement)?.value;
+    const requiredLicense = (form.elements.namedItem("requiredLicense") as HTMLSelectElement)?.value;
     const fuelType = (form.elements.namedItem("fuelType") as HTMLSelectElement)?.value;
     const emissionsClass = (form.elements.namedItem("emissionsClass") as HTMLSelectElement)?.value;
 
@@ -81,6 +82,7 @@ export function RentPage() {
     const filtered = CamperFilterService.filterAndSort(campersList, {
       query,
       manufacturer,
+      requiredLicense,
       fuelType,
       emissionsClass,
       priceMin,

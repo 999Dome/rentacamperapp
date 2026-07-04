@@ -8,7 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { CamperBlockingsService } from './camper_blockings.service';
-import {
+import type {
   CamperBlocking,
   CreateCamperBlockingDto,
 } from '../../domain/interfaces/camper_blocking.interface';

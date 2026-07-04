@@ -58,7 +58,7 @@ export function Contact() {
             </div>
           </div>
           <a
-            href="/aboutus/"
+            href="/pages/contact/"
             className="btn btn-custom-light-blue px-5 py-3 custom-font fs-4 shadow-sm text-dark"
           >
             Schreib uns eine Nachricht

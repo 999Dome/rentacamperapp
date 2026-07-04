@@ -161,14 +161,39 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
               "bi bi-car-front",
               [
                 { value: "", label: "Alle Hersteller" },
+                { value: "Rolls-Boyce", label: "Rolls-Boyce" },
                 { value: "Folkwagen", label: "Folkwagen" },
                 { value: "Mercedenz-Bonz", label: "Mercedenz-Bonz" },
                 { value: "Avdi", label: "Avdi" },
                 { value: "DYB", label: "DYB" },
                 { value: "Tayota", label: "Tayota" },
+                { value: "Sabaru", label: "Sabaru" },
+                { value: "Chervolet", label: "Chervolet" },
+                { value: "Ferraro", label: "Ferraro" },
                 { value: "Lamberghini", label: "Lamberghini" }
               ],
               "Alle Hersteller"
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label small text-uppercase text-muted fw-bold">Führerschein</label>
+            {renderDropdown(
+              "requiredLicense",
+              "bi bi-card-heading",
+              [
+                { value: "", label: "Alle Klassen" },
+                { value: "Klasse B", label: "Klasse B" },
+                { value: "Klasse B96", label: "Klasse B96" },
+                { value: "Klasse BE", label: "Klasse BE" },
+                { value: "Klasse C1", label: "Klasse C1" },
+                { value: "Klasse C1E", label: "Klasse C1E" },
+                { value: "Klasse C", label: "Klasse C" },
+                { value: "Klasse CE", label: "Klasse CE" },
+                { value: "alte Klasse 3", label: "alte Klasse 3" },
+                { value: "alte Klasse 2", label: "alte Klasse 2" }
+              ],
+              "Alle Klassen"
             )}
           </div>
 

@@ -98,8 +98,8 @@ export class BookingsService {
     const overlappingBlockings =
       await this.camperBlockingRepository.findOverlappingBlockings(
         createBookingDto.camper_id,
-        bufferedStartStr,
-        bufferedEndStr,
+        createBookingDto.start_date,
+        createBookingDto.end_date,
       );
 
     if (overlappingBlockings && overlappingBlockings.length > 0) {

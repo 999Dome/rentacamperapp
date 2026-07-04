@@ -1,4 +1,4 @@
-import { createElement } from '../../utils/createElement.ts';
+import { createElement, Fragment } from '../../utils/createElement.ts';
 import type { CamperImage } from '../../types/interface.ts';
 
 export function ImageGallery(images: CamperImage[]) {

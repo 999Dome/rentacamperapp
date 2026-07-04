@@ -14,7 +14,11 @@ export class CamperBlockingRepository {
   async create(dto: CreateCamperBlockingDto): Promise<CamperBlocking> {
     const { data, error } = await this.supabase.client
       .from(this.tableName)
-      .insert(dto)
+      .insert({
+        camper_id: dto.camper_id,
+        start_date: dto.start_date,
+        end_date: dto.end_date,
+      })
       .select()
       .single();
 

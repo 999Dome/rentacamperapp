@@ -57,10 +57,27 @@ export class CampersRepository {
     return camper as unknown as Camper;
   }
 
-  async findAll(): Promise<Camper[]> {
-    const { data, error } = await this.supabase.client
+  async findAll(
+    requiredLicense?: string,
+    emissionsClass?: string,
+  ): Promise<Camper[]> {
+    let query = this.supabase.client
       .from(this.table)
       .select('*, camper_owner(user_id, profiles(is_admin))');
+
+    if (requiredLicense) {
+      query = query.eq('required_license', requiredLicense);
+    }
+
+    if (emissionsClass) {
+      if (emissionsClass === 'Elektro') {
+        query = query.eq('fuel_consumption', 0);
+      } else if (emissionsClass === 'Euro 6') {
+        query = query.gt('fuel_consumption', 0);
+      }
+    }
+
+    const { data, error } = await query;
 
     if (error) throw new Error(`Failed to fetch campers: ${error.message}`);
     return (data || []).map((row) => this.mapCamperRow(row));
