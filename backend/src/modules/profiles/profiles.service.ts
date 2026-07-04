@@ -10,6 +10,8 @@ export class UpdateProfileDto {
   first_name?: string;
   last_name?: string;
   drivers_license_class?: string;
+  is_provider?: boolean;
+  is_renter?: boolean;
 }
 
 export interface EnrichedProfile {
@@ -39,16 +41,30 @@ export class ProfilesService {
   }
 
   async update(id: string, dto: UpdateProfileDto): Promise<EnrichedProfile> {
-    const resolvedLicenseId = await this.driversLicenseService.resolveLicenseId(
-      dto.drivers_license_class,
-    );
-
-    const updated = await this.profileRepository.update(id, {
-      first_name: dto.first_name,
-      last_name: dto.last_name,
-      drivers_license_class: resolvedLicenseId,
+    const updateData: any = {
       updated_at: new Date().toISOString(),
-    });
+    };
+
+    if (dto.first_name !== undefined) {
+      updateData.first_name = dto.first_name;
+    }
+    if (dto.last_name !== undefined) {
+      updateData.last_name = dto.last_name;
+    }
+    if (dto.drivers_license_class !== undefined) {
+      const resolvedLicenseId = await this.driversLicenseService.resolveLicenseId(
+        dto.drivers_license_class,
+      );
+      updateData.drivers_license_class = resolvedLicenseId;
+    }
+    if (dto.is_provider !== undefined) {
+      updateData.is_provider = dto.is_provider;
+    }
+    if (dto.is_renter !== undefined) {
+      updateData.is_renter = dto.is_renter;
+    }
+
+    const updated = await this.profileRepository.update(id, updateData);
 
     return await this.enrichProfile(updated);
   }

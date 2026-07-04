@@ -60,7 +60,7 @@ export function MainFooter() {
             <ul className="list-unstyled d-flex flex-column gap-2 mb-0">
               <li>
                 <a
-                  href="/rent/"
+                  href="/pages/rent/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Fahrzeuge mieten
@@ -68,7 +68,7 @@ export function MainFooter() {
               </li>
               <li>
                 <a
-                  href="/rentout/"
+                  href="/pages/rentout/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Camper vermieten
@@ -76,7 +76,7 @@ export function MainFooter() {
               </li>
               <li>
                 <a
-                  href="/aboutus/"
+                  href="/pages/aboutus/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Über uns
@@ -84,7 +84,7 @@ export function MainFooter() {
               </li>
               <li>
                 <a
-                  href="/account/"
+                  href="/pages/account/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Mein Konto
@@ -99,15 +99,7 @@ export function MainFooter() {
             <ul className="list-unstyled d-flex flex-column gap-2 mb-0">
               <li>
                 <a
-                  href="#"
-                  className="text-white-50 text-decoration-none footer-link"
-                >
-                  FAQ
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
+                  href="/pages/contact/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Kontakt

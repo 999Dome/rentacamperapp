@@ -20,8 +20,8 @@ export class AuthAPIClient {
     lastName: string,
     email: string,
     password: string,
-    role: string,
     driversLicenseClass: string,
+    role?: string,
   ): Promise<Record<string, unknown>> {
     const url = new URL('auth/register', this.baseUrl).toString();
     return this.postRequest(url, {
@@ -29,8 +29,8 @@ export class AuthAPIClient {
       lastName,
       email,
       password,
-      role,
       driversLicenseClass,
+      ...(role && { role }),
     });
   }
 

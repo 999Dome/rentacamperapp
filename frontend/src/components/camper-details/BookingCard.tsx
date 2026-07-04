@@ -29,23 +29,35 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
               <div id="checkout-display" className="fw-medium text-dark text-truncate" style={{ paddingLeft: "4px", fontSize: "15px", minHeight: "22px" }}>Datum auswählen</div>
             </div>
           </div>
-          <div className="p-2 pt-1 bg-white border-bottom border-dark-subtle">
-            <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px" }}>Abholort</label>
-            <select id="pickup-location" className="form-select border-0 shadow-none fw-medium text-dark" style={{ fontSize: "14px", paddingLeft: "4px", paddingRight: "4px", paddingTop: "0" }}>
-              <option value="">Bitte wählen...</option>
-              {locations.map(loc => (
-                <option value={loc.id}>{loc.name || loc.city}</option>
-              ))}
-            </select>
+          <div className="p-2 pt-1 bg-white border-bottom border-dark-subtle position-relative custom-dropdown-container" id="pickup-dropdown-container">
+            <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px", pointerEvents: "none" }}>Abholort</label>
+            <div className="custom-dropdown-toggle d-flex justify-content-between align-items-center fw-medium text-dark ps-1 pe-2 py-1" style={{ fontSize: "14px", cursor: "pointer", minHeight: "28px" }} id="pickup-toggle">
+              <span id="pickup-display-text" className="text-muted">Bitte wählen...</span>
+              <i className="bi bi-chevron-down text-muted" style={{ fontSize: "12px" }}></i>
+            </div>
+            <input type="hidden" id="pickup-location" value="" />
+            <div className="custom-dropdown-menu d-none position-absolute start-0 end-0 bg-white border rounded-3 shadow-lg p-2 mt-1" style={{ zIndex: 1000, maxHeight: "250px", overflowY: "auto", top: "100%" }} id="pickup-menu">
+              <div className="px-1 py-1 border-bottom mb-2">
+                <input type="text" className="form-control form-control-sm border-0 bg-light shadow-none" placeholder="Suchen..." id="pickup-search" style={{ fontSize: "13px" }} />
+              </div>
+              <div className="custom-dropdown-options" id="pickup-options">
+              </div>
+            </div>
           </div>
-          <div className="p-2 pt-1 bg-white border-bottom border-dark-subtle">
-            <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px" }}>Rückgabeort</label>
-            <select id="return-location" className="form-select border-0 shadow-none fw-medium text-dark" style={{ fontSize: "14px", paddingLeft: "4px", paddingRight: "4px", paddingTop: "0" }}>
-              <option value="">Bitte wählen...</option>
-              {locations.map(loc => (
-                <option value={loc.id}>{loc.name || loc.city}</option>
-              ))}
-            </select>
+          <div className="p-2 pt-1 bg-white border-bottom border-dark-subtle position-relative custom-dropdown-container" id="return-dropdown-container">
+            <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px", pointerEvents: "none" }}>Rückgabeort</label>
+            <div className="custom-dropdown-toggle d-flex justify-content-between align-items-center fw-medium text-dark ps-1 pe-2 py-1" style={{ fontSize: "14px", cursor: "pointer", minHeight: "28px" }} id="return-toggle">
+              <span id="return-display-text" className="text-muted">Bitte wählen...</span>
+              <i className="bi bi-chevron-down text-muted" style={{ fontSize: "12px" }}></i>
+            </div>
+            <input type="hidden" id="return-location" value="" />
+            <div className="custom-dropdown-menu d-none position-absolute start-0 end-0 bg-white border rounded-3 shadow-lg p-2 mt-1" style={{ zIndex: 1000, maxHeight: "250px", overflowY: "auto", top: "100%" }} id="return-menu">
+              <div className="px-1 py-1 border-bottom mb-2">
+                <input type="text" className="form-control form-control-sm border-0 bg-light shadow-none" placeholder="Suchen..." id="return-search" style={{ fontSize: "13px" }} />
+              </div>
+              <div className="custom-dropdown-options" id="return-options">
+              </div>
+            </div>
           </div>
           <div className="p-2 pt-1 bg-white">
             <label className="form-label mb-0 text-uppercase fw-bold text-dark" style={{ fontSize: "10px", paddingLeft: "4px" }}>Extras</label>
@@ -96,13 +108,54 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
   const checkinDisplay = card.querySelector('#checkin-display') as HTMLElement;
   const checkoutDisplay = card.querySelector('#checkout-display') as HTMLElement;
 
-  let startDateStr = "";
-  let endDateStr = "";
-  let apiStartDate = "";
-  let apiEndDate = "";
+  interface BookingSessionData {
+    startDateStr: string;
+    endDateStr: string;
+    apiStartDate: string;
+    apiEndDate: string;
+    pickupLocationId: string;
+    returnLocationId: string;
+    selectedAddons: string[];
+  }
+
+  const savedSessionDataStr = sessionStorage.getItem(`pendingBooking_${camper.id}`);
+  let savedSessionData: BookingSessionData | null = null;
+  if (savedSessionDataStr) {
+    try {
+      savedSessionData = JSON.parse(savedSessionDataStr) as BookingSessionData;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  let startDateStr = savedSessionData?.startDateStr || "";
+  let endDateStr = savedSessionData?.endDateStr || "";
+  let apiStartDate = savedSessionData?.apiStartDate || "";
+  let apiEndDate = savedSessionData?.apiEndDate || "";
   let currentTotalPrice = 0;
+  let selectedAddons: string[] = savedSessionData?.selectedAddons || [];
+
   const bookButton = card.querySelector('#bookButton') as HTMLButtonElement;
   bookButton.disabled = true;
+
+  const saveStateToSession = () => {
+    const pickupSelect = card.querySelector('#pickup-location') as HTMLInputElement;
+    const returnSelect = card.querySelector('#return-location') as HTMLInputElement;
+    const bookingSessionData = {
+      startDateStr,
+      endDateStr,
+      apiStartDate,
+      apiEndDate,
+      pickupLocationId: pickupSelect?.value || "",
+      returnLocationId: returnSelect?.value || "",
+      selectedAddons: selectedAddons,
+    };
+    sessionStorage.setItem(`pendingBooking_${camper.id}`, JSON.stringify(bookingSessionData));
+  };
+
+  const clearStateFromSession = () => {
+    sessionStorage.removeItem(`pendingBooking_${camper.id}`);
+  };
 
   if (isLoggedIn()) {
     Promise.all([
@@ -110,8 +163,8 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       import('../../api/driversLicenseAPI.ts').then(m => m.getDriversLicenseById(camper.required_license))
     ]).then(([user, license]) => {
       if (user && license) {
-        const userProfile = user as unknown as { profile?: { driver_license_class?: string | null } | null };
-        const userLicenseClass = userProfile.profile?.driver_license_class;
+        const userProfile = user as unknown as { profile?: { drivers_license_class?: string | null; driver_license_class?: string | null } | null };
+        const userLicenseClass = userProfile.profile?.drivers_license_class || userProfile.profile?.driver_license_class;
         const requiredLicenseClass = license.class;
         const isLicensed = DriversLicenseValidator.isLicensedToDrive(userLicenseClass, requiredLicenseClass);
         if (!isLicensed) {
@@ -129,12 +182,13 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
 
   bookButton.addEventListener('click', async () => {
     if (!isLoggedIn()) {
+      saveStateToSession();
       window.location.href = `/pages/account/?redirectTo=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
 
-    const pickupSelect = card.querySelector('#pickup-location') as HTMLSelectElement;
-    const returnSelect = card.querySelector('#return-location') as HTMLSelectElement;
+    const pickupSelect = card.querySelector('#pickup-location') as HTMLInputElement;
+    const returnSelect = card.querySelector('#return-location') as HTMLInputElement;
     
     try {
       bookButton.disabled = true;
@@ -147,7 +201,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       
       const bookingData = {
         camper_id: camper.id,
-        user_id: user.id,
+        user_id: user.id as string,
         start_date: apiStartDate,
         end_date: apiEndDate,
         total_price: currentTotalPrice,
@@ -157,6 +211,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       };
 
       const booking = await createBooking(bookingData);
+      clearStateFromSession();
 
       const checkoutData = {
         bookingId: booking.id,
@@ -175,7 +230,21 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       window.location.href = '/pages/checkout/';
     } catch (err) {
       console.error(err);
-      alert('Fehler bei der Reservierung. Möglicherweise ist das Fahrzeug in diesem Zeitraum bereits ausgebucht.');
+      let errorMsg = 'Fehler bei der Reservierung. Möglicherweise ist das Fahrzeug in diesem Zeitraum bereits ausgebucht.';
+      if (err instanceof Error) {
+        try {
+          const match = err.message.match(/\{.*\}/);
+          if (match) {
+            const parsed = JSON.parse(match[0]) as { message?: string | string[] };
+            if (parsed && parsed.message) {
+              errorMsg = Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message;
+            }
+          }
+        } catch {
+          // Ignore JSON parse errors
+        }
+      }
+      alert(errorMsg);
       bookButton.disabled = false;
       bookButton.textContent = 'Reservieren';
     }
@@ -186,8 +255,8 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
   const receiptTotal = card.querySelector('#receipt-total') as HTMLElement;
 
   const triggerCalculation = async () => {
-    const pickupSelect = card.querySelector('#pickup-location') as HTMLSelectElement;
-    const returnSelect = card.querySelector('#return-location') as HTMLSelectElement;
+    const pickupSelect = card.querySelector('#pickup-location') as HTMLInputElement;
+    const returnSelect = card.querySelector('#return-location') as HTMLInputElement;
     
     if (!startDateStr || !endDateStr || !pickupSelect?.value || !returnSelect?.value) {
       receiptContainer.classList.add('d-none');
@@ -258,6 +327,189 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
     }
   };
 
+  const setupCustomDropdown = (
+    containerId: string, 
+    toggleId: string, 
+    menuId: string, 
+    searchId: string, 
+    optionsId: string, 
+    hiddenInputId: string, 
+    displayTextId: string,
+    onValueChange: (val: string) => void
+  ) => {
+    const containerEl = card.querySelector(`#${containerId}`) as HTMLElement;
+    const toggleEl = card.querySelector(`#${toggleId}`) as HTMLElement;
+    const menuEl = card.querySelector(`#${menuId}`) as HTMLElement;
+    const searchEl = card.querySelector(`#${searchId}`) as HTMLInputElement;
+    const optionsContainer = card.querySelector(`#${optionsId}`) as HTMLElement;
+    const hiddenInput = card.querySelector(`#${hiddenInputId}`) as HTMLInputElement;
+    const displayText = card.querySelector(`#${displayTextId}`) as HTMLElement;
+
+    if (!containerEl || !toggleEl || !menuEl || !searchEl || !optionsContainer || !hiddenInput || !displayText) {
+      return {
+        setValue: () => {},
+        getValue: () => ""
+      };
+    }
+
+    toggleEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      card.querySelectorAll('.custom-dropdown-menu').forEach(m => {
+        if (m !== menuEl) m.classList.add('d-none');
+      });
+      menuEl.classList.toggle('d-none');
+      if (!menuEl.classList.contains('d-none')) {
+        searchEl.value = '';
+        renderOptions('');
+        searchEl.focus();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!containerEl.contains(e.target as Node)) {
+        menuEl.classList.add('d-none');
+      }
+    });
+
+    searchEl.addEventListener('input', () => {
+      renderOptions(searchEl.value.toLowerCase());
+    });
+
+    const renderOptions = (filterText: string) => {
+      optionsContainer.innerHTML = '';
+      
+      const filtered = locations.filter(loc => {
+        const name = (loc.name || `${loc.city} Station`).toLowerCase();
+        const address = `${loc.street} ${loc.city}`.toLowerCase();
+        return name.includes(filterText) || address.includes(filterText);
+      });
+
+      if (filtered.length === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'text-muted text-center py-2';
+        noResults.style.fontSize = '13px';
+        noResults.textContent = 'Keine Stationen gefunden';
+        optionsContainer.appendChild(noResults);
+        return;
+      }
+
+      filtered.forEach(loc => {
+        const item = (
+          <div className="custom-dropdown-item p-2 rounded-2 d-flex align-items-start gap-2 mb-1" style={{ cursor: "pointer", transition: "background-color 0.2s ease" }} data-value={loc.id}>
+            <i className="bi bi-geo-alt-fill text-custom-light-blue mt-1" style={{ fontSize: "14px" }}></i>
+            <div style={{ lineHeight: "1.2" }}>
+              <div className="fw-bold text-dark" style={{ fontSize: "13px" }}>{loc.name || `${loc.city} Station`}</div>
+              <div className="text-muted" style={{ fontSize: "11px" }}>{loc.street} {loc.housenumber || ''}, {loc.plz || ''} {loc.city}</div>
+            </div>
+          </div>
+        ) as HTMLElement;
+
+        item.addEventListener('mouseenter', () => {
+          item.style.backgroundColor = '#f1f3f5';
+        });
+        item.addEventListener('mouseleave', () => {
+          item.style.backgroundColor = 'transparent';
+        });
+
+        item.addEventListener('click', () => {
+          hiddenInput.value = loc.id;
+          displayText.textContent = loc.name || `${loc.city} Station`;
+          displayText.classList.remove('text-muted');
+          menuEl.classList.add('d-none');
+          onValueChange(loc.id);
+        });
+
+        optionsContainer.appendChild(item);
+      });
+    };
+
+    const setValue = (val: string) => {
+      hiddenInput.value = val;
+      const loc = locations.find(l => l.id === val);
+      if (loc) {
+        displayText.textContent = loc.name || `${loc.city} Station`;
+        displayText.classList.remove('text-muted');
+      } else {
+        displayText.textContent = "Bitte wählen...";
+        displayText.classList.add('text-muted');
+      }
+    };
+
+    renderOptions('');
+
+    return {
+      setValue,
+      getValue: () => hiddenInput.value
+    };
+  };
+
+  interface DropdownController {
+    setValue: (val: string) => void;
+    getValue: () => string;
+  }
+
+  const dropdowns: {
+    pickup: DropdownController | null;
+    return: DropdownController | null;
+  } = {
+    pickup: null,
+    return: null
+  };
+
+  dropdowns.pickup = setupCustomDropdown(
+    'pickup-dropdown-container',
+    'pickup-toggle',
+    'pickup-menu',
+    'pickup-search',
+    'pickup-options',
+    'pickup-location',
+    'pickup-display-text',
+    (val) => {
+      if (val && dropdowns.return && !dropdowns.return.getValue()) {
+        dropdowns.return.setValue(val);
+      }
+      saveStateToSession();
+      triggerCalculation();
+    }
+  );
+
+  dropdowns.return = setupCustomDropdown(
+    'return-dropdown-container',
+    'return-toggle',
+    'return-menu',
+    'return-search',
+    'return-options',
+    'return-location',
+    'return-display-text',
+    () => {
+      saveStateToSession();
+      triggerCalculation();
+    }
+  );
+
+  if (savedSessionData) {
+    if (savedSessionData.pickupLocationId && dropdowns.pickup) {
+      dropdowns.pickup.setValue(savedSessionData.pickupLocationId);
+    }
+    if (savedSessionData.returnLocationId && dropdowns.return) {
+      dropdowns.return.setValue(savedSessionData.returnLocationId);
+    }
+    if (savedSessionData.selectedAddons) {
+      savedSessionData.selectedAddons.forEach((addonId: string) => {
+        const cb = card.querySelector(`#addon-${addonId}`) as HTMLInputElement;
+        if (cb) cb.checked = true;
+      });
+    }
+    if (startDateStr) {
+      checkinDisplay.textContent = startDateStr;
+    }
+    if (endDateStr) {
+      checkoutDisplay.textContent = endDateStr;
+    }
+  }
+
+  let blockedRanges: { from: string; to: string }[] = [];
+
   if (wrapper) {
     const fp = flatpickr(wrapper, {
       mode: "range",
@@ -265,10 +517,11 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
       showMonths: window.innerWidth > 768 ? 2 : 1,
       locale: German,
       dateFormat: "d.m.Y",
+      defaultDate: (apiStartDate && apiEndDate) ? [apiStartDate, apiEndDate] : undefined,
       onChange: function(selectedDates, _dateStr, instance) {
         if (selectedDates.length > 0) {
-          startDateStr = instance.formatDate(selectedDates[0], "d.m.Y");
-          apiStartDate = instance.formatDate(selectedDates[0], "Y-m-d");
+          startDateStr = instance.formatDate(selectedDates[0], "d.m.Y") as string;
+          apiStartDate = instance.formatDate(selectedDates[0], "Y-m-d") as string;
           checkinDisplay.textContent = startDateStr;
         } else {
           startDateStr = "";
@@ -277,29 +530,101 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
         }
         
         if (selectedDates.length > 1) {
-          endDateStr = instance.formatDate(selectedDates[1], "d.m.Y");
-          apiEndDate = instance.formatDate(selectedDates[1], "Y-m-d");
+          endDateStr = instance.formatDate(selectedDates[1], "d.m.Y") as string;
+          apiEndDate = instance.formatDate(selectedDates[1], "Y-m-d") as string;
           checkoutDisplay.textContent = endDateStr;
+
+          // Check if selected range overlaps with blocked ranges (flatpickr allows spanning blocked dates by default)
+          const start = selectedDates[0];
+          const end = selectedDates[1];
+          let hasOverlap = false;
+
+          for (const range of blockedRanges) {
+            const blockedStart = new Date(range.from);
+            const blockedEnd = new Date(range.to);
+
+            // Set times to midnight to ensure accurate day comparison
+            const s = new Date(start);
+            const e = new Date(end);
+            s.setHours(0, 0, 0, 0);
+            e.setHours(0, 0, 0, 0);
+            blockedStart.setHours(0, 0, 0, 0);
+            blockedEnd.setHours(0, 0, 0, 0);
+
+            if (s <= blockedEnd && e >= blockedStart) {
+              hasOverlap = true;
+              break;
+            }
+          }
+
+          if (hasOverlap) {
+            alert("Der gewählte Zeitraum überschneidet sich mit bereits gebuchten Tagen oder der logistischen Pufferzeit. Bitte wähle einen anderen Zeitraum.");
+            instance.clear(false);
+            startDateStr = "";
+            apiStartDate = "";
+            endDateStr = "";
+            apiEndDate = "";
+            checkinDisplay.textContent = "Datum auswählen";
+            checkoutDisplay.textContent = "Datum auswählen";
+            saveStateToSession();
+            triggerCalculation();
+            return;
+          }
         } else {
           endDateStr = "";
           apiEndDate = "";
           checkoutDisplay.textContent = "Datum auswählen";
         }
         
+        saveStateToSession();
         triggerCalculation();
       }
     });
 
     import('../../api/bookingsAPI.ts').then(({ getBlockedDates }) => {
       getBlockedDates(camper.id).then(response => {
-        if (response.blockedRanges && response.blockedRanges.length > 0) {
-          fp.set('disable', response.blockedRanges);
+        blockedRanges = response.blockedRanges || [];
+        if (blockedRanges.length > 0) {
+          fp.set('disable', blockedRanges);
+
+          // Check if pre-selected session dates overlap with newly loaded blocked ranges
+          if (apiStartDate && apiEndDate) {
+            const start = new Date(apiStartDate);
+            const end = new Date(apiEndDate);
+            let hasOverlap = false;
+
+            for (const range of blockedRanges) {
+              const blockedStart = new Date(range.from);
+              const blockedEnd = new Date(range.to);
+
+              start.setHours(0, 0, 0, 0);
+              end.setHours(0, 0, 0, 0);
+              blockedStart.setHours(0, 0, 0, 0);
+              blockedEnd.setHours(0, 0, 0, 0);
+
+              if (start <= blockedEnd && end >= blockedStart) {
+                hasOverlap = true;
+                break;
+              }
+            }
+
+            if (hasOverlap) {
+              fp.clear(false);
+              startDateStr = "";
+              apiStartDate = "";
+              endDateStr = "";
+              apiEndDate = "";
+              checkinDisplay.textContent = "Datum auswählen";
+              checkoutDisplay.textContent = "Datum auswählen";
+              clearStateFromSession();
+              triggerCalculation();
+            }
+          }
         }
       }).catch(console.error);
     });
   }
 
-  let selectedAddons: string[] = [];
   const checkboxes = card.querySelectorAll('.addon-checkbox') as NodeListOf<HTMLInputElement>;
   checkboxes.forEach(cb => {
     cb.addEventListener('change', (e) => {
@@ -310,6 +635,7 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
         selectedAddons = selectedAddons.filter(id => id !== target.value);
       }
       (card as HTMLElement & { selectedAddons?: string[] }).selectedAddons = selectedAddons;
+      saveStateToSession();
       triggerCalculation();
     });
   });
@@ -328,10 +654,9 @@ export function BookingCard(camper: Camper, addons: Addon[], _pricingRules: Pric
     }
   };
 
-  const pickupSelect = card.querySelector('#pickup-location') as HTMLSelectElement;
-  const returnSelect = card.querySelector('#return-location') as HTMLSelectElement;
-  if (pickupSelect) pickupSelect.addEventListener('change', triggerCalculation);
-  if (returnSelect) returnSelect.addEventListener('change', triggerCalculation);
+  if (savedSessionData) {
+    triggerCalculation();
+  }
 
   setTimeout(updateStickyPosition, 100);
   window.addEventListener('resize', updateStickyPosition);

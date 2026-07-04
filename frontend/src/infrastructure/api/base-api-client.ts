@@ -70,8 +70,13 @@ export class BaseAPIClient {
       throw this.createAPIError(response.status, endpoint, errorText);
     }
 
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return null as unknown as T;
+    }
+
     try {
-      const data = (await response.json()) as T;
+      const data = JSON.parse(text) as T;
       return data;
     } catch (parseError) {
       const message = parseError instanceof Error ? parseError.message : 'JSON parse error';

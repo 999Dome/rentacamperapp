@@ -27,7 +27,7 @@ export function ImageGallery(images: CamperImage[]) {
       </div>
       
       {carouselImages.length > 1 ? (
-        <>
+        <Fragment>
           <button className="carousel-control-prev" type="button" data-bs-target="#camperImageCarousel" data-bs-slide="prev">
             <span className="carousel-control-prev-icon" aria-hidden="true" style={{ filter: "drop-shadow(0px 0px 4px rgba(0,0,0,0.8))" }}></span>
             <span className="visually-hidden">Vorheriges</span>
@@ -36,7 +36,7 @@ export function ImageGallery(images: CamperImage[]) {
             <span className="carousel-control-next-icon" aria-hidden="true" style={{ filter: "drop-shadow(0px 0px 4px rgba(0,0,0,0.8))" }}></span>
             <span className="visually-hidden">Nächstes</span>
           </button>
-        </>
+        </Fragment>
       ) : null}
     </div>
   );

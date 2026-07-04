@@ -16,6 +16,9 @@ interface UserProfile {
   profile?: {
     firstname?: string;
     lastname?: string;
+    first_name?: string;
+    last_name?: string;
+    drivers_license_class?: string | null;
     driver_license_class?: string | null;
   } | null;
 }
@@ -54,8 +57,8 @@ export function CheckoutPage() {
   const container = (
     <div className="container my-5" style={{ minHeight: "80vh" }}>
       <div className="text-center mb-5">
-        <h1 className="display-4 fw-bold custom-font-base">Checkout</h1>
-        <p className="text-muted fs-5">
+        <h1 className="display-4 fw-bold custom-font-burbank text-white">Checkout</h1>
+        <p className="text-white-50 fs-5">
           Fast geschafft! Überprüfe deine Daten und schließe die Buchung ab.
         </p>
         <div id="countdown-timer-container" className="mt-3"></div>
@@ -195,7 +198,7 @@ export function CheckoutPage() {
       timerInterval = window.setInterval(updateTimer, 1000);
     }
 
-    const userLicenseClass = user.profile?.driver_license_class;
+    const userLicenseClass = user.profile?.drivers_license_class || user.profile?.driver_license_class;
     const isLicensed = DriversLicenseValidator.isLicensedToDrive(userLicenseClass, requiredLicenseClass);
 
     const leftCol = document.createElement("div");
@@ -214,7 +217,7 @@ export function CheckoutPage() {
     }
 
     leftCol.appendChild(
-      <div className="card border-0 shadow-sm rounded-4 mb-4">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white">
         <div className="card-body p-4 p-md-5">
           <h4 className="fw-bold mb-4">Persönliche Daten</h4>
           <div className="row g-3">
@@ -225,7 +228,7 @@ export function CheckoutPage() {
               <input
                 type="text"
                 className="form-control bg-light"
-                value={user.profile?.firstname || ""}
+                value={user.profile?.first_name || user.profile?.firstname || ""}
                 readOnly
               />
             </div>
@@ -236,7 +239,7 @@ export function CheckoutPage() {
               <input
                 type="text"
                 className="form-control bg-light"
-                value={user.profile?.lastname || ""}
+                value={user.profile?.last_name || user.profile?.lastname || ""}
                 readOnly
               />
             </div>
@@ -268,7 +271,7 @@ export function CheckoutPage() {
     );
 
     leftCol.appendChild(
-      <div className="card border-0 shadow-sm rounded-4 mb-4">
+      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white">
         <div className="card-body p-4 p-md-5">
           <h4 className="fw-bold mb-4">Zahlungsart</h4>
           <div className="d-flex flex-column gap-3">
@@ -390,7 +393,8 @@ export function CheckoutPage() {
         const paypalScript = document.createElement("script");
         paypalScript.src =
           "https://www.paypal.com/sdk/js?client-id=" +
-          (import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb");
+          (import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb") +
+          "&currency=EUR";
         paypalScript.async = true;
         paypalScript.onload = () => {
           const paypalWindow = window as unknown as {
@@ -564,7 +568,7 @@ export function CheckoutPage() {
 
     rightCol.appendChild(
       <div
-        className="card border-0 shadow-lg rounded-4 overflow-hidden position-sticky"
+        className="card border-0 shadow-lg rounded-4 overflow-hidden position-sticky bg-beige"
         style={{ top: "100px" }}
       >
         <img

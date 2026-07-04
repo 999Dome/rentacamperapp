@@ -11,8 +11,8 @@ const CheckoutSuccessPage = () => {
   const container = (
     <div className="container my-5" style={{ minHeight: "80vh" }}>
       <div className="text-center mb-5">
-        <h1 className="display-4 fw-bold custom-font-base">Zahlungsbestätigung</h1>
-        <p className="text-muted fs-5">
+        <h1 className="display-4 fw-bold custom-font-burbank text-white">Zahlungsbestätigung</h1>
+        <p className="text-white-50 fs-5">
           Überprüfung deiner Zahlung wird durchgeführt...
         </p>
       </div>

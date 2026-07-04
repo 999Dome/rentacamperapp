@@ -144,7 +144,6 @@ class AuthPageLogic {
     const email = UIHelper.getFormValue(this.elements.registerForm, 'regEmail');
     const password = UIHelper.getFormValue(this.elements.registerForm, 'regPassword');
     const confirmPassword = UIHelper.getFormValue(this.elements.registerForm, 'regPasswordConfirm');
-    const role = UIHelper.getFormValue(this.elements.registerForm, 'regRole');
     const license = UIHelper.getFormValue(this.elements.registerForm, 'regLicense');
 
     const validation = CredentialValidator.validateRegistrationForm(
@@ -172,7 +171,6 @@ class AuthPageLogic {
         lastName,
         email,
         password,
-        role,
         license,
       )) as AuthResponse;
       const token = response.token || response.access_token;

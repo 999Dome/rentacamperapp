@@ -2,27 +2,36 @@ import { createElement } from "../../utils/createElement.ts";
 import { fetchCurrentUser } from "../../auth/auth.ts";
 import { fetchBookingsByRenter, cancelBooking } from "../../api/bookingsAPI.ts";
 import type { BookingResponse } from "../../api/bookingsAPI.ts";
-import { SkeletonTableRow } from "../common/SkeletonTableRow.tsx";
 
 export function BookingsTable() {
+  const SkeletonBookingCard = () => (
+    <div className="card border-0 shadow-sm rounded-4 p-4 mb-3 bg-white placeholder-glow">
+      <div className="d-flex justify-content-between mb-3">
+        <span className="placeholder col-3 rounded" style={{ height: "16px" }}></span>
+        <span className="placeholder col-2 rounded-pill" style={{ height: "24px" }}></span>
+      </div>
+      <div className="row g-3">
+        <div className="col-12 col-md-4">
+          <span className="placeholder col-8 mb-2 d-block rounded" style={{ height: "14px" }}></span>
+          <span className="placeholder col-10 rounded" style={{ height: "24px" }}></span>
+        </div>
+        <div className="col-12 col-md-5">
+          <span className="placeholder col-6 mb-2 d-block rounded" style={{ height: "14px" }}></span>
+          <span className="placeholder col-8 rounded" style={{ height: "20px" }}></span>
+        </div>
+        <div className="col-12 col-md-3 text-md-end">
+          <span className="placeholder col-6 mb-2 d-block rounded" style={{ height: "14px" }}></span>
+          <span className="placeholder col-8 rounded" style={{ height: "24px" }}></span>
+        </div>
+      </div>
+    </div>
+  ) as HTMLElement;
+
   const container = (
-    <div className="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-beige">
-      <h3 className="fw-bold mb-4 text-dark custom-font-base">Meine Buchungen</h3>
-      <div className="table-responsive">
-        <table className="table align-middle">
-          <thead className="table-light">
-            <tr>
-              <th>Fahrzeug</th>
-              <th>Zeitraum & Orte</th>
-              <th>Status</th>
-              <th>Gesamtpreis</th>
-              <th className="text-end">Preisdetails</th>
-            </tr>
-          </thead>
-          <tbody id="bookings-tbody">
-            {Array.from({ length: 3 }, () => SkeletonTableRow(5))}
-          </tbody>
-        </table>
+    <div className="p-0">
+      <h3 className="fw-bold mb-4 text-white custom-font-burbank" style={{ letterSpacing: "1px" }}>Meine Buchungen</h3>
+      <div id="bookings-list" className="d-flex flex-column gap-3">
+        {Array.from({ length: 3 }, () => SkeletonBookingCard())}
       </div>
     </div>
   ) as HTMLElement;
@@ -37,7 +46,7 @@ export function BookingsTable() {
             <h5 className="modal-title text-danger"><i className="bi bi-exclamation-triangle-fill me-2"></i>Buchung stornieren</h5>
             <button type="button" className="btn-close" aria-label="Schließen" onclick={() => closeCancelModal()}></button>
           </div>
-          <div className="modal-body">
+          <div className="modal-body text-dark">
             <p>Möchtest du diese Buchung wirklich unwiderruflich stornieren?</p>
             <p className="small text-muted">Es wird automatisch ein Stornierungsbeleg generiert und an deine E-Mail-Adresse gesendet.</p>
             <div id="cancel-error" className="text-danger small d-none mt-2"></div>
@@ -86,10 +95,10 @@ export function BookingsTable() {
       const user = await fetchCurrentUser();
       if (!user || !user.id) throw new Error("Not logged in");
 
-      await cancelBooking(bookingToCancel.id, user.id);
+      await cancelBooking(bookingToCancel.id, user.id as string);
       
       closeCancelModal();
-      await loadBookings(); // Reload to update status and hide button
+      await loadBookings(); // Reload to update status
     } catch (err) {
       console.error("Cancel failed", err);
       errorEl.textContent = err instanceof Error ? err.message : "Stornierung fehlgeschlagen.";
@@ -99,47 +108,21 @@ export function BookingsTable() {
     }
   };
 
-
   const renderTable = (bookings: BookingResponse[]) => {
-    const tbody = container.querySelector("#bookings-tbody") as HTMLElement;
-    tbody.innerHTML = "";
+    const listContainer = container.querySelector("#bookings-list") as HTMLElement;
+    listContainer.innerHTML = "";
 
     if (bookings.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="text-center text-muted py-4">Du hast noch keine Buchungen vorgenommen.</td>
-        </tr>
+      listContainer.innerHTML = `
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+          <i class="bi bi-calendar-x fs-1 text-muted mb-3 d-block"></i>
+          <span class="text-muted fs-5">Du hast noch keine Buchungen vorgenommen.</span>
+        </div>
       `;
       return;
     }
 
     bookings.forEach((booking) => {
-      const row = document.createElement("tr");
-
-      row.appendChild(
-        <td>
-          <span className="fw-bold text-dark">{booking.camper_name}</span>
-        </td>
-      );
-
-      row.appendChild(
-        <td>
-          <div className="fw-medium mb-1">{booking.start_date} <i className="bi bi-arrow-right mx-1 text-muted"></i> {booking.end_date}</div>
-          {booking.pickup_location && (
-            <div className="small text-muted mb-1">
-              <i className="bi bi-geo-alt-fill text-primary me-1"></i>
-              <strong>Abholung:</strong> {booking.pickup_location.name} ({booking.pickup_location.street}, {booking.pickup_location.city})
-            </div>
-          )}
-          {booking.return_location && (
-            <div className="small text-muted">
-              <i className="bi bi-geo-alt me-1"></i>
-              <strong>Rückgabe:</strong> {booking.return_location.name} ({booking.return_location.street}, {booking.return_location.city})
-            </div>
-          )}
-        </td>
-      );
-
       let badgeClass = "bg-warning-subtle text-warning";
       let badgeText = "Ausstehend";
 
@@ -154,88 +137,130 @@ export function BookingsTable() {
         badgeText = "Storniert";
       }
 
-      row.appendChild(
-        <td>
-          <span className={`badge rounded-pill px-3 py-1 ${badgeClass}`}>{badgeText}</span>
-        </td>
-      );
+      const cardEl = (
+        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-3 bg-white" style={{ transition: "transform 0.2s ease" }}>
+          {/* Card Header */}
+          <div className="card-header border-0 bg-light d-flex justify-content-between align-items-center px-4 py-3">
+            <div className="d-flex align-items-center gap-2">
+              <span className="text-muted small">Buchungs-ID:</span>
+              <span className="fw-bold text-dark small">#{booking.id.slice(0, 8)}</span>
+            </div>
+            <span className={`badge rounded-pill px-3 py-1 ${badgeClass}`} style={{ fontSize: "12px" }}>{badgeText}</span>
+          </div>
 
-      row.appendChild(
-        <td>
-          <span className="fw-bold text-dark">{booking.total_price.toFixed(2)} €</span>
-        </td>
-      );
+          {/* Card Body */}
+          <div className="card-body p-4">
+            <div className="row g-3 align-items-center">
+              
+              {/* Camper Details */}
+              <div className="col-12 col-md-4">
+                <span className="text-muted small text-uppercase d-block mb-1" style={{ fontSize: "11px" }}>Fahrzeug</span>
+                <h4 className="fw-bold text-dark mb-0 custom-font-base">{booking.camper_name}</h4>
+              </div>
 
-      const actionsTd = (<td className="text-end"></td>) as HTMLElement;
+              {/* Dates & Locations */}
+              <div className="col-12 col-md-5">
+                <span className="text-muted small text-uppercase d-block mb-1" style={{ fontSize: "11px" }}>Zeitraum & Orte</span>
+                <div className="d-flex align-items-center gap-2 fw-bold text-dark mb-2" style={{ fontSize: "15px" }}>
+                  <i className="bi bi-calendar3 text-custom-light-blue"></i>
+                  <span>{booking.start_date}</span>
+                  <i className="bi bi-arrow-right text-muted"></i>
+                  <span>{booking.end_date}</span>
+                </div>
+                
+                {booking.pickup_location && (
+                  <div className="small text-muted d-flex align-items-start gap-1 mb-1" style={{ fontSize: "12px" }}>
+                    <i className="bi bi-geo-alt-fill text-custom-light-blue mt-1" style={{ fontSize: "12px" }}></i>
+                    <div><strong>Abholung:</strong> {booking.pickup_location.name || `${booking.pickup_location.city} Station`} ({booking.pickup_location.street}, {booking.pickup_location.city})</div>
+                  </div>
+                )}
+                {booking.return_location && (
+                  <div className="small text-muted d-flex align-items-start gap-1" style={{ fontSize: "12px" }}>
+                    <i className="bi bi-geo-alt text-custom-light-blue mt-1" style={{ fontSize: "12px" }}></i>
+                    <div><strong>Rückgabe:</strong> {booking.return_location.name || `${booking.return_location.city} Station`} ({booking.return_location.street}, {booking.return_location.city})</div>
+                  </div>
+                )}
+              </div>
 
-      if (booking.status === "confirmed") {
-        const cancelBtn = (
-          <button className="btn btn-sm btn-outline-danger rounded-pill px-3 me-2" onclick={(e: Event) => showCancelModal(e, booking)}>
-            Buchung stornieren
-          </button>
-        ) as HTMLElement;
-        actionsTd.appendChild(cancelBtn);
-      }
+              {/* Total Price */}
+              <div className="col-12 col-md-3 text-md-end">
+                <span className="text-muted small text-uppercase d-block mb-1" style={{ fontSize: "11px" }}>Gesamtpreis</span>
+                <h3 className="fw-bold text-dark mb-0">{booking.total_price.toFixed(2)} €</h3>
+              </div>
 
-      const detailsBtn = (
-        <button className="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick={(e: Event) => toggleDetails(e, booking)}>
-          Details
-        </button>
-      ) as HTMLElement;
-      actionsTd.appendChild(detailsBtn);
+            </div>
+          </div>
 
-      row.appendChild(actionsTd);
+          {/* Card Footer */}
+          <div className="card-footer bg-white border-0 px-4 py-3 d-flex justify-content-between align-items-center border-top">
+            <button className="btn btn-sm btn-link text-decoration-none p-0 text-muted fw-bold d-flex align-items-center gap-1" onclick={(e: Event) => toggleDetails(e, booking)} style={{ fontSize: "13px" }}>
+              <span>Preisdetails anzeigen</span>
+              <i className="bi bi-chevron-down" id={`chevron-${booking.id}`}></i>
+            </button>
+            
+            <div className="d-flex gap-2">
+              {booking.status === "confirmed" && (
+                <button className="btn btn-sm btn-outline-danger rounded-pill px-3" onclick={(e: Event) => showCancelModal(e, booking)} style={{ fontSize: "12px" }}>
+                  Buchung stornieren
+                </button>
+              )}
+            </div>
+          </div>
 
-      tbody.appendChild(row);
-
-      const detailsRow = (
-        <tr className="d-none bg-light" id={`details-${booking.id}`}>
-          <td colspan={5} className="p-3">
+          {/* Collapsible Details */}
+          <div className="d-none border-top bg-light p-4" id={`details-${booking.id}`}>
             <div className="p-3 border rounded-3 bg-white shadow-sm" style={{ fontSize: "14px" }}>
-              <h6 className="fw-bold mb-2">Aufschlüsselung des Gesamtbetrags:</h6>
+              <h6 className="fw-bold mb-3 text-dark">Aufschlüsselung des Gesamtbetrags:</h6>
               <ul className="list-group list-group-flush mb-0">
-                <li className="list-group-item d-flex justify-content-between px-0 py-1 bg-transparent">
+                <li className="list-group-item d-flex justify-content-between px-0 py-2 bg-transparent text-dark">
                   <span>Mietpreis (inkl. Saisonzuschlag/Rabatt)</span>
                   <span>{(booking.total_price - booking.addons_price).toFixed(2)} €</span>
                 </li>
                 {booking.addons_detail && booking.addons_detail.length > 0 ? (
                   booking.addons_detail.map((add) => (
-                    <li className="list-group-item d-flex justify-content-between px-0 py-1 bg-transparent text-muted">
+                    <li className="list-group-item d-flex justify-content-between px-0 py-2 bg-transparent text-muted">
                       <span>{add.name}</span>
                       <span>+{add.price.toFixed(2)} €</span>
                     </li>
                   ))
                 ) : (
-                  <li className="list-group-item d-flex justify-content-between px-0 py-1 bg-transparent text-muted">
+                  <li className="list-group-item d-flex justify-content-between px-0 py-2 bg-transparent text-muted">
                     <span>Zusatzleistungen (Addons)</span>
                     <span>0.00 €</span>
                   </li>
                 )}
-                <li className="list-group-item d-flex justify-content-between px-0 py-1 bg-transparent fw-bold border-top mt-1">
+                <li className="list-group-item d-flex justify-content-between px-0 py-2 bg-transparent fw-bold border-top mt-1 text-dark">
                   <span>Gesamtsumme</span>
                   <span>{booking.total_price.toFixed(2)} €</span>
                 </li>
               </ul>
             </div>
-          </td>
-        </tr>
+          </div>
+
+        </div>
       ) as HTMLElement;
 
-      tbody.appendChild(detailsRow);
+      listContainer.appendChild(cardEl);
     });
   };
 
   const toggleDetails = (e: Event, booking: BookingResponse) => {
-    const btn = e.target as HTMLButtonElement;
+    const btn = e.currentTarget as HTMLButtonElement;
     const detailRow = container.querySelector(`#details-${booking.id}`) as HTMLElement;
+    const chevron = btn.querySelector("i") as HTMLElement;
+    
     if (detailRow.classList.contains("d-none")) {
       detailRow.classList.remove("d-none");
-      btn.textContent = "Schließen";
-      btn.className = "btn btn-sm btn-secondary rounded-pill px-3";
+      if (chevron) {
+        chevron.classList.remove("bi-chevron-down");
+        chevron.classList.add("bi-chevron-up");
+      }
     } else {
       detailRow.classList.add("d-none");
-      btn.textContent = "Details";
-      btn.className = "btn btn-sm btn-outline-secondary rounded-pill px-3";
+      if (chevron) {
+        chevron.classList.remove("bi-chevron-up");
+        chevron.classList.add("bi-chevron-down");
+      }
     }
   };
 
@@ -247,11 +272,12 @@ export function BookingsTable() {
       renderTable(bookings);
     } catch (err) {
       console.error(err);
-      const tbody = container.querySelector("#bookings-tbody") as HTMLElement;
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="text-center text-danger py-4">Fehler beim Laden der Buchungen.</td>
-        </tr>
+      const listContainer = container.querySelector("#bookings-list") as HTMLElement;
+      listContainer.innerHTML = `
+        <div class="alert alert-danger rounded-4 p-4 text-center">
+          <i class="bi bi-exclamation-octagon fs-2 d-block mb-2"></i>
+          Fehler beim Laden der Buchungen.
+        </div>
       `;
     }
   };

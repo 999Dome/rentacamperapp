@@ -6,6 +6,7 @@ export interface CreateStripeSessionRequest {
   bookingDetails: {
     startDate: string;
     endDate: string;
+    bookingId?: string;
   };
 }
 

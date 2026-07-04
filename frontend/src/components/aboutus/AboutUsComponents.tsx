@@ -21,24 +21,24 @@ import type { LocationResponse } from "../../infrastructure/api/location-api-cli
 
 export function LocationSection({ locations }: { locations: LocationResponse[] }) {
   return (
-    <section id="standort" className="panel reveal mb-5 p-4 rounded-4 bg-dark bg-opacity-25 border">
-      <h2 className="h3 fw-bold text-custom-red mb-3 custom-font-base">Unsere Stationen</h2>
-      <div className="content split row g-4 align-items-center">
+    <section id="standort" className="card border-0 shadow-lg rounded-4 bg-beige p-4 mb-5 reveal">
+      <h2 className="h3 fw-bold text-custom-red mb-3 custom-font-burbank">Unsere Stationen</h2>
+      <div className="row g-4 align-items-center">
         <div className="text col-12 col-md-7">
-          <p className="fs-5">
+          <p className="fs-5 text-dark">
             Unsere Camper-Stationen befinden sich an zentralen Standorten — leicht erreichbar, mit ausreichend Parkplätzen für deinen Pkw während des Mietzeitraums.
           </p>
           <div className="locations-list d-flex flex-column gap-3">
             {locations.length > 0 ? locations.map((loc) => (
-              <div className="location-item p-3 border rounded-3 bg-white bg-opacity-10 text-white">
+              <div className="location-item p-3 border border-dark border-opacity-10 rounded-3 bg-white text-dark shadow-sm">
                 <h5 className="fw-bold text-custom-light-blue mb-1"><i className="bi bi-geo-alt-fill me-2"></i>{loc.name || loc.city}</h5>
-                <address className="mb-0 text-white-50">
+                <address className="mb-0 text-muted">
                   {loc.street} {loc.housenumber || ''}<br />
                   {loc.plz || ''} {loc.city}
                 </address>
               </div>
             )) : (
-              <p className="text-white-50">Stationen werden geladen...</p>
+              <p className="text-muted">Stationen werden geladen...</p>
             )}
           </div>
         </div>
@@ -57,8 +57,8 @@ export function LocationSection({ locations }: { locations: LocationResponse[] }
 
 export function OpeningHours() {
   return (
-    <section id="oeffnungszeiten" className="panel reveal mb-5 p-4 rounded-4 bg-dark bg-opacity-25 border">
-      <h2 className="h3 fw-bold text-custom-red mb-3 custom-font-base">Öffnungszeiten</h2>
+    <section id="oeffnungszeiten" className="card border-0 shadow-lg rounded-4 bg-beige p-4 mb-5 reveal">
+      <h2 className="h3 fw-bold text-custom-red mb-3 custom-font-burbank">Öffnungszeiten</h2>
       <ul className="hours list-group list-group-flush bg-transparent">
         {[
           { day: "Montag", hours: "09:00 — 18:00" },
@@ -69,9 +69,9 @@ export function OpeningHours() {
           { day: "Samstag", hours: "10:00 — 16:00" },
           { day: "Sonntag", hours: "Geschlossen (Notfallkontakt per Telefon verfügbar)" }
         ].map((h) => (
-          <li className="list-group-item d-flex justify-content-between align-items-center bg-transparent border-bottom border-secondary border-opacity-25 text-white py-3 fs-5">
+          <li className="list-group-item d-flex justify-content-between align-items-center bg-transparent border-bottom border-dark border-opacity-10 text-dark py-3 fs-5">
             <strong className="text-custom-light-blue">{h.day}:</strong>
-            <span>{h.hours}</span>
+            <span className="text-muted">{h.hours}</span>
           </li>
         ))}
       </ul>
@@ -87,19 +87,19 @@ export function Staff() {
   ];
 
   return (
-    <section id="personal" className="panel reveal mb-5 p-4 rounded-4 bg-dark bg-opacity-25 border">
-      <h2 className="h3 fw-bold text-custom-red mb-4 custom-font-base">Personal</h2>
-      <div className="staff-grid row g-4">
+    <section id="personal" className="card border-0 shadow-lg rounded-4 bg-beige p-4 mb-5 reveal">
+      <h2 className="h3 fw-bold text-custom-red mb-4 custom-font-burbank">Personal</h2>
+      <div className="row g-4">
         {team.map((member) => (
           <div className="col-12 col-md-4">
-            <article className="card border-0 shadow-sm rounded-4 p-4 text-center h-100 bg-white bg-opacity-5 hover-zoom">
+            <article className="card border-0 shadow-sm rounded-4 p-4 text-center h-100 bg-white hover-zoom text-dark">
               <img
                 src={member.img}
                 alt={member.name}
-                className="rounded-circle mb-3 border border-3 border-secondary border-opacity-25 mx-auto"
+                className="rounded-circle mb-3 border border-3 border-dark border-opacity-10 mx-auto"
                 style={{ width: "120px", height: "120px", objectFit: "cover" }}
               />
-              <h4 className="fw-bold text-white mb-1">{member.name}</h4>
+              <h4 className="fw-bold text-dark mb-1">{member.name}</h4>
               <p className="text-custom-light-blue mb-0">{member.role}</p>
             </article>
           </div>
@@ -111,9 +111,9 @@ export function Staff() {
 
 export function Impressum() {
   return (
-    <section id="impressum" className="panel reveal mb-5 p-4 rounded-4 bg-dark bg-opacity-25 border">
-      <h2 className="h3 fw-bold text-custom-red mb-3 custom-font-base">Impressum</h2>
-      <p className="fs-5 text-white mb-0" style={{ lineHeight: "1.7" }}>
+    <section id="impressum" className="card border-0 shadow-lg rounded-4 bg-beige p-4 mb-5 reveal">
+      <h2 className="h3 fw-bold text-custom-red mb-3 custom-font-burbank">Impressum</h2>
+      <p className="fs-5 text-dark mb-0" style={{ lineHeight: "1.7" }}>
         Rent-a-Camper GmbH<br />
         Musterstraße 1, 12345 Musterstadt<br />
         Geschäftsführer: Max Mustermann<br />

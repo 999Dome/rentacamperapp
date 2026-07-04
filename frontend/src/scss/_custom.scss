@@ -401,3 +401,18 @@ input[type="date"].filter-control {
   height: 28px;
   width: 80px;
 }
+
+/* ─── Blue Form Inputs: White Text Color ─── */
+.form-control:not(.bg-light):not(.bg-white),
+.form-select:not(.bg-light):not(.bg-white) {
+  color: white !important;
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+}
+
+select:not(.bg-light):not(.bg-white) option {
+  background-color: #1a1e23 !important;
+  color: white !important;
+}

@@ -6,9 +6,9 @@ export function ContactForm() {
     <div className="container my-5" style={{ minHeight: '60vh' }}>
       <div className="row justify-content-center">
         <div className="col-lg-8">
-          <div className="card shadow-lg border-0 rounded-4">
+          <div className="card shadow-lg border-0 rounded-4 bg-beige">
             <div className="card-body p-5">
-              <h2 className="card-title fw-bold custom-font mb-4 text-center">Schreibe uns</h2>
+              <h2 className="card-title fw-bold custom-font mb-4 text-center custom-font-burbank">Schreibe uns</h2>
               <p className="text-muted text-center mb-5">
                 Hast du Fragen, Wünsche oder Anregungen? Fülle einfach das Formular aus und wir melden uns schnellstmöglich bei dir.
               </p>

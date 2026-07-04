@@ -40,8 +40,8 @@ export function ProviderOnboarding({ userId, onSuccess }: ProviderOnboardingProp
   };
 
   const container = (
-    <div className="container py-5" style={{ maxWidth: "600px" }}>
-      <div className="card border-0 shadow-lg rounded-4 p-4 p-md-5">
+    <div className="container py-5 " style={{ maxWidth: "600px" }}>
+      <div className="card border-0 bg-beige shadow-lg rounded-4 p-4 p-md-5">
         <div className="text-center mb-4">
           <i className="bi bi-shop fs-1 text-custom-light-blue mb-3"></i>
           <h2 className="fw-bold custom-font-base text-dark">Als Vermieter registrieren und Camper inserieren</h2>

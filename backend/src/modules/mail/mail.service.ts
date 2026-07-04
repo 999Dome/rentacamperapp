@@ -5,6 +5,7 @@ import type { CancellationPdfData } from '../pdf/pdf.service';
 
 export interface SendEmailOptions {
   to: string;
+  from?: string;
   replyTo?: string;
   subject: string;
   html: string;
@@ -35,9 +36,28 @@ export class MailService {
 
   async sendEmail(options: SendEmailOptions): Promise<void> {
     try {
+      let recipient = options.to;
+      if (
+        this.defaultFrom === 'onboarding@resend.dev' &&
+        recipient !== 'xbydomex@gmail.com'
+      ) {
+        this.logger.warn(
+          `Redirecting email from ${recipient} to verified developer email xbydomex@gmail.com due to Resend Sandbox restrictions.`,
+        );
+        recipient = 'xbydomex@gmail.com';
+      }
+
+      let sender = this.defaultFrom;
+      if (options.from) {
+        const emailMatch = this.defaultFrom.match(/<([^>]+)>/);
+        const verifiedEmail = emailMatch ? emailMatch[1] : this.defaultFrom.trim();
+        const cleanDisplayName = options.from.replace(/[<>]/g, '').trim();
+        sender = `"${cleanDisplayName}" <${verifiedEmail}>`;
+      }
+
       const payload: CreateEmailOptions = {
-        from: this.defaultFrom,
-        to: options.to,
+        from: sender,
+        to: recipient,
         replyTo: options.replyTo || this.defaultReplyTo,
         subject: options.subject,
         html: options.html,
@@ -50,11 +70,11 @@ export class MailService {
       const { error } = await this.resend.emails.send(payload);
 
       if (error) {
-        this.logger.error(`Failed to send email to ${options.to}`, error);
+        this.logger.error(`Failed to send email to ${recipient}`, error);
         throw new Error(error.message);
       }
 
-      this.logger.log(`Email sent successfully to ${options.to}`);
+      this.logger.log(`Email sent successfully to ${recipient}`);
     } catch (error) {
       this.logger.error(`Error sending email to ${options.to}`, error);
       throw error;

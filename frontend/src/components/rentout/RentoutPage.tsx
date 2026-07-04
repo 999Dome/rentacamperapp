@@ -15,17 +15,17 @@ export function RentoutPage() {
       </div>
       <div id="rentout-content" className="d-none">
         <header className="mb-5 text-center">
-          <h1 className="display-4 fw-bold custom-font-burbank text-custom-red text-stroke-grey mb-2" style={{ letterSpacing: "2px" }}>
+          <h1 className="display-4 fw-bold custom-font-burbank text-white" style={{ letterSpacing: "2px" }}>
             Vermieter-Portal
           </h1>
-          <p className="fs-5 text-muted">Verwalte deine Inserate, checke Buchungsraten und beantworte Anfragen</p>
+          <p className="fs-5 text-white-50">Verwalte deine Inserate, checke Buchungsraten und beantworte Anfragen</p>
         </header>
 
         <div className="d-flex justify-content-center mb-5">
           <div className="d-inline-flex bg-white rounded-pill p-1 shadow-sm border border-secondary-subtle">
             <button
               type="button"
-              className="btn rounded-pill px-4 py-2 active-tab-btn btn-primary fw-medium"
+              className="btn rounded-pill px-4 py-2 btn-primary fw-medium text-white"
               id="tab-btn-dashboard"
               onclick={() => switchTab("dashboard")}
             >
@@ -33,9 +33,9 @@ export function RentoutPage() {
             </button>
             <button
               type="button"
-              className="btn rounded-pill px-4 py-2 text-secondary btn-light fw-medium"
+              className="btn rounded-pill px-4 py-2 fw-medium"
               id="tab-btn-crud"
-              style={{ backgroundColor: "transparent", border: "none" }}
+              style={{ backgroundColor: "transparent", border: "none", color: "#6c757d" }}
               onclick={() => switchTab("crud")}
             >
               Fahrzeug-Verwaltung
@@ -121,17 +121,29 @@ export function RentoutPage() {
     if (!btnDashboard || !btnCrud) return;
 
     if (tab === "dashboard") {
-      btnDashboard.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium";
-      btnCrud.className = "btn rounded-pill px-4 py-2 text-secondary btn-light fw-medium";
+      btnDashboard.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium text-white";
+      btnDashboard.style.backgroundColor = "";
+      btnDashboard.style.border = "";
+      btnDashboard.style.color = "";
+      
+      btnCrud.className = "btn rounded-pill px-4 py-2 fw-medium";
       btnCrud.style.backgroundColor = "transparent";
       btnCrud.style.border = "none";
+      btnCrud.style.color = "#6c757d";
+      
       paneDashboard.classList.remove("d-none");
       paneCrud.classList.add("d-none");
     } else {
-      btnCrud.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium";
-      btnDashboard.className = "btn rounded-pill px-4 py-2 text-secondary btn-light fw-medium";
+      btnCrud.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium text-white";
+      btnCrud.style.backgroundColor = "";
+      btnCrud.style.border = "";
+      btnCrud.style.color = "";
+      
+      btnDashboard.className = "btn rounded-pill px-4 py-2 fw-medium";
       btnDashboard.style.backgroundColor = "transparent";
       btnDashboard.style.border = "none";
+      btnDashboard.style.color = "#6c757d";
+      
       paneCrud.classList.remove("d-none");
       paneDashboard.classList.add("d-none");
     }

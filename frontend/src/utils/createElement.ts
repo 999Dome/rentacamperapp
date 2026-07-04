@@ -1,4 +1,7 @@
-export const Fragment = Symbol('Fragment');
+export const Fragment = Symbol('Fragment') as unknown as (
+  attrs: Record<string, unknown> | null,
+  ...children: unknown[]
+) => HTMLElement;
 
 type Attrs = Record<string, unknown> | null;
 
@@ -14,7 +17,7 @@ export function createElement(
     return tag(attrs, ...children);
   }
 
-  if (tag === Fragment) {
+  if ((tag as unknown) === Fragment) {
     const frag = document.createDocumentFragment();
     children.forEach((c) => appendChild(frag, c));
     return frag;

@@ -12,7 +12,7 @@ export class SupportService {
     private readonly configService: ConfigService,
   ) {
     this.supportEmail =
-      this.configService.get<string>('EMAIL_REPLY_TO') ||
+      this.configService.get<string>('EMAIL_TO') ||
       'service@rent-a-camper.me';
   }
 
@@ -23,9 +23,17 @@ export class SupportService {
       throw new BadRequestException('All fields are required.');
     }
 
+    const cleanEmail = dto.email.trim();
+    const cleanName = dto.name.trim();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      throw new BadRequestException('Invalid email format.');
+    }
+
     const htmlContent = `
-      <h2>Neue Support-Anfrage von ${dto.name}</h2>
-      <p><strong>Email:</strong> ${dto.email}</p>
+      <h2>Neue Support-Anfrage von ${cleanName}</h2>
+      <p><strong>Email:</strong> ${cleanEmail}</p>
       <p><strong>Betreff:</strong> ${dto.subject}</p>
       <hr />
       <p><strong>Nachricht:</strong></p>
@@ -34,7 +42,8 @@ export class SupportService {
 
     await this.mailService.sendEmail({
       to: this.supportEmail,
-      replyTo: dto.email,
+      from: `${cleanName} (${cleanEmail})`,
+      replyTo: cleanEmail,
       subject: `Support-Anfrage: ${dto.subject}`,
       html: htmlContent,
     });

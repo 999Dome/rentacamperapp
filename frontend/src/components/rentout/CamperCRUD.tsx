@@ -75,75 +75,110 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
     try {
       const all = await getAllCampers();
       campers = all.filter(c => c.ownerId === ownerId || c.owner_id === ownerId);
-      renderTable();
+      renderCampersList();
     } catch (err) {
       console.error(err);
     }
   }
 
-  function renderTable() {
-    const tbody = container.querySelector("#camper-crud-tbody") as HTMLElement;
-    if (!tbody) return;
-    tbody.innerHTML = "";
+  function renderCampersList() {
+    const listContainer = container.querySelector("#camper-list") as HTMLElement;
+    if (!listContainer) return;
+    listContainer.innerHTML = "";
 
     if (campers.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7" class="text-center text-muted py-4">Keine inserierten Fahrzeuge gefunden.</td>
-        </tr>
+      listContainer.innerHTML = `
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+          <i class="bi bi-truck fs-1 text-muted mb-3 d-block"></i>
+          <span class="text-muted fs-5">Keine inserierten Fahrzeuge gefunden.</span>
+        </div>
       `;
       return;
     }
 
     campers.forEach((camper) => {
-      const row = document.createElement("tr");
+      let statusBadgeClass = "bg-success-subtle text-success";
+      let statusBadgeText = "Aktiv";
 
-      row.appendChild(
-        <td>
-          <div className="d-flex align-items-center gap-3">
-            <img
-              src={camper.image_url || "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7"}
-              alt={camper.name || ""}
-              className="rounded-3"
-              style={{ width: "60px", height: "45px", objectFit: "cover" }}
-            />
-            <span className="fw-bold text-dark">{camper.name}</span>
+      if (camper.is_blocked) {
+        statusBadgeClass = "bg-danger-subtle text-danger";
+        statusBadgeText = "Gesperrt";
+      }
+
+      const cardEl = (
+        <div className="card border-0 shadow-sm rounded-4 overflow-hidden mb-3 bg-white" style={{ transition: "transform 0.2s ease" }}>
+          {/* Card Header */}
+          <div className="card-header border-0 bg-light d-flex justify-content-between align-items-center px-4 py-3">
+            <div className="d-flex align-items-center gap-2">
+              <span className="text-muted small">Camper-ID:</span>
+              <span className="fw-bold text-dark small">#{camper.id.slice(0, 8)}</span>
+            </div>
+            <span className={`badge rounded-pill px-3 py-1 ${statusBadgeClass}`} style={{ fontSize: "12px" }}>{statusBadgeText}</span>
           </div>
-        </td>
-      );
 
-      row.appendChild(<td>{camper.manufacturer}</td>);
-      row.appendChild(<td className="fw-bold">{camper.price_per_night_base} €</td>);
-      row.appendChild(<td>{camper.beds} Betten</td>);
-      row.appendChild(<td><span className="badge bg-light text-dark border">Klasse {camper.required_license}</span></td>);
+          {/* Card Body */}
+          <div className="card-body p-4">
+            <div className="row g-3 align-items-center">
+              
+              {/* Camper Image & Name */}
+              <div className="col-12 col-md-4">
+                <span className="text-muted small text-uppercase d-block mb-1" style={{ fontSize: "11px" }}>Fahrzeug</span>
+                <div className="d-flex align-items-center gap-3">
+                  <img
+                    src={camper.image_url || "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7"}
+                    alt={camper.name || ""}
+                    className="rounded-3 shadow-sm"
+                    style={{ width: "80px", height: "60px", objectFit: "cover" }}
+                  />
+                  <div>
+                    <h4 className="fw-bold text-dark mb-0 custom-font-base">{camper.name}</h4>
+                    <span className="text-muted small">{camper.manufacturer}</span>
+                  </div>
+                </div>
+              </div>
 
-      const statusBadge = camper.is_blocked ? (
-        <span className="badge bg-danger-subtle text-danger rounded-pill px-3 py-1">Gesperrt</span>
-      ) : (
-        <span className="badge bg-success-subtle text-success rounded-pill px-3 py-1">Aktiv</span>
-      );
-      row.appendChild(<td>{statusBadge}</td>);
+              {/* Specs / Details */}
+              <div className="col-12 col-md-5">
+                <span className="text-muted small text-uppercase d-block mb-1" style={{ fontSize: "11px" }}>Ausstattung &amp; Führerschein</span>
+                <div className="d-flex align-items-center gap-3 fw-bold text-dark mb-2" style={{ fontSize: "15px" }}>
+                  <span><i className="bi bi-person-fill text-custom-light-blue me-1"></i>{camper.beds} Betten</span>
+                  <span><i className="bi bi-card-list text-custom-light-blue me-1"></i>Klasse {camper.required_license}</span>
+                  <span><i className="bi bi-fuel-pump-fill text-custom-light-blue me-1"></i>{camper.fuel_type}</span>
+                </div>
+                <div className="small text-muted" style={{ fontSize: "12px" }}>
+                  <strong>Motor:</strong> {camper.engine_power} PS ({camper.fuel_consumption} l/100km)
+                  {camper.has_tow_hitch && <span className="ms-2 badge bg-light text-dark border">Anhängerkupplung</span>}
+                </div>
+              </div>
 
-      const blockBtnText = "Sperrzeiten";
-      const blockBtnClass = "btn-outline-warning";
+              {/* Nightly price */}
+              <div className="col-12 col-md-3 text-md-end">
+                <span className="text-muted small text-uppercase d-block mb-1" style={{ fontSize: "11px" }}>Basispreis</span>
+                <h3 className="fw-bold text-dark mb-0">{camper.price_per_night_base.toFixed(2)} €</h3>
+                <span className="text-muted small">pro Nacht</span>
+              </div>
 
-      row.appendChild(
-        <td className="text-end">
-          <div className="d-inline-flex gap-2">
-            <button className={`btn btn-sm ${blockBtnClass} rounded-pill px-3`} onclick={() => openBlockingModal(camper.id)}>
-              {blockBtnText}
-            </button>
-            <button className="btn btn-sm btn-outline-primary rounded-pill px-3" onclick={() => openModal(camper.id)}>
-              Edit
-            </button>
-            <button className="btn btn-sm btn-outline-danger rounded-pill px-3" onclick={() => deleteCamper(camper.id)}>
-              Löschen
-            </button>
+            </div>
           </div>
-        </td>
-      );
 
-      tbody.appendChild(row);
+          {/* Card Footer */}
+          <div className="card-footer bg-white border-0 px-4 py-3 d-flex justify-content-end align-items-center border-top">
+            <div className="d-flex gap-2">
+              <button className="btn btn-sm btn-outline-warning rounded-pill px-3" onclick={() => openBlockingModal(camper.id)} style={{ fontSize: "12px" }}>
+                Sperrzeiten
+              </button>
+              <button className="btn btn-sm btn-outline-primary rounded-pill px-3" onclick={() => openModal(camper.id)} style={{ fontSize: "12px" }}>
+                Bearbeiten
+              </button>
+              <button className="btn btn-sm btn-outline-danger rounded-pill px-3" onclick={() => deleteCamper(camper.id)} style={{ fontSize: "12px" }}>
+                Löschen
+              </button>
+            </div>
+          </div>
+        </div>
+      ) as HTMLElement;
+
+      listContainer.appendChild(cardEl);
     });
   }
 
@@ -422,38 +457,23 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
   }
 
   const container = (
-    <div className="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+    <div className="p-0">
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-          <h3 className="fw-bold mb-1 text-dark custom-font-base">Fahrzeug-Verwaltung</h3>
-          <p className="text-muted mb-0 small">Verwalte deine inserierten Wohnmobile und blockiere sie bei Bedarf für Wartungen.</p>
+          <h3 className="fw-bold mb-1 text-white custom-font-burbank" style={{ letterSpacing: "1px" }}>Fahrzeug-Verwaltung</h3>
+          <p className="text-white-50 mb-0 small">Verwalte deine inserierten Wohnmobile und blockiere sie bei Bedarf für Wartungen.</p>
         </div>
         <button className="btn btn-primary rounded-pill px-4" onclick={() => openModal(null)}>
           + Neuen Camper anlegen
         </button>
       </div>
 
-      <div className="table-responsive">
-        <table className="table table-hover align-middle">
-          <thead className="table-light">
-            <tr>
-              <th>Fahrzeug</th>
-              <th>Hersteller</th>
-              <th>Basispreis</th>
-              <th>Schlafplätze</th>
-              <th>Führerschein</th>
-              <th>Status</th>
-              <th className="text-end">Aktionen</th>
-            </tr>
-          </thead>
-          <tbody id="camper-crud-tbody"></tbody>
-        </table>
-      </div>
+      <div id="camper-list" className="d-flex flex-column gap-3"></div>
 
       <div className="modal-backdrop fade show d-none" id="crud-modal-backdrop" style={{ zIndex: 1040 }}></div>
       <div className="modal fade show d-none" id="crud-modal" tabIndex={-1} style={{ display: "block", zIndex: 1050 }}>
         <div className="modal-dialog modal-lg modal-dialog-centered">
-          <div className="modal-content rounded-4 border-0 shadow-lg">
+          <div className="modal-content rounded-4 border-0 shadow-lg bg-beige">
             <div className="modal-header border-bottom px-4">
               <h5 className="modal-title fw-bold text-dark custom-font-base" id="modal-title-text">Camper hinzufügen</h5>
               <button type="button" className="btn-close" aria-label="Schließen" onclick={closeModal}></button>
@@ -583,7 +603,7 @@ export function CamperCRUD({ ownerId, onDataChanged }: CamperCRUDProps) {
 
       <div className="modal fade show d-none" id="blocking-modal" tabIndex={-1} style={{ display: "block", zIndex: 1050 }}>
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content rounded-4 border-0 shadow-lg">
+          <div className="modal-content rounded-4 border-0 shadow-lg bg-beige">
             <div className="modal-header border-bottom px-4 bg-light rounded-top-4">
               <h5 className="modal-title fw-bold text-dark custom-font-base">Sperrzeiten verwalten</h5>
               <button type="button" className="btn-close" aria-label="Schließen" onclick={closeBlockingModal}></button>

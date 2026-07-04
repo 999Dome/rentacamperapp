@@ -10,12 +10,12 @@ export function RentPage() {
   let campersList: MockCamper[] = [];
 
   const container = (
-    <div className="container-fluid py-5 px-3 px-md-5" style={{ backgroundColor: "#D1FEB8" }}>
+    <div className="container-fluid py-5 px-3 px-md-5">
       <header className="text-center mb-5">
-        <h1 className="display-4 fw-bold custom-font-burbank text-custom-light-blue text-stroke-grey mb-2" style={{ letterSpacing: "2px" }}>
+        <h1 className="display-4 fw-bold custom-font-burbank mb-2 text-white" style={{ letterSpacing: "2px" }}>
           Unsere Wohnmobile
         </h1>
-        <p className="fs-5 text-muted">Finde deinen perfekten Begleiter für das nächste Abenteuer</p>
+        <p className="fs-5 custom-font-base text-white-50">Finde deinen perfekten Begleiter für das nächste Abenteuer</p>
       </header>
 
       <div className="row">

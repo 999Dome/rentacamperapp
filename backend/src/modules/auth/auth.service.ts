@@ -78,8 +78,9 @@ export class AuthService {
         id: authData.user.id,
         first_name: firstName || '',
         last_name: lastName || '',
-        is_provider: role === 'provider',
-        is_renter: role === 'renter' || role !== 'provider',
+        is_provider: false,
+        is_renter: true,
+        is_admin: false,
         drivers_license_class: resolvedLicenseId,
       });
 
@@ -138,9 +139,31 @@ export class AuthService {
       console.warn('Fehler beim Laden des Profils:', profileError);
     }
 
+    let enrichedProfile: any = null;
+    if (profile) {
+      let className = 'Klasse B';
+      if (profile.drivers_license_class) {
+        try {
+          const license = await this.driversLicenseService.findLicenseById(
+            profile.drivers_license_class,
+          );
+          if (license && license.class) {
+            className = license.class;
+          }
+        } catch (err) {
+          console.warn('Could not load license class name in getMe:', err);
+        }
+      }
+      enrichedProfile = {
+        ...profile,
+        drivers_license_class: className,
+        driver_license_class: className, // Fallback for frontend compatibility
+      };
+    }
+
     return {
       ...authData.user,
-      profile,
+      profile: enrichedProfile,
     };
   }
 }

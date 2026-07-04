@@ -14,10 +14,10 @@ export function AccountPage() {
   const container = (
     <div className="container py-5" style={{ minHeight: "80vh" }}>
       <header className="mb-5 text-center">
-        <h1 className="display-4 fw-bold custom-font-burbank text-custom-red text-stroke-grey mb-2" style={{ letterSpacing: "2px" }}>
+        <h1 className="display-4 fw-bold custom-font-burbank text-white" style={{ letterSpacing: "2px" }}>
           Mein Konto
         </h1>
-        <p className="fs-5 text-muted">Willkommen zurück! Hier kannst du deine Buchungen einsehen und deine Profildaten pflegen.</p>
+        <p className="fs-2 text-white-50">Willkommen zurück! Hier kannst du deine Buchungen einsehen und deine Profildaten pflegen.</p>
       </header>
 
       <div className="row g-4">
