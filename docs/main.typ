@@ -19,7 +19,7 @@
 
 #set document(title: "Rent-A-Camper — Technische Dokumentation", author: "Dominik Kollenz, Kevin")
 
-#set text(font: ("Arial", "Helvetica", "DejaVu Sans"), size: 10pt, fill: c-text, lang: "de", region: "DE")
+#set text(font: "Arial", size: 10pt, fill: c-text, lang: "de", region: "DE")
 #set par(justify: false, leading: 0.68em)
 
 #show heading.where(level: 1): it => {
@@ -147,7 +147,7 @@
   margin: (x: 3.5cm, top: 3.5cm, bottom: 3.5cm),
   header: context {
     if counter(page).get().first() > 1 {
-      set text(size: 8pt, fill: rgb("#9ca3af"), font: ("Arial", "Helvetica", "DejaVu Sans"))
+      set text(size: 8pt, fill: rgb("#9ca3af"), font: "Arial")
       grid(
         columns: (1fr, 1fr),
         [Rent-A-Camper — Technische Dokumentation],
