@@ -152,7 +152,9 @@ export class CampersService {
    */
   async create(dto: CamperInsertInput) {
     if (dto.required_license) {
-      const resolved = await this.driversLicenseService.resolveLicenseId(dto.required_license);
+      const resolved = await this.driversLicenseService.resolveLicenseId(
+        dto.required_license,
+      );
       if (resolved) {
         dto.required_license = resolved;
       }
@@ -166,7 +168,9 @@ export class CampersService {
    */
   async update(id: string, dto: CamperUpdateInput) {
     if (dto.required_license) {
-      const resolved = await this.driversLicenseService.resolveLicenseId(dto.required_license);
+      const resolved = await this.driversLicenseService.resolveLicenseId(
+        dto.required_license,
+      );
       if (resolved) {
         dto.required_license = resolved;
       }

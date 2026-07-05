@@ -92,7 +92,7 @@ export class AuthService {
    * @throws BadRequestException If sign-up fails or the profile insert fails.
    */
   async register(registerDto: RegisterDto) {
-    const { firstName, lastName, email, password, role, driversLicenseClass } =
+    const { firstName, lastName, email, password, driversLicenseClass } =
       registerDto;
     const authClient = this.getAuthClient();
 

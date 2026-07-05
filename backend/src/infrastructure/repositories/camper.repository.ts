@@ -167,12 +167,25 @@ export class CampersRepository {
   /**
    * Sanitizes the camper DTO by removing non-database fields that may be sent from the frontend.
    */
-  private sanitizeDto<T>(dto: T): T {
+  private sanitizeDto<T extends object>(dto: T): T {
     if (!dto || typeof dto !== 'object') {
       return dto;
     }
-    const { features_list, image_url, ownerId, owner_id, providerType, ...clean } = dto as any;
-    return clean;
+    const {
+      features_list,
+      image_url,
+      ownerId,
+      owner_id,
+      providerType,
+      ...clean
+    } = dto as T & {
+      features_list?: unknown;
+      image_url?: unknown;
+      ownerId?: unknown;
+      owner_id?: unknown;
+      providerType?: unknown;
+    };
+    return clean as T;
   }
 
   /**

@@ -19,7 +19,12 @@ import { DriversLicenseModule } from '../drivers_license/drivers_license.module'
  * features (e.g. bookings) can look campers up directly.
  */
 @Module({
-  imports: [SupabaseModule, AddonsModule, PricingRulesModule, DriversLicenseModule],
+  imports: [
+    SupabaseModule,
+    AddonsModule,
+    PricingRulesModule,
+    DriversLicenseModule,
+  ],
   controllers: [CampersController],
   providers: [
     CampersService,
