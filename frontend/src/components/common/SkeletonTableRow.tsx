@@ -12,18 +12,21 @@ export function SkeletonTableRow(columns: number = 5): HTMLElement {
 
   for (let i = 0; i < columns; i++) {
     const isLast = i === columns - 1;
+
+    // The last column's bar has a fixed width; the others get a randomized
+    // width (60%-99%) so the row doesn't look like a uniform, static grid
+    // while data is loading. That randomized value can't be expressed as a
+    // static CSS class, so it's the one property still set imperatively.
+    const bar = (
+      <span className={`placeholder rounded skeleton-bar${isLast ? " skeleton-bar-last" : ""}`} />
+    ) as HTMLElement;
+    if (!isLast) {
+      bar.style.width = `${60 + Math.floor(Math.random() * 40)}%`;
+    }
+
     cells.push(
       <td className={isLast ? "text-end" : ""}>
-        <span className="placeholder-glow">
-          <span
-            className="placeholder rounded"
-            style={{
-              display: "inline-block",
-              width: isLast ? "80px" : `${60 + Math.floor(Math.random() * 40)}%`,
-              height: "14px",
-            }}
-          />
-        </span>
+        <span className="placeholder-glow">{bar}</span>
       </td> as HTMLElement,
     );
   }

@@ -2,6 +2,12 @@ import { createElement } from "../../utils/createElement.ts";
 import { getHighlightCampers } from "../../api/campersAPI.ts";
 import { getHighlightCamperImages } from "../../api/camperImagesAPI.ts";
 
+/**
+ * Home page section that showcases the top 3 campers ("Highlights"). It
+ * renders a loading spinner immediately, then fetches the highlighted
+ * campers and their images in the background and swaps in camper cards
+ * once the data arrives (or an error/empty message if it doesn't).
+ */
 export function Highlights() {
   const container = (
     <section className="container my-4">
@@ -47,20 +53,14 @@ export function Highlights() {
         const camperCol = (
           <div className="col-12 col-md-4">
             <div
-              className="card h-100 border-0 shadow-lg position-relative bg-beige"
-              style={{
-                borderRadius: "16px",
-                overflow: "hidden",
-                transition: "transform 0.2s;",
-              }}
+              className="card h-100 border-0 shadow-lg position-relative bg-beige rounded-4 overflow-hidden highlight-card"
             >
               <div className="overflow-hidden rounded-top">
                 <a href={`/campers/${camper.id}`}>
                   <img
                     src={getCamperImageUrl(camper.id.toString())}
-                    className="card-img-top hover-zoom"
+                    className="card-img-top hover-zoom object-fit-cover highlight-card-img"
                     alt={camper.name}
-                    style={{ height: "220px", objectFit: "cover" }}
                   />
                 </a>
               </div>

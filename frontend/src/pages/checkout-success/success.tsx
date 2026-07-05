@@ -7,9 +7,16 @@ import { updateBookingStatus } from "../../api/bookingsAPI.ts";
 import { fetchCurrentUser, isLoggedIn } from "../../auth/auth.ts";
 import { getCamperById } from "../../api/campersAPI.ts";
 
+/**
+ * Checkout success page: shown right after a Stripe redirect back to the
+ * app. It shows a loading spinner while it confirms the booking with the
+ * backend (marking it "confirmed" if a Stripe session id is present), then
+ * replaces the spinner with a success or error message depending on the
+ * outcome.
+ */
 const CheckoutSuccessPage = () => {
   const container = (
-    <div className="container my-5" style={{ minHeight: "80vh" }}>
+    <div className="container my-5 min-vh-80">
       <div className="text-center mb-5">
         <h1 className="display-4 fw-bold custom-font-burbank text-white">Zahlungsbestätigung</h1>
         <p className="text-white-50 fs-5">
@@ -69,7 +76,7 @@ const CheckoutSuccessPage = () => {
       content.innerHTML = `
         <div class="col-12">
           <div class="alert alert-success rounded-4 p-4 text-center">
-            <div class="mb-3" style="font-size: 48px;">✅</div>
+            <div class="mb-3 success-emoji">✅</div>
             <h5 class="fw-bold mb-2">Zahlung erfolgreich!</h5>
             <p class="mb-3">Deine Buchung für <strong>${camper.name}</strong> wurde erfolgreich bestätigt!</p>
             <p class="text-muted small mb-3">Die Rechnung wurde dir soeben an deine E-Mail-Adresse gesendet.</p>

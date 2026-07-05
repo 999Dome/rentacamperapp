@@ -5,12 +5,24 @@ import {
   CreateCamperBlockingDto,
 } from '../../domain/interfaces/camper_blocking.interface';
 
+/**
+ * Data-access layer for the `camper_blockings` table — the provider-managed
+ * availability blocks used alongside bookings to decide whether a camper is
+ * free for a requested period.
+ */
 @Injectable()
 export class CamperBlockingRepository {
   private readonly tableName = 'camper_blockings';
 
   constructor(private readonly supabase: SupabaseService) {}
 
+  /**
+   * Creates a new availability block for a camper.
+   *
+   * @param dto Camper id and the date range to block (reason is not persisted).
+   * @returns The created blocking row.
+   * @throws Error If the insert fails.
+   */
   async create(dto: CreateCamperBlockingDto): Promise<CamperBlocking> {
     const { data, error } = await this.supabase.client
       .from(this.tableName)
@@ -29,6 +41,13 @@ export class CamperBlockingRepository {
     return data;
   }
 
+  /**
+   * Lists all blockings for a camper, earliest first.
+   *
+   * @param camperId The camper to list blockings for.
+   * @returns The camper's blockings ordered by start date.
+   * @throws Error If the query fails.
+   */
   async findByCamperId(camperId: string): Promise<CamperBlocking[]> {
     const { data, error } = await this.supabase.client
       .from(this.tableName)
@@ -43,6 +62,13 @@ export class CamperBlockingRepository {
     return data;
   }
 
+  /**
+   * Fetches a single blocking by id.
+   *
+   * @param id The blocking id.
+   * @returns The blocking, or `null` if none exists.
+   * @throws Error If the query fails.
+   */
   async findById(id: string): Promise<CamperBlocking | null> {
     const { data, error } = await this.supabase.client
       .from(this.tableName)
@@ -57,6 +83,12 @@ export class CamperBlockingRepository {
     return data;
   }
 
+  /**
+   * Deletes a blocking by id.
+   *
+   * @param id The blocking id to delete.
+   * @throws Error If the delete fails.
+   */
   async delete(id: string): Promise<void> {
     const { error } = await this.supabase.client
       .from(this.tableName)
@@ -68,6 +100,18 @@ export class CamperBlockingRepository {
     }
   }
 
+  /**
+   * Finds blockings that overlap a requested date range for a camper.
+   *
+   * Two ranges overlap when the existing block starts on/before the requested
+   * end AND ends on/after the requested start — hence the `lte`/`gte` pair.
+   *
+   * @param camperId  The camper to check.
+   * @param startDate Requested range start (ISO `YYYY-MM-DD`).
+   * @param endDate   Requested range end (ISO `YYYY-MM-DD`).
+   * @returns Overlapping blockings; empty if the range is free.
+   * @throws Error If the query fails.
+   */
   async findOverlappingBlockings(
     camperId: string,
     startDate: string,

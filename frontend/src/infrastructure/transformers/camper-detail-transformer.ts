@@ -5,12 +5,13 @@ import { getCamperFeaturesByCamperId } from '../../api/camperFeaturesAPI';
 import { getDriversLicenseById } from '../../api/driversLicenseAPI';
 
 /**
- * CamperDetailTransformer - Reine Datentransformation
+ * CamperDetailTransformer - pure data transformation.
  *
- * Single Responsibility: Nur Daten-Umwandlung von Camper → MockCamper
- * - Lädt zusätzliche Daten (Bilder, Features, Lizenzen) parallel
- * - Transformiert Datenstrukturen
- * - Keine UI-Logik, keine Geschäftslogik
+ * Single responsibility: turn a `Camper` (as stored in the database) into a
+ * `MockCamper` (the richer shape the UI expects) by:
+ * - loading extra data (image, features, drivers-license class) in parallel;
+ * - reshaping the combined data into the `MockCamper` structure.
+ * It contains no UI logic and no business logic - just fetching and mapping.
  */
 export class CamperDetailTransformer {
   private readonly defaultImageUrl = 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7';
@@ -18,7 +19,11 @@ export class CamperDetailTransformer {
   private readonly defaultLicenseClass = 'B';
 
   /**
-   * Transformiert einen einzelnen Camper mit allen zusätzlichen Informationen
+   * Transforms a single camper, enriching it with its primary image,
+   * feature list and drivers-license class (each with a sensible fallback
+   * if that piece of data can't be loaded).
+   * @param camper The raw camper record to enrich.
+   * @returns The camper enriched into the `MockCamper` shape used by the UI.
    */
   async transformCamperWithDetails(camper: Camper): Promise<MockCamper> {
     const [imageUrl, features, licenseClass] = await Promise.all([
@@ -37,7 +42,11 @@ export class CamperDetailTransformer {
   }
 
   /**
-   * Transformiert mehrere Camper parallel
+   * Transforms a list of campers in parallel by calling
+   * {@link transformCamperWithDetails} for each one.
+   * @param campers The raw camper records to enrich.
+   * @returns The enriched campers, or an empty array if `campers` is empty
+   * or the batch transformation fails.
    */
   async transformMultipleCampersWithDetails(campers: Camper[]): Promise<MockCamper[]> {
     if (!Array.isArray(campers) || campers.length === 0) {
@@ -55,7 +64,9 @@ export class CamperDetailTransformer {
   }
 
   /**
-   * Lädt Bild für Camper (mit Fallback)
+   * Loads the camper's primary image, falling back to a default stock photo
+   * if none is set or the request fails.
+   * @param camperId ID of the camper to load the image for.
    */
   private async loadImageUrl(camperId: string): Promise<string> {
     try {
@@ -70,10 +81,15 @@ export class CamperDetailTransformer {
   }
 
   /**
-   * Lädt Features für Camper (mit Fallback)
+   * Loads the camper's feature names, falling back to a default feature
+   * list if none are set or the request fails.
+   * @param camperId ID of the camper to load features for.
    */
   private async loadFeatures(camperId: string): Promise<string[]> {
     try {
+      // The generated `CamperFeature` type only describes the join-table row
+      // (camper_id/feature_id/id), but the API actually embeds the related
+      // `features` row (with its `name`) in each result - hence the cast.
       const features = (await getCamperFeaturesByCamperId(
         camperId,
       )) as unknown as { features?: { name: string } | null }[];
@@ -92,7 +108,10 @@ export class CamperDetailTransformer {
   }
 
   /**
-   * Lädt Führerscheinklasse (mit Fallback)
+   * Loads the drivers-license class required for the camper, falling back
+   * to a default class if no ID is given, the record is missing, or the
+   * request fails.
+   * @param licenseId ID of the drivers-license record to look up.
    */
   private async loadLicenseClass(licenseId: string): Promise<string> {
     if (!licenseId) {
@@ -111,7 +130,11 @@ export class CamperDetailTransformer {
   }
 
   /**
-   * Hilfsfunktion für einheitliches Logging
+   * Helper for consistent warning logs when an optional piece of detail
+   * data fails to load and a fallback is used instead.
+   * @param resource Short label for what failed to load, e.g. `'features'`.
+   * @param id ID of the record the load was attempted for.
+   * @param error The caught error (message is logged if it's an `Error`).
    */
   private logLoadWarning(resource: string, id: string, error: unknown): void {
     const message = error instanceof Error ? error.message : 'Unknown error';

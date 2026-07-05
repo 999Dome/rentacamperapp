@@ -165,6 +165,19 @@
   border-radius: 20px;
   border: none;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+
+  input,
+  select,
+  button.filter-control,
+  .filter-control {
+    color: #212529 !important;
+  }
+
+  input::placeholder,
+  .filter-control::placeholder {
+    color: #212529 !important;
+    opacity: 1 !important;
+  }
 }
 
 .filter-input-group {
@@ -189,22 +202,26 @@
 .filter-control {
   background-color: #f8f9fa;
   border: 1.5px solid #e9ecef;
-  color: #212529;
+  color: #212529 !important;
   border-radius: 12px;
   padding: 0.6rem 1rem;
   font-family: $font-family-base;
   font-size: 1.05rem;
   transition: all 0.25s ease-in-out;
 
+  span {
+    color: #212529 !important;
+  }
+
   &:focus {
     background-color: #ffffff;
     border-color: #4ebbea;
     box-shadow: 0 0 0 4px rgba(78, 187, 234, 0.15);
-    color: #212529;
+    color: #212529 !important;
   }
 
   &::placeholder {
-    color: #adb5bd;
+    color: #212529 !important;
     font-family: $font-family-base;
   }
 }
@@ -333,6 +350,21 @@ input[type="date"].filter-control {
       border-color: #4ebbea !important;
       color: white !important;
     }
+
+    /* Blocked days (already booked or within the logistics buffer). Added by
+       the date-range picker's onDayCreate hook so users can see at a glance
+       which days are unavailable before trying to select them. */
+    &.booking-day-blocked,
+    &.flatpickr-disabled {
+      background-color: rgba(234, 93, 66, 0.12) !important;
+      color: #c0392b !important;
+      text-decoration: line-through;
+      cursor: not-allowed !important;
+
+      &:hover {
+        background-color: rgba(234, 93, 66, 0.12) !important;
+      }
+    }
   }
 }
 
@@ -402,9 +434,39 @@ input[type="date"].filter-control {
   width: 80px;
 }
 
+.skeleton-feature-tag-1 {
+  width: 60px;
+}
+
+.skeleton-feature-tag-2 {
+  width: 50px;
+}
+
+.skeleton-feature-tag-3 {
+  width: 70px;
+}
+
+.skeleton-price-label-text {
+  width: 90px;
+}
+
+.skeleton-cta-button {
+  width: 80px;
+  height: 36px;
+}
+
+.skeleton-bar {
+  display: inline-block;
+  height: 14px;
+}
+
+.skeleton-bar-last {
+  width: 80px;
+}
+
 /* ─── Blue Form Inputs: White Text Color ─── */
-.form-control:not(.bg-light):not(.bg-white),
-.form-select:not(.bg-light):not(.bg-white) {
+.form-control:not(.bg-light):not(.bg-white):not(.filter-control),
+.form-select:not(.bg-light):not(.bg-white):not(.filter-control) {
   color: white !important;
   
   &::placeholder {
@@ -415,4 +477,812 @@ input[type="date"].filter-control {
 select:not(.bg-light):not(.bg-white) option {
   background-color: #1a1e23 !important;
   color: white !important;
+}
+
+/* ─── AboutUs Page ─── */
+:root {
+  --accent: #ea5d42;
+  --accent2: #4ebbea;
+  --accent3: #fcc218;
+}
+
+.hero {
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+    url("/cover.png") center/cover no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-inner {
+  z-index: 2;
+  text-align: center;
+}
+
+.neon {
+  font-family: 'Burbank Big Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 2px;
+  font-size: 56px;
+  color: var(--accent);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  margin: 0;
+  padding: 0;
+  display: inline-block;
+}
+
+.tag {
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 6px;
+}
+
+.jump-nav {
+  margin-top: 14px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.jump-nav a {
+  color: #ffffff !important;
+  background: var(--accent);
+  padding: 8px 16px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transform: translateY(0);
+  transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+.jump-nav a:hover {
+  transform: translateY(-2px);
+  background: #d44c33;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: all 0.7s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.reveal.in-view {
+  opacity: 1;
+  transform: none;
+}
+
+.aboutus-map-frame {
+  height: 100%;
+  min-height: 350px;
+}
+
+.staff-avatar {
+  width: 120px;
+  height: 120px;
+}
+
+.impressum-text {
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    height: 260px;
+  }
+}
+
+@media (max-width: 560px) {
+  .neon {
+    font-size: 42px;
+  }
+  .jump-nav {
+    flex-wrap: wrap;
+  }
+}
+
+/* ─── Camper Details Page ─── */
+.camper-details-v2-container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 24px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #222222;
+}
+
+.camper-header {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.camper-title {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.camper-subtitle {
+  font-size: 14px;
+  color: #717171;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.image-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  height: 500px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 48px;
+
+  .main-image-container {
+    grid-column: 1 / 2;
+    grid-row: 1 / 3;
+    overflow: hidden;
+  }
+
+  .secondary-images-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(0.9);
+    }
+  }
+}
+
+.camper-content-layout {
+  display: flex;
+  justify-content: space-between;
+  gap: 8%;
+  margin-bottom: 64px;
+}
+
+.camper-left-column {
+  flex: 1;
+
+  .section-divider {
+    height: 1px;
+    background-color: #ebebeb;
+    margin: 32px 0;
+  }
+
+  .host-info {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .specs-list {
+    font-size: 16px;
+    color: #222222;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .description-text {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #222222;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+      color: #222222;
+    }
+  }
+
+  .technical-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #ebebeb;
+      padding-bottom: 8px;
+
+      span:first-child {
+        color: #717171;
+      }
+    }
+  }
+}
+
+.camper-right-column {
+  width: 33.33%;
+  position: relative;
+}
+
+.booking-card {
+  position: sticky;
+  top: 120px;
+  border: 1px solid #dddddd;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  background: white;
+
+  .price-header {
+    margin-bottom: 24px;
+    font-size: 22px;
+    font-weight: 600;
+    span {
+      font-weight: 400;
+      font-size: 16px;
+      color: #222222;
+    }
+  }
+
+  .booking-form {
+    border: 1px solid #b0b0b0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 16px;
+
+    .dates-container {
+      display: flex;
+      border-bottom: 1px solid #b0b0b0;
+
+      .date-input {
+        flex: 1;
+        padding: 10px 12px;
+        label {
+          display: block;
+          font-size: 10px;
+          font-weight: 800;
+          text-transform: uppercase;
+        }
+        input {
+          width: 100%;
+          border: none;
+          outline: none;
+          background: transparent;
+          font-size: 14px;
+        }
+        &:first-child {
+          border-right: 1px solid #b0b0b0;
+        }
+      }
+    }
+
+    .addons-select {
+      padding: 10px 12px;
+      label {
+        display: block;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      select {
+        width: 100%;
+        border: none;
+        outline: none;
+        font-size: 14px;
+        background: transparent;
+      }
+    }
+  }
+
+  .reserve-button {
+    width: 100%;
+    background: #e51d53;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-bottom: 16px;
+
+    &:hover {
+      background: #d70466;
+    }
+  }
+
+  .no-charge-text {
+    text-align: center;
+    font-size: 14px;
+    color: #222222;
+    margin-bottom: 24px;
+  }
+
+  .price-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .price-item {
+      display: flex;
+      justify-content: space-between;
+      color: #222222;
+      text-decoration: underline;
+    }
+  }
+
+  .price-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 16px;
+    padding-top: 24px;
+    border-top: 1px solid #ebebeb;
+  }
+}
+
+@media (max-width: 768px) {
+  .camper-content-layout {
+    flex-direction: column;
+  }
+  .camper-right-column {
+    width: 100%;
+    margin-top: 32px;
+  }
+  .image-gallery {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+
+    .secondary-images-container {
+      display: none;
+    }
+  }
+}
+
+.addon-checkbox {
+  cursor: pointer;
+}
+
+.addon-checkbox:not(:checked) + .addon-label {
+  opacity: 0.5;
+  color: #6c757d !important;
+}
+
+.addon-checkbox:not(:checked) + .addon-label .addon-price {
+  color: #adb5bd;
+}
+
+.addon-checkbox:checked + .addon-label {
+  opacity: 1;
+  color: #212529 !important;
+}
+
+.addon-checkbox:checked + .addon-label .addon-price {
+  color: #6c757d;
+}
+
+.addon-label {
+  cursor: pointer;
+  font-size: 14px;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+/* ─── Booking Card (Camper Details) ─── */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.fs-10px {
+  font-size: 10px;
+}
+
+.fs-15px {
+  font-size: 15px;
+}
+
+.ps-4px {
+  padding-left: 4px;
+}
+
+.min-h-22px {
+  min-height: 22px;
+}
+
+.lh-1-2 {
+  line-height: 1.2;
+}
+
+.booking-card-sticky {
+  top: 100px;
+  transition: top 0.2s ease;
+}
+
+.book-button-bg {
+  background-color: var(--bs-primary, #ea5d42) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  transition: background-color 0.15s ease-in-out, filter 0.15s ease-in-out, opacity 0.15s ease-in-out;
+
+  &:hover, &:focus, &:active, &.active {
+    background-color: var(--bs-primary, #ea5d42) !important;
+    filter: brightness(0.9);
+    color: #fff !important;
+    border-color: transparent !important;
+  }
+}
+
+.custom-dropdown-toggle {
+  font-size: 14px;
+  cursor: pointer;
+  min-height: 28px;
+}
+
+.custom-dropdown-menu {
+  z-index: 1000;
+  max-height: 250px;
+  overflow-y: auto;
+  top: 100%;
+}
+
+.custom-dropdown-item {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f1f3f5;
+  }
+}
+
+/* ─── Cookie Banner ─── */
+.cookie-consent-banner {
+  z-index: 1050;
+  transform: translateY(100%);
+  transition: transform 0.4s ease-in-out;
+}
+
+.cookie-consent-banner.cookie-banner-visible {
+  transform: translateY(0);
+}
+
+.cookie-btn-accept-all {
+  background-color: var(--bs-primary, #ea5d42);
+  border: none;
+}
+
+/* ─── Main Header ─── */
+.header-icon {
+  width: 54px;
+  height: auto;
+}
+
+.navbar-toggler-border-light {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.navbar-toggler-icon-inverted {
+  filter: invert(1);
+}
+
+/* ─── Home Hero ─── */
+.hero-cover {
+  background-image: url("/cover.png");
+  background-size: cover;
+  background-position: center bottom;
+  height: 75vh;
+}
+
+.hero-mask {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.hero-logo {
+  width: 100px;
+  height: auto;
+}
+
+.hero-tagline {
+  letter-spacing: 2px;
+}
+
+/* ─── Home Contact Section ─── */
+.contact-section-glow {
+  background: radial-gradient(circle at top right, rgba(78, 187, 234, 0.1), transparent 50%);
+  z-index: 0;
+}
+
+.contact-section-content {
+  z-index: 1;
+}
+
+.contact-lead-text {
+  max-width: 600px;
+}
+
+/* ─── Home Search Bar ─── */
+.search-bar-card {
+  background-color: #243046;
+  border-radius: 12px;
+  margin-top: -55px;
+  z-index: 10;
+}
+
+/* ─── Home Workflow Steps ─── */
+.workflow-step-card {
+  background-color: #243946;
+  transition: transform 0.2s;
+}
+
+.workflow-step-icon {
+  width: 70px;
+  height: 70px;
+}
+
+.workflow-step-icon-blue {
+  background-color: rgba(91, 192, 235, 0.1);
+  border: 2px solid var(--custom-light-blue);
+}
+
+.workflow-step-icon-yellow {
+  background-color: rgba(253, 231, 76, 0.1);
+  border: 2px solid var(--custom-yellow);
+}
+
+.workflow-step-icon-red {
+  background-color: rgba(250, 121, 33, 0.1);
+  border: 2px solid var(--custom-red);
+}
+
+.workflow-step-icon-green {
+  background-color: rgba(155, 197, 61, 0.1);
+  border: 2px solid #9bc53d;
+}
+
+.workflow-step-number-green {
+  color: #9bc53d;
+}
+
+/* ─── Home Highlights ─── */
+.highlight-card {
+  transition: transform 0.2s;
+}
+
+.highlight-card-img {
+  height: 220px;
+}
+
+/* ─── Checkout Success Page ─── */
+.success-emoji {
+  font-size: 48px;
+}
+
+/* ─── Component Utilities ─── */
+.error-message-block {
+  text-align: center;
+  margin: 50px;
+}
+
+.min-vh-60 {
+  min-height: 60vh;
+}
+
+.min-vh-80 {
+  min-height: 80vh;
+}
+
+.access-denied-card {
+  max-width: 600px;
+}
+
+/* ─── Shared Page Header ─── */
+.letter-spacing-2 {
+  letter-spacing: 2px;
+}
+
+.letter-spacing-1px {
+  letter-spacing: 1px;
+}
+
+/* ─── Rent Page & Camper Card ─── */
+.fs-11px {
+  font-size: 11px;
+}
+
+.w-200px {
+  width: 200px;
+}
+
+/* ─── Account Page: Bookings Table ─── */
+.fs-12px {
+  font-size: 12px;
+}
+
+.fs-13px {
+  font-size: 13px;
+}
+
+.fs-14px {
+  font-size: 14px;
+}
+
+.fs-15px {
+  font-size: 15px;
+}
+
+.h-14px {
+  height: 14px;
+}
+
+.h-16px {
+  height: 16px;
+}
+
+.h-20px {
+  height: 20px;
+}
+
+.h-24px {
+  height: 24px;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease;
+}
+
+.cancel-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Provider Dashboard ─── */
+.w-180px {
+  width: 180px;
+}
+
+.w-130px {
+  width: 130px;
+}
+
+.occupancy-progress-track {
+  height: 10px;
+}
+
+.occupancy-progress-initial {
+  width: 0%;
+}
+
+.dashboard-skel-badge {
+  width: 120px;
+  height: 22px;
+}
+
+.dashboard-skel-date {
+  width: 140px;
+  height: 14px;
+}
+
+.dashboard-skel-title {
+  width: 60%;
+  height: 20px;
+}
+
+.dashboard-skel-subtitle {
+  width: 80%;
+  height: 14px;
+}
+
+.dashboard-skel-btn {
+  height: 36px;
+}
+
+/* ─── Rentout Page ─── */
+.rentout-tab-btn-inactive {
+  background-color: transparent;
+  border: none;
+  color: #6c757d;
+}
+
+/* ─── Camper CRUD (Rentout) ─── */
+.camper-list-thumb {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+}
+
+.camper-modal-backdrop {
+  z-index: 1040;
+}
+
+.camper-modal-overlay {
+  display: block;
+  z-index: 1050;
+}
+
+.camper-form-modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.image-preview-thumb-wrapper {
+  width: 80px;
+  height: 80px;
+}
+
+.image-preview-remove-btn {
+  width: 20px;
+  height: 20px;
+  top: -5px;
+  right: -5px;
+}
+
+/* ─── Auth Page ─── */
+.max-w-500px {
+  max-width: 500px;
+}
+
+.w-400px {
+  width: 400px;
+}
+
+.auth-back-link {
+  z-index: 10;
+  border-radius: 50px;
+}
+
+.auth-success-icon {
+  color: #2E8B57;
+}
+
+/* ─── Image Gallery (Camper Details) ─── */
+.camper-carousel {
+  height: 500px;
+}
+
+.carousel-control-icon-shadow {
+  filter: drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.8));
+}
+
+/* ─── Checkout Page ─── */
+.paypal-buttons-box {
+  display: none;
+  margin-top: 20px;
+}
+
+.bg-license-disabled {
+  background-color: #6c757d;
+}
+
+.checkout-summary-img {
+  height: 200px;
+  object-fit: cover;
+}
+
+.terms-checkbox-label {
+  flex: 1;
+  padding-left: 10px;
+}
+
+.countdown-timer-alert {
+  border-radius: 12px;
+  font-size: 1.1rem;
 }

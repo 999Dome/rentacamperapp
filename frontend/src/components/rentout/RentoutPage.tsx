@@ -5,9 +5,19 @@ import { ProviderOnboarding } from "./ProviderOnboarding.tsx";
 import { getUserIdFromToken } from "../../auth/auth.ts";
 import { fetchProfile } from "../../api/profilesAPI.ts";
 
+/**
+ * Renders the "Vermieter-Portal" (provider portal) page. It first checks
+ * whether the logged-in user is already a registered provider: if not, it
+ * shows the `ProviderOnboarding` flow; once they are (or right after
+ * onboarding succeeds), it shows the provider dashboard with two tabs
+ * ("Dashboard & Anfragen" and "Fahrzeug-Verwaltung") switched imperatively
+ * via `switchTab`, since there is no reactive state system in this app.
+ *
+ * @returns The page's root element.
+ */
 export function RentoutPage() {
   const container = (
-    <div className="container py-5" style={{ minHeight: "80vh" }}>
+    <div className="container py-5 min-vh-80">
       <div id="rentout-loading" className="text-center py-5">
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
@@ -15,7 +25,7 @@ export function RentoutPage() {
       </div>
       <div id="rentout-content" className="d-none">
         <header className="mb-5 text-center">
-          <h1 className="display-4 fw-bold custom-font-burbank text-white" style={{ letterSpacing: "2px" }}>
+          <h1 className="display-4 fw-bold custom-font-burbank text-white letter-spacing-2">
             Vermieter-Portal
           </h1>
           <p className="fs-5 text-white-50">Verwalte deine Inserate, checke Buchungsraten und beantworte Anfragen</p>
@@ -33,9 +43,8 @@ export function RentoutPage() {
             </button>
             <button
               type="button"
-              className="btn rounded-pill px-4 py-2 fw-medium"
+              className="btn rounded-pill px-4 py-2 fw-medium rentout-tab-btn-inactive"
               id="tab-btn-crud"
-              style={{ backgroundColor: "transparent", border: "none", color: "#6c757d" }}
               onclick={() => switchTab("crud")}
             >
               Fahrzeug-Verwaltung
@@ -122,28 +131,14 @@ export function RentoutPage() {
 
     if (tab === "dashboard") {
       btnDashboard.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium text-white";
-      btnDashboard.style.backgroundColor = "";
-      btnDashboard.style.border = "";
-      btnDashboard.style.color = "";
-      
-      btnCrud.className = "btn rounded-pill px-4 py-2 fw-medium";
-      btnCrud.style.backgroundColor = "transparent";
-      btnCrud.style.border = "none";
-      btnCrud.style.color = "#6c757d";
-      
+      btnCrud.className = "btn rounded-pill px-4 py-2 fw-medium rentout-tab-btn-inactive";
+
       paneDashboard.classList.remove("d-none");
       paneCrud.classList.add("d-none");
     } else {
       btnCrud.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium text-white";
-      btnCrud.style.backgroundColor = "";
-      btnCrud.style.border = "";
-      btnCrud.style.color = "";
-      
-      btnDashboard.className = "btn rounded-pill px-4 py-2 fw-medium";
-      btnDashboard.style.backgroundColor = "transparent";
-      btnDashboard.style.border = "none";
-      btnDashboard.style.color = "#6c757d";
-      
+      btnDashboard.className = "btn rounded-pill px-4 py-2 fw-medium rentout-tab-btn-inactive";
+
       paneCrud.classList.remove("d-none");
       paneDashboard.classList.add("d-none");
     }

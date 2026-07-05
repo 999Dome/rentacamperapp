@@ -1,10 +1,19 @@
 import { Injectable } from '@nestjs/common';
 
+/**
+ * Central place for static, non-persisted camper configuration.
+ *
+ * Right now this only holds the curated list of "highlight" campers shown on
+ * the homepage. Keeping it in a dedicated service (instead of hard-coding the
+ * ids in a controller/service) means the source of these values is obvious and
+ * easy to swap for a DB/config lookup later.
+ */
 @Injectable()
 export class CampersConfigService {
   /**
-   * IDs of campers highlighted on the homepage.
-   * These are manually curated by the admin.
+   * IDs of campers highlighted on the homepage. Manually curated by the admin.
+   *
+   * @returns The list of camper ids to feature, in display order.
    */
   getHighlightCamperIds(): string[] {
     return [

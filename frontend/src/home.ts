@@ -1,3 +1,8 @@
+/**
+ * Bootstrap entry point for the home page: mounts the header, hero banner,
+ * search bar, highlights, workflow explainer, contact section, and footer
+ * directly into `document.body`, in order.
+ */
 import "bootstrap/dist/css/bootstrap.min.css";
 
 import { MainHeader } from "./components/mainheader.tsx";

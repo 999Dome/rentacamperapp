@@ -2,76 +2,39 @@ import { createElement } from "../../utils/createElement.ts";
 import { fetchCurrentUser, isLoggedIn } from "../../auth/auth.ts";
 import { getCamperById, calculatePrice } from "../../api/campersAPI.ts";
 import { getCamperPrimaryImageById } from "../../api/camperImagesAPI.ts";
-import { updateBookingStatus } from "../../api/bookingsAPI.ts";
-import { createStripeCheckoutSession, createPayPalOrder, capturePayPalOrder } from "../../api/paymentsAPI.ts";
+import { createStripeCheckoutSession } from "../../api/paymentsAPI.ts";
 import type { MockCamper } from "../../utils/mockData.ts";
 import { getDriversLicenseById } from "../../api/driversLicenseAPI.ts";
 import { DriversLicenseValidator } from "../../domain/validators/drivers-license-validator.ts";
+import type { PriceBreakdownRow } from "../common/PriceBreakdownList.tsx";
+import { LicenseWarningBanner } from "../common/LicenseWarningBanner.tsx";
+import { CheckoutLoadingState } from "./checkout-page/CheckoutLoadingState.tsx";
+import { startCheckoutCountdownTimer } from "./checkout-page/checkout-countdown-timer.ts";
+import { PersonalDataCard } from "./checkout-page/PersonalDataCard.tsx";
+import { PaymentMethodSelector } from "./checkout-page/PaymentMethodSelector.tsx";
+import { initPayPalButtons } from "./checkout-page/paypal-checkout.ts";
+import { OrderSummaryCard } from "./checkout-page/OrderSummaryCard.tsx";
+import { showBookingErrorAlert } from "./checkout-page/booking-error.tsx";
+import type { UserProfile, PriceCalculationResult, PendingBookingData } from "./checkout-page/types.ts";
 
-interface UserProfile {
-  id?: string;
-  email?: string;
-  first_name?: string;
-  last_name?: string;
-  profile?: {
-    firstname?: string;
-    lastname?: string;
-    first_name?: string;
-    last_name?: string;
-    drivers_license_class?: string | null;
-    driver_license_class?: string | null;
-  } | null;
-}
-
-interface AddonDetail {
-  name: string;
-  cost: number;
-}
-
-interface PriceCalculationResult {
-  basePrice: number;
-  nights: number;
-  seasonSurchargeAmount: number;
-  discountPercentage: number;
-  discountAmount: number;
-  cleaningFee: number;
-  addonDetails: AddonDetail[];
-  totalAmount: number;
-  depositAmount: number;
-}
-
-interface PendingBookingData {
-  bookingId: string;
-  expiresAt: string;
-  camperId: string;
-  startDate: string;
-  endDate: string;
-  apiStartDate: string;
-  apiEndDate: string;
-  addons: string[];
-  pickupLocationId?: string;
-  returnLocationId?: string;
-}
-
+/**
+ * The checkout page: shows a loading skeleton while the pending booking's
+ * user/camper/price data is fetched, then renders the full two-column
+ * checkout form (personal data + payment method on the left, order summary +
+ * confirm button on the right) built from the pieces in `./checkout-page/`.
+ *
+ * This function itself only owns the top-level wiring:
+ * - `loadData` fetches everything the page needs and hands it to `renderContent`.
+ * - `renderContent` builds `leftCol`/`rightCol` from the extracted
+ *   sub-components, creates the single `confirmButton` element and passes it
+ *   to whichever piece needs to read or mutate it (the Stripe click handler,
+ *   the PayPal flow, and the terms checkbox), and keeps the single source of
+ *   truth for `checkoutTermsAccepted`.
+ *
+ * @returns The page container element (kept in the DOM and filled in asynchronously).
+ */
 export function CheckoutPage() {
-  const container = (
-    <div className="container my-5" style={{ minHeight: "80vh" }}>
-      <div className="text-center mb-5">
-        <h1 className="display-4 fw-bold custom-font-burbank text-white">Checkout</h1>
-        <p className="text-white-50 fs-5">
-          Fast geschafft! Überprüfe deine Daten und schließe die Buchung ab.
-        </p>
-        <div id="countdown-timer-container" className="mt-3"></div>
-      </div>
-      <div className="row g-5" id="checkout-content">
-        <div className="col-12 text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  ) as HTMLElement;
+  const container = CheckoutLoadingState();
 
   const loadData = async () => {
     if (!isLoggedIn()) {
@@ -148,229 +111,53 @@ export function CheckoutPage() {
     requiredLicenseClass: string,
   ) => {
     content.innerHTML = "";
-    
+
     let checkoutTermsAccepted = false;
 
-    // Timer Logic
-    const timerContainer = document.getElementById("countdown-timer-container");
-    let timerInterval: number | null = null;
-
-    if (timerContainer && pendingData.expiresAt) {
-      const updateTimer = () => {
-        const now = new Date().getTime();
-        const expireTime = new Date(pendingData.expiresAt).getTime();
-        const distance = expireTime - now;
-
-        if (distance < 0) {
-          if (timerInterval) clearInterval(timerInterval);
-          timerContainer.innerHTML = `<div class="alert alert-danger d-inline-block fw-bold">Die Reservierungszeit ist abgelaufen. Bitte starte die Buchung erneut.</div>`;
-          
-          const confirmBtn = document.getElementById("confirm-payment-btn") as HTMLButtonElement;
-          if (confirmBtn) {
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = "Reservierung abgelaufen";
-          }
-          
-          const paypalContainer = document.getElementById("paypal-buttons-container");
-          if (paypalContainer) paypalContainer.style.display = "none";
-          
-          setTimeout(() => {
-            sessionStorage.removeItem("pendingCheckout");
-            window.location.href = `/pages/camper-details/?id=${camper.id}`;
-          }, 3000);
-          return;
-        }
-
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        
-        const formattedMin = minutes.toString().padStart(2, '0');
-        const formattedSec = seconds.toString().padStart(2, '0');
-
-        timerContainer.innerHTML = `
-          <div class="alert alert-warning d-inline-block fw-bold shadow-sm" style="border-radius: 12px; font-size: 1.1rem;">
-            ⏳ Deine Reservierung läuft ab in: <span class="text-danger fs-4">${formattedMin}:${formattedSec}</span> Minuten
-          </div>
-        `;
-      };
-      
-      updateTimer();
-      timerInterval = window.setInterval(updateTimer, 1000);
-    }
+    startCheckoutCountdownTimer(pendingData, camper.id);
 
     const userLicenseClass = user.profile?.drivers_license_class || user.profile?.driver_license_class;
     const isLicensed = DriversLicenseValidator.isLicensedToDrive(userLicenseClass, requiredLicenseClass);
 
-    const leftCol = document.createElement("div");
-    leftCol.className = "col-lg-7";
-
-    if (!isLicensed) {
-      leftCol.appendChild(
-        <div className="alert alert-danger rounded-4 p-3 mb-4">
-          <h5 className="fw-bold mb-2 text-danger">Führerscheinprüfung fehlgeschlagen</h5>
-          <p className="mb-0 small">
-            Deine hinterlegte Führerscheinklasse <strong>({userLicenseClass || "Keine"})</strong> reicht für diesen Camper nicht aus.
-            Dieses Fahrzeug erfordert mindestens die Klasse <strong>{requiredLicenseClass}</strong>.
-          </p>
-        </div>
-      );
-    }
-
-    leftCol.appendChild(
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white">
-        <div className="card-body p-4 p-md-5">
-          <h4 className="fw-bold mb-4">Persönliche Daten</h4>
-          <div className="row g-3">
-            <div className="col-sm-6">
-              <label className="form-label text-muted small text-uppercase fw-bold">
-                Vorname
-              </label>
-              <input
-                type="text"
-                className="form-control bg-light"
-                value={user.profile?.first_name || user.profile?.firstname || ""}
-                readOnly
-              />
-            </div>
-            <div className="col-sm-6">
-              <label className="form-label text-muted small text-uppercase fw-bold">
-                Nachname
-              </label>
-              <input
-                type="text"
-                className="form-control bg-light"
-                value={user.profile?.last_name || user.profile?.lastname || ""}
-                readOnly
-              />
-            </div>
-            <div className="col-12">
-              <label className="form-label text-muted small text-uppercase fw-bold">
-                E-Mail
-              </label>
-              <input
-                type="email"
-                className="form-control bg-light"
-                value={user.email}
-                readOnly
-              />
-            </div>
-            <div className="col-12">
-              <label className="form-label text-muted small text-uppercase fw-bold">
-                Führerschein Klasse
-              </label>
-              <input
-                type="text"
-                className="form-control bg-light"
-                value={user.profile?.driver_license_class || "Nicht angegeben"}
-                readOnly
-              />
-            </div>
-          </div>
-        </div>
-      </div>,
-    );
-
-    leftCol.appendChild(
-      <div className="card border-0 shadow-sm rounded-4 mb-4 bg-white">
-        <div className="card-body p-4 p-md-5">
-          <h4 className="fw-bold mb-4">Zahlungsart</h4>
-          <div className="d-flex flex-column gap-3">
-            <label
-              className="border rounded-3 p-3 d-flex align-items-center gap-3"
-              style={{ cursor: "pointer" }}
-            >
-              <input
-                type="radio"
-                name="payment"
-                value="stripe"
-                className="form-check-input mt-0 payment-method"
-                defaultChecked
-              />
-              <div>
-                <span className="fw-medium d-block">💳 Kreditkarte (Stripe)</span>
-                <small className="text-muted">Sicher bezahlen mit Mastercard, Visa oder American Express</small>
-              </div>
-            </label>
-            <label
-              className="border rounded-3 p-3 d-flex align-items-center gap-3"
-              style={{ cursor: "pointer" }}
-            >
-              <input
-                type="radio"
-                name="payment"
-                value="paypal"
-                className="form-check-input mt-0 payment-method"
-              />
-              <div>
-                <span className="fw-medium d-block">🅿️ PayPal</span>
-                <small className="text-muted">Schnell und sicher mit deinem PayPal Konto</small>
-              </div>
-            </label>
-          </div>
-          <div id="paypal-buttons-container" style={{ display: "none", marginTop: "20px" }}></div>
-        </div>
-      </div>,
-    );
-
-    
-    const rightCol = document.createElement("div");
-    rightCol.className = "col-lg-5";
-
-    
-    const receiptItems = [];
-    receiptItems.push(
-      <li className="list-group-item d-flex justify-content-between px-0 py-2 border-0 bg-transparent text-dark fw-medium">
-        <span>
-          {priceData.basePrice.toFixed(2)} € x {priceData.nights} Nächte
-        </span>
-        <span>{(priceData.basePrice * priceData.nights).toFixed(2)} €</span>
-      </li>,
-    );
+    const receiptRows: PriceBreakdownRow[] = [
+      {
+        label: `${priceData.basePrice.toFixed(2)} € x ${priceData.nights} Nächte`,
+        value: `${(priceData.basePrice * priceData.nights).toFixed(2)} €`,
+        textClass: "text-dark fw-medium",
+      },
+    ];
 
     if (priceData.seasonSurchargeAmount > 0) {
-      receiptItems.push(
-        <li className="list-group-item d-flex justify-content-between px-0 py-2 border-0 bg-transparent text-danger">
-          <span>Hauptsaison-Aufschlag</span>
-          <span>+ {priceData.seasonSurchargeAmount.toFixed(2)} €</span>
-        </li>,
-      );
+      receiptRows.push({
+        label: "Hauptsaison-Aufschlag",
+        value: `+ ${priceData.seasonSurchargeAmount.toFixed(2)} €`,
+        textClass: "text-danger",
+      });
     }
 
     if (priceData.discountAmount > 0) {
-      receiptItems.push(
-        <li className="list-group-item d-flex justify-content-between px-0 py-2 border-0 bg-transparent text-success">
-          <span>Rabatt ({priceData.discountPercentage}%)</span>
-          <span>- {priceData.discountAmount.toFixed(2)} €</span>
-        </li>,
-      );
+      receiptRows.push({
+        label: `Rabatt (${priceData.discountPercentage}%)`,
+        value: `- ${priceData.discountAmount.toFixed(2)} €`,
+        textClass: "text-success",
+      });
     }
 
     if (priceData.cleaningFee > 0) {
-      receiptItems.push(
-        <li className="list-group-item d-flex justify-content-between px-0 py-2 border-0 bg-transparent text-muted">
-          <span>Reinigungsgebühr</span>
-          <span>{priceData.cleaningFee.toFixed(2)} €</span>
-        </li>,
-      );
+      receiptRows.push({
+        label: "Reinigungsgebühr",
+        value: `${priceData.cleaningFee.toFixed(2)} €`,
+      });
     }
 
     priceData.addonDetails.forEach((addon) => {
-      receiptItems.push(
-        <li className="list-group-item d-flex justify-content-between px-0 py-2 border-0 bg-transparent text-muted">
-          <span>{addon.name}</span>
-          <span>{addon.cost.toFixed(2)} €</span>
-        </li>,
-      );
+      receiptRows.push({ label: addon.name, value: `${addon.cost.toFixed(2)} €` });
     });
 
     const confirmButton = (
       <button
-        className="btn w-100 py-3 fw-bold fs-4 text-white custom-font-base mt-2"
+        className={`btn w-100 py-3 fw-bold fs-4 text-black custom-font-base mt-2 letter-spacing-2 ${isLicensed ? "book-button-bg" : "bg-license-disabled"}`}
         id="confirm-payment-btn"
-        style={{
-          backgroundColor: isLicensed ? "var(--bs-primary, #ea5d42)" : "#6c757d",
-          letterSpacing: "2px",
-        }}
         disabled={true}
       >
         {isLicensed ? "Zahlungspflichtig buchen" : "Führerschein unzureichend"}
@@ -382,108 +169,6 @@ export function CheckoutPage() {
         'input[name="payment"]:checked'
       ) as HTMLInputElement;
       return selected?.value || "stripe";
-    };
-
-    // Initialisiere PayPal Smart Buttons nur einmal
-    const initPayPalButtons = async () => {
-      const container = document.getElementById("paypal-buttons-container");
-      if (!container || container.innerHTML !== "") return;
-
-      try {
-        const paypalScript = document.createElement("script");
-        paypalScript.src =
-          "https://www.paypal.com/sdk/js?client-id=" +
-          (import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb") +
-          "&currency=EUR";
-        paypalScript.async = true;
-        paypalScript.onload = () => {
-          const paypalWindow = window as unknown as {
-            paypal?: {
-              Buttons: (options: {
-                onClick?: (data: unknown, actions: { resolve: () => Promise<void>; reject: () => Promise<void> }) => void | Promise<void>;
-                createOrder: () => Promise<string>;
-                onApprove: (data: { orderID: string }) => Promise<void>;
-                onError: () => void;
-              }) => {
-                render: (container: HTMLElement | null) => void;
-              };
-            };
-          };
-
-          if (paypalWindow.paypal) {
-            paypalWindow.paypal
-              .Buttons({
-                onClick: (_data: unknown, actions: { resolve: () => Promise<void>; reject: () => Promise<void> }) => {
-                  if (!checkoutTermsAccepted) {
-                    alert("Bitte akzeptieren Sie die AGB und Datenschutzerklärung, um fortzufahren.");
-                    return actions.reject();
-                  }
-                  return actions.resolve();
-                },
-                createOrder: async () => {
-                  const response = await createPayPalOrder(
-                    camper.id,
-                    priceData.totalAmount,
-                    pendingData.apiStartDate,
-                    pendingData.apiEndDate
-                  );
-                  return response.id;
-                },
-                onApprove: async (data: { orderID: string }) => {
-                  try {
-                    confirmButton.disabled = true;
-                    confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Zahlung wird verarbeitet...';
-
-                    await capturePayPalOrder(data.orderID);
-
-                    await updateBookingStatus(pendingData.bookingId, 'confirmed');
-
-                    alert("Zahlung erfolgreich! Buchung abgeschlossen.");
-                    sessionStorage.removeItem("pendingCheckout");
-                    window.location.href = `/pages/checkout-success/?bookingId=${pendingData.bookingId}&camper=${pendingData.camperId}`;
-                  } catch (err) {
-                    console.error(err);
-                    const errorMsg = err instanceof Error ? err.message : String(err);
-                    let displayMsg = "Fehler bei der Zahlungsbestätigung. Bitte versuchen Sie es erneut.";
-                    if (errorMsg.includes("400")) {
-                      try {
-                        const match = errorMsg.match(/\{.*\}/);
-                        if (match) {
-                          const parsed = JSON.parse(match[0]) as { message?: string | string[] };
-                          if (parsed.message) displayMsg = Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message;
-                        }
-                      } catch {
-                        // Ignore JSON parse errors
-                      }
-                    }
-                    
-                    const existingAlert = document.getElementById("booking-error-alert");
-                    if (existingAlert) existingAlert.remove();
-                    
-                    const errorAlert = document.createElement("div");
-                    errorAlert.id = "booking-error-alert";
-                    errorAlert.className = "alert alert-danger mt-3";
-                    errorAlert.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${displayMsg}`;
-                    
-                    confirmButton.parentElement?.insertBefore(errorAlert, confirmButton);
-
-                    confirmButton.disabled = false;
-                    confirmButton.textContent = "Zahlungspflichtig buchen";
-                  }
-                },
-                onError: () => {
-                  alert("Fehler bei der PayPal-Zahlung. Bitte versuchen Sie es erneut.");
-                  confirmButton.disabled = false;
-                  confirmButton.textContent = "Zahlungspflichtig buchen";
-                },
-              })
-              .render(container);
-          }
-        };
-        document.head.appendChild(paypalScript);
-      } catch (err) {
-        console.error("Error initializing PayPal buttons:", err);
-      }
     };
 
     // Payment method change handler
@@ -498,7 +183,13 @@ export function CheckoutPage() {
           paypalContainer.style.display = "block";
         }
         confirmButton.style.display = "none";
-        initPayPalButtons();
+        initPayPalButtons({
+          camper,
+          priceData,
+          pendingData,
+          confirmButton,
+          getTermsAccepted: () => checkoutTermsAccepted,
+        });
       } else {
         if (paypalContainer) {
           paypalContainer.style.display = "none";
@@ -536,127 +227,36 @@ export function CheckoutPage() {
           }
         }
       } catch (err) {
-        console.error(err);
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        let displayMsg = "Fehler beim Zahlungsprozess. Bitte versuchen Sie es erneut.";
-        if (errorMsg.includes("400")) {
-          try {
-            const match = errorMsg.match(/\{.*\}/);
-            if (match) {
-              const parsed = JSON.parse(match[0]) as { message?: string | string[] };
-              if (parsed.message) displayMsg = Array.isArray(parsed.message) ? parsed.message.join(', ') : parsed.message;
-            }
-          } catch {
-            // Ignore JSON parse errors
-          }
-        }
-        
-        const existingAlert = document.getElementById("booking-error-alert");
-        if (existingAlert) existingAlert.remove();
-        
-        const errorAlert = document.createElement("div");
-        errorAlert.id = "booking-error-alert";
-        errorAlert.className = "alert alert-danger mt-3";
-        errorAlert.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i>${displayMsg}`;
-        
-        confirmButton.parentElement?.insertBefore(errorAlert, confirmButton);
-
-        confirmButton.disabled = false;
-        confirmButton.textContent = "Zahlungspflichtig buchen";
+        showBookingErrorAlert(confirmButton, err, "Fehler beim Zahlungsprozess. Bitte versuchen Sie es erneut.");
       }
     });
 
-    rightCol.appendChild(
-      <div
-        className="card border-0 shadow-lg rounded-4 overflow-hidden position-sticky bg-beige"
-        style={{ top: "100px" }}
-      >
-        <img
-          src={
-            camper.image_url ||
-            "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7"
-          }
-          alt={camper.name || "Camper"}
-          className="card-img-top"
-          style={{ height: "200px", objectFit: "cover" }}
+    const leftCol = (
+      <div className="col-lg-7">
+        {!isLicensed &&
+          LicenseWarningBanner({ variant: "detailed", userLicenseClass, requiredLicenseClass })}
+        <PersonalDataCard user={user} />
+        <PaymentMethodSelector />
+      </div>
+    ) as HTMLElement;
+
+    const rightCol = (
+      <div className="col-lg-5">
+        <OrderSummaryCard
+          camper={camper}
+          pendingData={pendingData}
+          priceData={priceData}
+          receiptRows={receiptRows}
+          confirmButton={confirmButton}
+          onTermsChange={(accepted: boolean) => {
+            checkoutTermsAccepted = accepted;
+            if (isLicensed) {
+              confirmButton.disabled = !checkoutTermsAccepted;
+            }
+          }}
         />
-        <div className="card-body p-4 p-md-5">
-          <h4 className="fw-bold custom-font-base mb-1">{camper.name}</h4>
-          <p className="text-muted small mb-4">{camper.manufacturer}</p>
-
-          <div className="d-flex justify-content-between mb-4 bg-light p-3 rounded-3 border">
-            <div className="text-center w-50 border-end">
-              <div
-                className="text-uppercase small text-muted fw-bold"
-                style={{ fontSize: "10px" }}
-              >
-                Abholung
-              </div>
-              <div className="fw-bold">{pendingData.startDate}</div>
-            </div>
-            <div className="text-center w-50">
-              <div
-                className="text-uppercase small text-muted fw-bold"
-                style={{ fontSize: "10px" }}
-              >
-                Rückgabe
-              </div>
-              <div className="fw-bold">{pendingData.endDate}</div>
-            </div>
-          </div>
-
-          <h6 className="fw-bold text-uppercase small text-muted mb-3">
-            Preisdetails
-          </h6>
-          <ul className="list-group list-group-flush fs-6 mb-3">
-            {receiptItems}
-          </ul>
-
-          <hr className="my-3" />
-
-          <div className="d-flex justify-content-between align-items-center fw-bold fs-3 mb-2">
-            <span>Gesamt</span>
-            <span className="blue">{priceData.totalAmount.toFixed(2)} €</span>
-          </div>
-
-          <div
-            className="text-muted p-2 bg-light rounded border border-secondary-subtle"
-            style={{ fontSize: "13px" }}
-          >
-            <div className="d-flex justify-content-between fw-medium">
-              <span>Kaution (vor Ort zu hinterlegen):</span>
-              <span>
-                {priceData.depositAmount
-                  ? priceData.depositAmount.toFixed(2)
-                  : "0.00"}{" "}
-                €
-              </span>
-            </div>
-          </div>
-
-          <div className="form-check mt-4 mb-3 p-3 bg-light rounded border border-secondary-subtle d-flex align-items-center">
-            <input 
-              className="form-check-input ms-0 me-3" 
-              type="checkbox" 
-              id="checkoutTermsCheckbox" 
-              onchange={(e: Event) => {
-                const target = e.target as HTMLInputElement;
-                checkoutTermsAccepted = target.checked;
-                if (isLicensed) {
-                  confirmButton.disabled = !checkoutTermsAccepted;
-                }
-              }}
-            />
-            <label className="form-check-label small text-muted" htmlFor="checkoutTermsCheckbox" style={{ flex: 1, paddingLeft: "10px" }}>
-              Ich habe die <a href="/right/agb.html" target="_blank" rel="noopener noreferrer" className="text-decoration-underline fw-medium text-dark">Allgemeine Geschäftsbedingungen (AGB)</a> und die <a href="/right/privacy-policies.html" target="_blank" rel="noopener noreferrer" className="text-decoration-underline fw-medium text-dark">Datenschutzerklärung</a> gelesen und akzeptiere diese.
-            </label>
-          </div>
-
-          {confirmButton}
-
-        </div>
-      </div>,
-    );
+      </div>
+    ) as HTMLElement;
 
     content.appendChild(leftCol);
     content.appendChild(rightCol);

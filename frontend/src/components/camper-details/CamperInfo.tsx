@@ -5,19 +5,28 @@ import type {
   DriversLicense,
 } from "../../types/interface.ts";
 
+/**
+ * Renders the main informational panel on the camper detail page: title,
+ * badges (manufacturer, beds, license class, provider type), description,
+ * feature list and a technical-details table.
+ *
+ * @param camper The camper's core data (name, description, dimensions, etc.).
+ * @param features The list of features/amenities this camper has.
+ * @param license The driver's license class required for this camper.
+ * @returns The info panel element.
+ */
 export function CamperInfo(
   camper: Camper,
   features: CamperFeature[],
   license: DriversLicense,
 ) {
-  
+
   const bedsText = camper.beds ? `${camper.beds} Betten` : "Keine Bettenangabe";
 
   return (
     <div className="col-12 col-lg-8">
       <div
-        className="card border-0 shadow-lg rounded-4 p-4 p-md-5 h-100"
-        style={{ backgroundColor: "#ffffff" }}
+        className="card border-0 shadow-lg rounded-4 p-4 p-md-5 h-100 bg-white"
       >
         <div className="mb-4">
           <h1 className="display-5 fw-bold custom-font-base mb-2">
@@ -52,7 +61,7 @@ export function CamperInfo(
           <h3 className="h4 fw-bold custom-font-base mb-3 text-custom-red">
             Über dieses Wohnmobil
           </h3>
-          <p className="fs-5 text-dark" style={{ lineHeight: "1.7" }}>
+          <p className="fs-5 text-dark impressum-text">
             {camper.description ||
               camper.short_desc ||
               "Keine Beschreibung verfügbar."}

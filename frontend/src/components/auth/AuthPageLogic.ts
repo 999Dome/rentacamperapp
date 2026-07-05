@@ -5,6 +5,19 @@ import { SessionStorage } from '../../infrastructure/session-storage';
 import { UIHelper } from '../../ui/helpers/ui-helper';
 import type { AuthResponse } from '../../domain/models/auth.model';
 
+/**
+ * Why this file is an imperative "controller" class instead of reactive
+ * state/hooks: this app has no virtual DOM, no component state, and no
+ * re-render mechanism (see `frontend/src/utils/createElement.ts`) - JSX only
+ * ever runs once, at creation time, to produce real DOM nodes. `AuthPage.tsx`
+ * builds that static markup, and this class is handed the resulting root
+ * element afterwards to find already-rendered pieces (forms, buttons, error
+ * boxes) with `querySelector` and wire up `addEventListener`s by hand. Any
+ * later UI change (showing an error, toggling the login/register pill, etc.)
+ * has to mutate the existing DOM nodes directly, because there is no
+ * framework that would do that for us based on state changes.
+ */
+
 interface AuthPageElements {
   loginForm: HTMLFormElement;
   registerForm: HTMLFormElement;
@@ -15,12 +28,25 @@ interface AuthPageElements {
   forgotPwLink: HTMLAnchorElement;
 }
 
+/**
+ * Imperative controller that wires up the login/register markup rendered by
+ * `AuthPage.tsx`. It looks up the relevant elements once (forms, pill
+ * toggle buttons, error boxes), attaches all event listeners, and handles
+ * form submission (validating credentials, calling the auth API, storing
+ * the resulting token, and redirecting or showing errors).
+ */
 class AuthPageLogic {
   private page: HTMLElement;
   private elements: AuthPageElements;
   private apiClient: AuthAPIClient;
   private isProcessing = false;
 
+  /**
+   * Looks up all the elements this controller needs inside the already
+   * rendered `page`, then attaches every event listener.
+   *
+   * @param page The root element returned by `AuthPage()`.
+   */
   constructor(page: HTMLElement) {
     this.page = page;
     this.elements = this.initializeElements();
@@ -28,6 +54,7 @@ class AuthPageLogic {
     this.setupEventListeners();
   }
 
+  /** Finds and returns every DOM element this controller reads from or writes to. */
   private initializeElements(): AuthPageElements {
     return {
       loginForm: this.getElement('.login-form') as HTMLFormElement,
@@ -40,6 +67,7 @@ class AuthPageLogic {
     };
   }
 
+  /** Wires up all event listeners this page needs (form toggle, both forms, forgot-password link). */
   private setupEventListeners(): void {
     this.setupFormToggle();
     this.setupLoginForm();
@@ -47,6 +75,7 @@ class AuthPageLogic {
     this.setupForgotPasswordLink();
   }
 
+  /** Makes the login/register pill buttons switch which form panel is shown. */
   private setupFormToggle(): void {
     this.elements.pillRegister.addEventListener('click', (e) => {
       e.preventDefault();
@@ -59,6 +88,7 @@ class AuthPageLogic {
     });
   }
 
+  /** Intercepts the login form's submit event and hands it off to `handleLoginSubmit`. */
   private setupLoginForm(): void {
     this.elements.loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -66,6 +96,7 @@ class AuthPageLogic {
     });
   }
 
+  /** Intercepts the register form's submit event and hands it off to `handleRegisterSubmit`. */
   private setupRegisterForm(): void {
     this.elements.registerForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -73,6 +104,7 @@ class AuthPageLogic {
     });
   }
 
+  /** Wires up the "Kennwort vergessen?" link to `handleForgotPassword`. */
   private setupForgotPasswordLink(): void {
     this.elements.forgotPwLink.addEventListener('click', (e) => {
       e.preventDefault();
@@ -80,18 +112,26 @@ class AuthPageLogic {
     });
   }
 
+  /** Slides the panel over to the register form and clears any shown error messages. */
   private switchToRegisterForm(): void {
     UIHelper.toggleAuthForm(true, this.page);
     UIHelper.showError(this.elements.loginErrorBox, null);
     UIHelper.showError(this.elements.registerErrorBox, null);
   }
 
+  /** Slides the panel back to the login form and clears any shown error messages. */
   private switchToLoginForm(): void {
     UIHelper.toggleAuthForm(false, this.page);
     UIHelper.showError(this.elements.loginErrorBox, null);
     UIHelper.showError(this.elements.registerErrorBox, null);
   }
 
+  /**
+   * Validates the login form, calls the auth API, and on success stores the
+   * returned token and redirects the user. Shows an error message on
+   * validation or API failure. Shows a loading state on the submit button
+   * while the request is in flight.
+   */
   private async handleLoginSubmit(): Promise<void> {
     if (this.isProcessing) return;
 
@@ -134,6 +174,13 @@ class AuthPageLogic {
     }
   }
 
+  /**
+   * Validates the register form, calls the auth API, and either logs the
+   * user in directly (if a token comes back) or shows the "check your
+   * inbox" success panel (if the account needs email verification). Shows
+   * an error message on validation or API failure, and a loading state on
+   * the submit button while the request is in flight.
+   */
   private async handleRegisterSubmit(): Promise<void> {
     if (this.isProcessing) return;
 
@@ -208,6 +255,7 @@ class AuthPageLogic {
     }
   }
 
+  /** Placeholder handler for the not-yet-implemented password reset feature. */
   private handleForgotPassword(): void {
     console.warn('Password reset functionality is not implemented yet.');
     alert(
@@ -215,6 +263,14 @@ class AuthPageLogic {
     );
   }
 
+  /**
+   * Runs the login form's email and password through their respective
+   * validators.
+   *
+   * @param email Value of the login form's email field.
+   * @param password Value of the login form's password field.
+   * @returns The first failing validation result, or a valid result if both checks pass.
+   */
   private validateLoginCredentials(email: string, password: string): ValidationResult {
     const emailValidation = CredentialValidator.validateEmail(email);
     if (!emailValidation.isValid) {
@@ -229,6 +285,14 @@ class AuthPageLogic {
     return { isValid: true, errors: [] };
   }
 
+  /**
+   * Finds an element within the auth page by CSS selector, throwing if it's
+   * missing (this should only happen if `AuthPage.tsx`'s markup and this
+   * controller's selectors drift apart).
+   *
+   * @param selector CSS selector to look up within the page's root element.
+   * @returns The matched element.
+   */
   private getElement(selector: string): Element {
     const element = this.page.querySelector(selector);
     if (!element) {
@@ -238,6 +302,13 @@ class AuthPageLogic {
   }
 }
 
+/**
+ * Entry point called by `AuthPage.tsx` right after it builds the login/
+ * register markup. Creates the `AuthPageLogic` controller, which wires up
+ * all the interactive behavior for that markup.
+ *
+ * @param page The root element returned by `AuthPage()`.
+ */
 export function setupAuthLogic(page: HTMLElement): void {
   new AuthPageLogic(page);
 }

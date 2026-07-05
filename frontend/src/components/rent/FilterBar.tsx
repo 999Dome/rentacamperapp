@@ -3,31 +3,86 @@ import flatpickr from "flatpickr";
 import type { Instance as FlatpickrInstance } from "flatpickr/dist/types/instance";
 import "flatpickr/dist/flatpickr.min.css";
 import { German } from "flatpickr/dist/l10n/de.js";
+import { renderDropdown } from "./filter-bar/FilterDropdown.tsx";
+import { FilterHeader } from "./filter-bar/FilterHeader.tsx";
+import { RangeInputPair } from "./filter-bar/RangeInputPair.tsx";
+import { FeatureCheckboxList } from "./filter-bar/FeatureCheckboxList.tsx";
+import type { LocationResponse } from "../../infrastructure/api/location-api-client.ts";
 
 interface FilterBarProps {
   onFilterChange: () => void;
+  locations: LocationResponse[];
 }
 
-export function FilterBar({ onFilterChange }: FilterBarProps) {
+/** Feature names shown in the "Ausstattung & Features" checkbox list. */
+const FEATURE_OPTIONS = [
+  "Spülbecken",
+  "Kühlschrank",
+  "Gasherd",
+  "Backofen",
+  "Toilette",
+  "Innendusche",
+  "Außendusche",
+  "Warmwasser-Boiler",
+  "Standheizung",
+  "Klimaanlage",
+  "Navigationssystem",
+  "Rückfahrkamera",
+  "Zusatzbatterie",
+  "WLAN / LTE Router"
+];
+
+/**
+ * The camper rental filter sidebar/card. Renders a form (search term, date
+ * range, dropdown filters, numeric ranges, tow-hitch switch, feature
+ * checkboxes) and notifies the caller via `onFilterChange` whenever any
+ * field changes, so `RentPage` can re-run filtering against the camper list.
+ *
+ * The heavier, repeated pieces of markup are extracted into
+ * `./filter-bar/*` components (dropdowns, header, min/max input rows,
+ * feature checkboxes); this file wires them together and owns the
+ * behaviors that need direct DOM access (form reset, flatpickr setup).
+ *
+ * @param onFilterChange Called whenever a filter input changes (including
+ *   dropdown selection, date pick, and form reset).
+ * @returns The filter card's root `<div>` element.
+ */
+export function FilterBar({ onFilterChange, locations }: FilterBarProps) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const qLocation = urlParams.get("location");
+  const qDateFrom = urlParams.get("dateFrom");
+  const qDateTo = urlParams.get("dateTo");
+
+  const locationOptions = [
+    { value: "", label: "Alle Abholorte" },
+    ...locations.map((loc) => ({
+      value: loc.id,
+      label: loc.name ? `${loc.name} (${loc.city})` : `${loc.street} ${loc.housenumber || ''}, ${loc.city}`
+    }))
+  ];
+
   const handleReset = (e: Event) => {
     e.preventDefault();
     const card = (e.target as HTMLElement).closest(".filter-card") as HTMLElement;
     const form = card?.querySelector("form") as HTMLFormElement;
     if (form) {
       form.reset();
-      
+
       // Reset custom dropdown labels
       const manufacturerText = card.querySelector("#btn-text-manufacturer");
       if (manufacturerText) manufacturerText.textContent = "Alle Hersteller";
-      
+
       const fuelTypeText = card.querySelector("#btn-text-fuelType");
       if (fuelTypeText) fuelTypeText.textContent = "Alle Kraftstoffe";
-      
+
       const emissionsClassText = card.querySelector("#btn-text-emissionsClass");
       if (emissionsClassText) emissionsClassText.textContent = "Alle Klassen";
 
       const providerTypeText = card.querySelector("#btn-text-providerType");
       if (providerTypeText) providerTypeText.textContent = "Alle Anbieter";
+
+      const locationText = card.querySelector("#btn-text-location");
+      if (locationText) locationText.textContent = "Alle Abholorte";
 
       // Reset hidden inputs
       const hiddenInputs = form.querySelectorAll("input[type='hidden']");
@@ -48,78 +103,9 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
     }
   };
 
-  const handleSelect = (name: string, val: string, label: string, container: HTMLElement) => {
-    const btnTextEl = container.querySelector(`#btn-text-${name}`) as HTMLElement;
-    const inputEl = container.querySelector(`input[name="${name}"]`) as HTMLInputElement;
-    if (btnTextEl && inputEl) {
-      inputEl.value = val;
-      btnTextEl.textContent = label;
-      onFilterChange();
-    }
-  };
-
-  const renderDropdown = (
-    name: string,
-    iconClass: string,
-    options: { value: string; label: string }[],
-    defaultLabel: string
-  ) => {
-    return (
-      <div className="dropdown filter-input-group w-100">
-        <i className={`${iconClass} input-icon`}></i>
-        <button
-          className="form-select filter-control text-start w-100 dropdown-toggle d-flex align-items-center justify-content-between"
-          type="button"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-        >
-          <span id={`btn-text-${name}`}>{defaultLabel}</span>
-        </button>
-        <input type="hidden" name={name} value="" />
-        <ul className="dropdown-menu w-100 shadow-sm p-1">
-          {options.map((opt) => (
-            <li key={opt.value}>
-              <button
-                className="dropdown-item rounded-2 py-2"
-                type="button"
-                onclick={(e: Event) => {
-                  e.preventDefault();
-                  const target = e.currentTarget as HTMLElement;
-                  const dropdownContainer = target.closest(".dropdown") as HTMLElement;
-                  if (dropdownContainer) {
-                    handleSelect(name, opt.value, opt.label, dropdownContainer);
-                  }
-                }}
-              >
-                {opt.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  };
-
   const element = (
     <div className="card filter-card p-4 mb-4 bg-white">
-      <div className="d-flex justify-content-between align-items-center mb-0 mb-lg-4 border-bottom pb-2">
-        <h4 className="fw-bold mb-0 text-dark custom-font-base">Filter</h4>
-        <div className="d-flex align-items-center gap-2">
-          <button className="btn btn-sm btn-reset-filter" onclick={handleReset}>
-            Zurücksetzen
-          </button>
-          <button
-            className="btn btn-outline-custom-light-blue btn-sm d-lg-none"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#filterFormCollapse"
-            aria-expanded="false"
-            aria-controls="filterFormCollapse"
-          >
-            <i className="bi bi-funnel-fill"></i> Toggle
-          </button>
-        </div>
-      </div>
+      <FilterHeader onReset={handleReset} />
 
       <div className="collapse d-lg-block mt-3 mt-lg-0" id="filterFormCollapse">
         <form oninput={onFilterChange} onchange={onFilterChange}>
@@ -134,6 +120,18 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
                 placeholder="Suchen..."
               />
             </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="form-label small text-uppercase text-muted fw-bold">Abholort</label>
+            {renderDropdown(
+              "location",
+              "bi bi-geo-alt",
+              locationOptions,
+              "Alle Abholorte",
+              onFilterChange,
+              qLocation || undefined
+            )}
           </div>
 
           <div className="mb-4">
@@ -172,7 +170,8 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
                 { value: "Ferraro", label: "Ferraro" },
                 { value: "Lamberghini", label: "Lamberghini" }
               ],
-              "Alle Hersteller"
+              "Alle Hersteller",
+              onFilterChange
             )}
           </div>
 
@@ -193,7 +192,8 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
                 { value: "alte Klasse 3", label: "alte Klasse 3" },
                 { value: "alte Klasse 2", label: "alte Klasse 2" }
               ],
-              "Alle Klassen"
+              "Alle Klassen",
+              onFilterChange
             )}
           </div>
 
@@ -208,7 +208,8 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
                 { value: "Benzine", label: "Benzin (Super/Plus)" },
                 { value: "Electric", label: "Elektrisch" }
               ],
-              "Alle Kraftstoffe"
+              "Alle Kraftstoffe",
+              onFilterChange
             )}
           </div>
 
@@ -223,7 +224,8 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
                 { value: "Euro 5", label: "Euro 5" },
                 { value: "Elektro", label: "Elektro" }
               ],
-              "Alle Klassen"
+              "Alle Klassen",
+              onFilterChange
             )}
           </div>
 
@@ -237,62 +239,40 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
                 { value: "original", label: "Rent-A-Camper Original" },
                 { value: "privat", label: "Privatanbieter" }
               ],
-              "Alle Anbieter"
+              "Alle Anbieter",
+              onFilterChange
             )}
           </div>
 
           <div className="mb-4">
             <label className="form-label small text-uppercase text-muted fw-bold">Preis pro Nacht (€)</label>
-            <div className="row g-2">
-              <div className="col-6">
-                <div className="filter-input-group">
-                  <i className="bi bi-currency-euro input-icon"></i>
-                  <input type="number" name="priceMin" className="form-control filter-control" placeholder="Min" min="0" />
-                </div>
-              </div>
-              <div className="col-6">
-                <div className="filter-input-group">
-                  <i className="bi bi-currency-euro input-icon"></i>
-                  <input type="number" name="priceMax" className="form-control filter-control" placeholder="Max" min="0" />
-                </div>
-              </div>
-            </div>
+            <RangeInputPair
+              fields={[
+                { icon: "bi bi-currency-euro", name: "priceMin", placeholder: "Min", min: "0" },
+                { icon: "bi bi-currency-euro", name: "priceMax", placeholder: "Max", min: "0" }
+              ]}
+            />
           </div>
 
           <div className="mb-4">
             <label className="form-label small text-uppercase text-muted fw-bold">Schlafplätze (Bettanzahl)</label>
-            <div className="row g-2">
-              <div className="col-6">
-                <div className="filter-input-group">
-                  <i className="bi bi-door-closed input-icon"></i>
-                  <input type="number" name="bedsMin" className="form-control filter-control" placeholder="Min" min="1" />
-                </div>
-              </div>
-              <div className="col-6">
-                <div className="filter-input-group">
-                  <i className="bi bi-door-closed input-icon"></i>
-                  <input type="number" name="bedsMax" className="form-control filter-control" placeholder="Max" min="1" />
-                </div>
-              </div>
-            </div>
+            <RangeInputPair
+              fields={[
+                { icon: "bi bi-door-closed", name: "bedsMin", placeholder: "Min", min: "1" },
+                { icon: "bi bi-door-closed", name: "bedsMax", placeholder: "Max", min: "1" }
+              ]}
+            />
           </div>
 
           <div className="mb-4">
             <label className="form-label small text-uppercase text-muted fw-bold">Fahrzeugabmessungen (max. cm)</label>
-            <div className="row g-2 mb-2">
-              <div className="col-6">
-                <div className="filter-input-group">
-                  <i className="bi bi-arrows-expand input-icon"></i>
-                  <input type="number" name="heightMax" className="form-control filter-control" placeholder="Höhe" min="0" />
-                </div>
-              </div>
-              <div className="col-6">
-                <div className="filter-input-group">
-                  <i className="bi bi-arrows-collapse input-icon"></i>
-                  <input type="number" name="widthMax" className="form-control filter-control" placeholder="Breite" min="0" />
-                </div>
-              </div>
-            </div>
+            <RangeInputPair
+              rowClassName="row g-2 mb-2"
+              fields={[
+                { icon: "bi bi-arrows-expand", name: "heightMax", placeholder: "Höhe", min: "0" },
+                { icon: "bi bi-arrows-collapse", name: "widthMax", placeholder: "Breite", min: "0" }
+              ]}
+            />
             <div className="filter-input-group">
               <i className="bi bi-speedometer2 input-icon"></i>
               <input type="number" name="weightMax" className="form-control filter-control" placeholder="Max Gewicht (kg)" min="0" />
@@ -308,37 +288,7 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
 
           <div className="mb-3">
             <label className="form-label small text-uppercase text-muted fw-bold mb-2">Ausstattung & Features</label>
-            <div className="d-flex flex-column gap-2">
-              {[
-                "Spülbecken",
-                "Kühlschrank",
-                "Gasherd",
-                "Backofen",
-                "Toilette",
-                "Innendusche",
-                "Außendusche",
-                "Warmwasser-Boiler",
-                "Standheizung",
-                "Klimaanlage",
-                "Navigationssystem",
-                "Rückfahrkamera",
-                "Zusatzbatterie",
-                "WLAN / LTE Router"
-              ].map((feat) => (
-                <div className="form-check" key={feat}>
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    name="features"
-                    value={feat}
-                    id={`feat-${feat}`}
-                  />
-                  <label className="form-check-label text-muted small" htmlFor={`feat-${feat}`}>
-                    {feat}
-                  </label>
-                </div>
-              ))}
-            </div>
+            <FeatureCheckboxList features={FEATURE_OPTIONS} />
           </div>
         </form>
       </div>
@@ -353,6 +303,7 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
     flatpickr(dateFromInput, {
       locale: German,
       dateFormat: "d.m.Y",
+      defaultDate: qDateFrom || undefined,
       onChange: () => {
         onFilterChange();
       }
@@ -363,6 +314,7 @@ export function FilterBar({ onFilterChange }: FilterBarProps) {
     flatpickr(dateToInput, {
       locale: German,
       dateFormat: "d.m.Y",
+      defaultDate: qDateTo || undefined,
       onChange: () => {
         onFilterChange();
       }

@@ -1,5 +1,12 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
+/**
+ * Client for the PayPal Orders v2 REST API (sandbox environment).
+ *
+ * Uses raw `fetch` rather than an SDK. When real credentials are absent it
+ * degrades gracefully to a dummy flow (see {@link getAccessToken} /
+ * {@link createOrder}) so the checkout UI remains testable without live keys.
+ */
 @Injectable()
 export class PayPalService {
   private readonly baseUrl = 'https://api-m.sandbox.paypal.com';
@@ -7,6 +14,15 @@ export class PayPalService {
   private readonly clientSecret =
     process.env.PAYPAL_CLIENT_SECRET || 'PLACEHOLDER';
 
+  /**
+   * Obtains an OAuth2 access token via the client-credentials grant.
+   *
+   * On any failure it logs and returns the sentinel `'DUMMY_ACCESS_TOKEN'`
+   * instead of throwing, which downstream methods detect to run the offline
+   * dummy flow — convenient for local/dev without real PayPal keys.
+   *
+   * @returns A bearer access token, or the dummy sentinel on failure.
+   */
   private async getAccessToken(): Promise<string> {
     const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString(
       'base64',
@@ -35,6 +51,16 @@ export class PayPalService {
     }
   }
 
+  /**
+   * Creates a PayPal order to be approved and later captured.
+   *
+   * @param camperId        Id of the camper being paid for.
+   * @param amount          Charge amount in EUR (formatted to 2 decimals).
+   * @param _bookingDetails Booking metadata (currently unused here).
+   * @returns The created order `{ id }` (a `DUMMY_ORDER_*` id when running
+   *          without real credentials).
+   * @throws InternalServerErrorException If a live order request fails.
+   */
   async createOrder(
     camperId: string,
     amount: number, // in EUR
@@ -81,10 +107,19 @@ export class PayPalService {
     }
   }
 
+  /**
+   * Captures (finalises) a previously approved PayPal order.
+   *
+   * @param orderId The id returned by {@link createOrder}.
+   * @returns The raw PayPal capture response (a synthetic `COMPLETED` result
+   *          for dummy orders / missing credentials).
+   * @throws InternalServerErrorException If a live capture request fails.
+   */
   async capturePayment(orderId: string): Promise<Record<string, unknown>> {
     try {
       const accessToken = await this.getAccessToken();
 
+      // Short-circuit for the offline dummy flow (no real order to capture).
       if (
         accessToken === 'DUMMY_ACCESS_TOKEN' ||
         orderId.startsWith('DUMMY_ORDER')

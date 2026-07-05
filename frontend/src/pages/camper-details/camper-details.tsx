@@ -1,5 +1,6 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import "../../scss/camper-details-v2.scss";
+import "../../scss/theme.scss";
+import { createElement } from "../../utils/createElement.ts";
 
 import { MainHeader } from "../../components/mainheader.tsx";
 import { MainFooter } from "../../components/mainfooter.tsx";
@@ -15,6 +16,12 @@ import { ImageGallery } from "../../components/camper-details/ImageGallery.tsx";
 import { CamperInfo } from "../../components/camper-details/CamperInfo.tsx";
 import { BookingCard } from "../../components/camper-details/BookingCard.tsx";
 
+/**
+ * Bootstrap entry point for the camper-details MPA page. Reads the camper id
+ * from either the `id` query param or the `/campers/:id` path segment, loads
+ * all data needed to render the page in parallel, and mounts the page into
+ * `document.body`.
+ */
 async function renderCamperDetails() {
   const pathParts = window.location.pathname.split('/');
   const urlParams = new URLSearchParams(window.location.search);
@@ -27,9 +34,7 @@ async function renderCamperDetails() {
   document.body.appendChild(MainHeader());
 
   if (!camperId) {
-    const errorDiv = document.createElement("div");
-    errorDiv.innerHTML = "<h2 style='text-align: center; margin: 50px;'>Keine Camper-ID angegeben</h2>";
-    document.body.appendChild(errorDiv);
+    document.body.appendChild(<h2 className="error-message-block">Keine Camper-ID angegeben</h2>);
     document.body.appendChild(MainFooter());
     return;
   }
@@ -57,24 +62,22 @@ async function renderCamperDetails() {
       total_weight: 3500
     };
 
-    const mainContainer = document.createElement("main");
-    mainContainer.className = "container camper-details-v2-container my-5";
-
-    mainContainer.appendChild(ImageGallery(image));
-
-    const contentLayout = document.createElement("div");
-    contentLayout.className = "row g-4 mt-4 mb-5";
-
-    contentLayout.appendChild(CamperInfo(camper, features, license));
-    contentLayout.appendChild(BookingCard(camper, addons, pricingRules, locations));
-
-    mainContainer.appendChild(contentLayout);
-    document.body.appendChild(mainContainer);
+    document.body.appendChild(
+      <main className="container camper-details-v2-container my-5">
+        {ImageGallery(image)}
+        <div className="row g-4 mt-4 mb-5">
+          {CamperInfo(camper, features, license)}
+          {BookingCard(camper, addons, pricingRules, locations)}
+        </div>
+      </main>
+    );
 
   } catch (error) {
-    const errorDiv = document.createElement("div");
-    errorDiv.innerHTML = `<h2 style='text-align: center; margin: 50px;'>Fehler beim Laden: ${error instanceof Error ? error.message : 'Unbekannt'}</h2>`;
-    document.body.appendChild(errorDiv);
+    document.body.appendChild(
+      <h2 className="error-message-block">
+        Fehler beim Laden: {error instanceof Error ? error.message : 'Unbekannt'}
+      </h2>
+    );
   }
 
   document.body.appendChild(MainFooter());

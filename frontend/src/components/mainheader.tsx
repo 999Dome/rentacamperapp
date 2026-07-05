@@ -2,6 +2,11 @@ import '../scss/theme.scss';
 import 'bootstrap';
 import { createElement } from '../utils/createElement.ts';
 
+/**
+ * Site-wide top navigation bar: logo/home link, the "RENT-A-CAMPER"
+ * wordmark, and the main navigation links (collapsible into a hamburger
+ * menu on small screens via Bootstrap's navbar-collapse behavior).
+ */
 export function MainHeader() {
   return (
     <nav
@@ -14,7 +19,6 @@ export function MainHeader() {
             src="/icon.svg"
             alt="Logo"
             className="header-icon"
-            style="width: 54px; height: auto"
           />
           <span className="d-none d-md-inline-flex align-items-center">
             <span className="text-custom-light-blue mt-2">RENT</span>
@@ -26,16 +30,15 @@ export function MainHeader() {
         </a>
 
         <button
-          className="navbar-toggler"
+          className="navbar-toggler navbar-toggler-border-light"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#mainNavContent"
           aria-controls="mainNavContent"
           aria-expanded="false"
           aria-label="Toggle navigation"
-          style={{ borderColor: "rgba(255,255,255,0.5)" }}
         >
-          <span className="navbar-toggler-icon" style={{ filter: "invert(1)" }}></span>
+          <span className="navbar-toggler-icon navbar-toggler-icon-inverted"></span>
         </button>
 
         <div className="collapse navbar-collapse justify-content-end" id="mainNavContent">

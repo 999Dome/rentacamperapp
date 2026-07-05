@@ -1,12 +1,15 @@
 /**
- * BaseAPIClient - Zentrale API-Basis mit DRY Error Handling
+ * BaseAPIClient - central API base class with shared (DRY) error handling.
  *
- * Diese Klasse implementiert die Single Responsibility Principle:
- * - Request-Verwaltung (URL-Building, Header-Setup)
- * - Zentrale Error-Behandlung
- * - Response-Parsing mit Typ-Sicherheit
+ * This class follows the Single Responsibility Principle by owning exactly
+ * three concerns, so every other API client (auth, bookings, payments, ...)
+ * can extend it instead of re-implementing the same fetch boilerplate:
+ * - Request handling (building the URL, setting headers)
+ * - Central error handling
+ * - Type-safe response parsing
  */
 
+/** Structured shape used to describe an API error (currently informational; not thrown as-is, see `createAPIError`). */
 export interface APIError {
   status: number;
   message: string;
@@ -27,10 +30,12 @@ export class BaseAPIClient {
   }
 
   /**
-   * Generische Request-Methode mit automatischem Error-Handling
-   * @param endpoint - API Endpoint (relative zur baseUrl)
-   * @param options - Fetch-Optionen (Method, Body, Headers, etc.)
-   * @returns Promise mit geparsten Response-Daten
+   * Generic request method with automatic error handling. Subclasses call
+   * this instead of using `fetch` directly.
+   *
+   * @param endpoint API endpoint, relative to `baseUrl`.
+   * @param options Fetch options (method, body, headers, etc.).
+   * @returns The parsed response data.
    */
   public async request<T>(
     endpoint: string,
@@ -58,7 +63,12 @@ export class BaseAPIClient {
   }
 
   /**
-   * Verarbeitet Responses mit Fehlerprüfung und Typ-Konvertierung
+   * Checks the response status and parses the body as JSON.
+   *
+   * @param response The raw fetch `Response`.
+   * @param endpoint The endpoint that was requested (used for logging/errors).
+   * @returns The parsed response data, or `null` if the body was empty.
+   * @throws {Error} If the response status is not ok, or the body is not valid JSON.
    */
   protected async handleResponse<T>(
     response: Response,
@@ -86,7 +96,11 @@ export class BaseAPIClient {
   }
 
   /**
-   * Fehlerbehandlung für Netzwerkfehler
+   * Logs network-level failures (e.g. no connection, DNS error) that happen
+   * before a response is even received.
+   *
+   * @param error The caught error (of unknown type, as thrown by `fetch`).
+   * @param endpoint The endpoint that was being requested.
    */
   protected handleNetworkError(error: unknown, endpoint: string): void {
     const message = error instanceof Error ? error.message : 'Unknown network error';
@@ -94,7 +108,12 @@ export class BaseAPIClient {
   }
 
   /**
-   * Erstellt strukturiertes API-Error-Objekt
+   * Builds a single `Error` describing a failed API response.
+   *
+   * @param status HTTP status code of the failed response.
+   * @param endpoint The endpoint that was requested.
+   * @param message Raw error text from the response body.
+   * @returns The constructed error.
    */
   private createAPIError(status: number, endpoint: string, message: string): Error {
     const errorMsg = `API Error [${status}] ${endpoint}: ${message}`;
@@ -102,7 +121,12 @@ export class BaseAPIClient {
   }
 
   /**
-   * Zentrale Logging-Funktion
+   * Central logging function for API errors, used by both response and
+   * network error handling so log output stays consistent.
+   *
+   * @param status HTTP status code, or `0` for network-level errors.
+   * @param endpoint The endpoint involved.
+   * @param error Error message to log.
    */
   protected logError(status: number, endpoint: string, error: string): void {
     const timestamp = new Date().toISOString();
@@ -111,7 +135,10 @@ export class BaseAPIClient {
   }
 
   /**
-   * Optional: Info-Logging
+   * Optional informational logging for non-error events.
+   *
+   * @param endpoint The endpoint involved.
+   * @param message Message to log.
    */
   protected logInfo(endpoint: string, message: string): void {
     console.warn(`[API INFO] ${endpoint}: ${message}`);

@@ -1,37 +1,23 @@
 import { createElement } from '../../utils/createElement.ts';
 
+/**
+ * Full-width home page hero: a background photo with a dark overlay, the
+ * app logo, the animated tagline, and a call-to-action button linking to
+ * the rent page.
+ */
 export function Hero() {
   return (
-    <div
-      className="text-center bg-image"
-      style={{
-        backgroundImage: 'url("/cover.png")',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center bottom',
-        height: '75vh',
-        width: '100%',
-        margin: 0,
-        padding: 0,
-      }}
-    >
-      <div
-        className="mask"
-        style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          height: '100%',
-          width: '100%',
-        }}
-      >
+    <div className="text-center bg-image hero-cover w-100 m-0 p-0">
+      <div className="mask hero-mask h-100 w-100">
         <div className="d-flex justify-content-center h-100 align-items-center h-100">
           <div className="text-white text-center">
             <img
               src="/icon.svg"
-              className="mb-4"
+              className="mb-4 hero-logo"
               alt="Logo"
-              style={{ width: '100px', height: 'auto' }}
             />
 
-            <p className="display-2 mb-4 text-stroke-grey custom-font-burbank" style={{ letterSpacing: '2px' }}>
+            <p className="display-2 mb-4 text-stroke-grey custom-font-burbank hero-tagline">
               <span className="text-custom-light-blue">Dein Weg</span>
               <span className="text-custom-red">. </span>
               <span className="text-custom-yellow">Dein Tempo</span>

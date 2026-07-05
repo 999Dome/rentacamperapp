@@ -20,8 +20,17 @@ import { MailModule } from './modules/mail/mail.module';
 import { PdfModule } from './modules/pdf/pdf.module';
 import { SupportModule } from './modules/support/support.module';
 
+/**
+ * Root application module.
+ *
+ * Registers global configuration and composes every feature module. The order
+ * of the imports below is not significant to NestJS — modules declare their own
+ * dependencies — they are simply grouped by concern for readability.
+ */
 @Module({
   imports: [
+    // Load .env once and make configuration available application-wide, so
+    // individual modules don't each need to re-import ConfigModule.
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,

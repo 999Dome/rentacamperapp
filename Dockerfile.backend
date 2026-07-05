@@ -1,29 +1,48 @@
-# Build
+# ---------------------------------------------------------------------------
+# Backend image (NestJS).
+#
+# IMPORTANT: The build context MUST be the repository root (the `wohnmobilapp/`
+# folder), NOT `backend/`. All COPY paths below are written relative to that
+# root so the project can always be built/started from the main folder, e.g.:
+#
+#   docker compose up --build        (run from wohnmobilapp/)
+#
+# This is required because the backend's TypeScript build also compiles the
+# sibling `shared/` sources (see backend/tsconfig.json `include`), so both
+# `backend/` and `shared/` must be present in the same context.
+# ---------------------------------------------------------------------------
+
+# --- Build stage -----------------------------------------------------------
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# copy package files
+# Copy only the manifests first so `npm install` is cached and re-runs only
+# when dependencies actually change (not on every source edit).
 COPY backend/package*.json ./backend/
 COPY shared/package*.json ./shared/
 
-# install
+# Install backend dependencies.
 WORKDIR /app/backend
 RUN npm install --legacy-peer-deps
 
-# copy source code
+# Copy the source. `shared/` is needed because the backend compiles it too;
+# it must sit next to `backend/` so the `../shared` path resolves.
 WORKDIR /app
 COPY shared/ ./shared/
 COPY backend/ ./backend/
 
-# build backend
+# Compile TypeScript. Output lands in backend/dist/backend/src (and dist/shared)
+# because the compiler's common root spans both `backend/src` and `../shared`.
 WORKDIR /app/backend
 RUN npm run build
 
-# Run (new image)
+# --- Runtime stage (slim image without build tooling) ----------------------
 FROM node:20-alpine
 WORKDIR /app
 
-# copy files from first build
+# Copy the compiled output, production node_modules and manifest from the
+# builder. dist/ contains both backend/src and shared, so runtime imports of
+# the shared code resolve correctly.
 COPY --from=builder /app/backend/dist ./dist
 COPY --from=builder /app/backend/node_modules ./node_modules
 COPY --from=builder /app/backend/package.json ./package.json
@@ -32,4 +51,5 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
+# Entry point matches the compiled layout (see backend `start:prod` script).
 CMD ["node", "dist/backend/src/main.js"]

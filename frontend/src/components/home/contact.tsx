@@ -1,5 +1,9 @@
 import { createElement, createSVGElement } from '../../utils/createElement.ts';
 
+/**
+ * "Still have questions?" call-to-action section shown on the home page.
+ * Displays a phone number and email address and links to the contact page.
+ */
 export function Contact() {
   const phoneIcon = createSVGElement(
     'svg',
@@ -37,12 +41,11 @@ export function Contact() {
         className="p-5 text-center rounded-4 shadow-lg position-relative overflow-hidden bg-beige"
       >
         <div
-          className="position-absolute top-0 start-0 w-100 h-100 bg-beige"
-          style="background: radial-gradient(circle at top right, rgba(78, 187, 234, 0.1), transparent 50%); z-index: 0;"
+          className="position-absolute top-0 start-0 w-100 h-100 bg-beige contact-section-glow"
         ></div>
-        <div className="position-relative" style="z-index: 1">
+        <div className="position-relative contact-section-content">
           <h2 className="display-6 fw-bold custom-font text-black mb-3">Noch Fragen?</h2>
-          <p className="lead text-black-50 mb-4 mx-auto" style="max-width: 600px">
+          <p className="lead text-black-50 mb-4 mx-auto contact-lead-text">
             Egal ob zur Buchung, zu den Fahrzeugen oder zu deiner perfekten Route – unser Team hilft
             dir gerne persönlich weiter.
           </p>

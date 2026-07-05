@@ -1,3 +1,7 @@
+/**
+ * Bootstrap entry point for the rent MPA page: mounts the header, the
+ * `RentPage` (camper search/filter/listing), and the footer.
+ */
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap";
 import "../../scss/theme.scss";

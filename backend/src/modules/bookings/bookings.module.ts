@@ -11,6 +11,14 @@ import { CamperBlockingsModule } from '../camper_blockings/camper_blockings.modu
 import { PdfModule } from '../pdf/pdf.module';
 import { MailModule } from '../mail/mail.module';
 
+/**
+ * Wires up the bookings feature.
+ *
+ * Imports the collaborators the booking flow needs: Supabase (DB), license &
+ * profile checks, camper lookups, blockings, and the PDF/mail services used for
+ * invoices and cancellation notices. `BookingsService` is exported so other
+ * modules can reuse it.
+ */
 @Module({
   imports: [
     SupabaseModule,
@@ -24,10 +32,14 @@ import { MailModule } from '../mail/mail.module';
   controllers: [BookingsController],
   providers: [
     BookingsService,
+    // Bind the repository interface token to the concrete Supabase class so the
+    // service can depend on IBookingRepository rather than the implementation.
     {
       provide: BOOKING_REPOSITORY_TOKEN,
       useClass: BookingRepository,
     },
+    // Also register the concrete class directly for anything that injects it
+    // by type (e.g. this module's own internal wiring).
     BookingRepository,
   ],
   exports: [BookingsService],
