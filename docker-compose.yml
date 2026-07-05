@@ -1,14 +1,30 @@
-version: '3.8'
+# ---------------------------------------------------------------------------
+# Full-stack composition (backend + frontend).
+#
+# Always run this from the repository root (the `wohnmobilapp/` folder):
+#
+#   docker compose up --build
+#
+# Both services use `context: .` (this folder), so the whole project is built
+# and started from the main folder — no need to cd into backend/ or frontend/.
+# ---------------------------------------------------------------------------
+
+# Fixed project name so containers/network are named consistently regardless
+# of the current directory name.
+name: wohnmobilapp
 
 services:
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    container_name: wohnmobilapp-backend
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+    # Runtime secrets/config (Supabase keys, mail, etc.).
     env_file:
       - backend/.env
     networks:
@@ -18,14 +34,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+      # VITE_* vars must be provided at BUILD time (Vite bakes them into the
+      # static bundle). Setting them as a runtime `environment` would have no
+      # effect, so the backend URL is passed here instead.
+      args:
+        VITE_BACKEND_URL: http://localhost:3000
+    container_name: wohnmobilapp-frontend
+    restart: unless-stopped
     ports:
       - "8080:80"
     depends_on:
       - backend
     networks:
       - camper-network
-    environment:
-      - VITE_BACKEND_URL=http://localhost:3000
 
 networks:
   camper-network:

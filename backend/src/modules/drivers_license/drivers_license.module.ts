@@ -7,6 +7,16 @@ import {
   DRIVERS_LICENSE_REPOSITORY_TOKEN,
 } from '../../infrastructure/repositories/drivers-license.repository';
 
+/**
+ * Wires up the driver's license feature.
+ *
+ * Imports {@link SupabaseModule} for database access, registers the controller
+ * and service, and binds the {@link DRIVERS_LICENSE_REPOSITORY_TOKEN} DI token to
+ * the concrete {@link DriversLicenseRepository}. Both the service and the token
+ * are exported so other modules (notably the booking flow) can reuse the
+ * eligibility logic. In NestJS a `@Module` plays the role of a Spring
+ * `@Configuration` that declares which beans exist and which are visible outside.
+ */
 @Module({
   imports: [SupabaseModule],
   controllers: [DriversLicenseController],

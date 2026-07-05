@@ -8,6 +8,17 @@ import {
 import { SupabaseModule } from '../../supabase/supabase.module';
 import { PricingCalculatorService } from '../../domain/services/pricing-calculator.service';
 
+/**
+ * Wires up the pricing feature.
+ *
+ * Imports {@link SupabaseModule} for DB access and registers the controller plus
+ * two collaborators: {@link PricingRulesService} (rule lookups) and
+ * {@link PricingCalculatorService} (price computation). The
+ * {@link PRICING_RULE_REPOSITORY_TOKEN} token is bound to the concrete
+ * {@link PricingRuleRepository}, which is also registered by class so it can be
+ * injected either way. Services, the calculator and the token are exported for
+ * reuse by other modules (e.g. the booking flow).
+ */
 @Module({
   imports: [SupabaseModule],
   controllers: [PricingRulesController],

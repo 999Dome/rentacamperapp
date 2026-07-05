@@ -1,6 +1,12 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import Stripe from 'stripe';
 
+/**
+ * Thin wrapper around the Stripe SDK for creating hosted Checkout sessions.
+ *
+ * The customer is redirected to Stripe's own payment page; on success/cancel
+ * Stripe redirects back to the frontend URLs configured below.
+ */
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
@@ -13,6 +19,20 @@ export class StripeService {
     });
   }
 
+  /**
+   * Creates a Stripe Checkout session for a single camper booking.
+   *
+   * The `bookingId` is threaded through both the success URL and the session
+   * `metadata` so the payment can be reconciled with the booking after the
+   * redirect / via webhooks.
+   *
+   * @param camperId       Id of the camper being paid for.
+   * @param amountInCents  Charge amount in cents (Stripe's expected unit).
+   * @param bookingDetails Metadata (bookingId, start/end dates) for the session.
+   * @returns The hosted Checkout `{ url }` to redirect the buyer to.
+   * @throws InternalServerErrorException If Stripe rejects the request or
+   *         returns no URL.
+   */
   async createCheckoutSession(
     camperId: string,
     amountInCents: number,

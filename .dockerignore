@@ -1,6 +1,18 @@
+# Build artifacts and dependencies (installed/compiled inside the image)
 node_modules
-npm-debug.log
+**/node_modules
 dist
 backend/dist
 frontend/dist
+npm-debug.log
+*.log
+
+# VCS and editor/tooling noise — not needed in the build context
 .git
+.gitignore
+.prettierrc
+.aider*
+
+# NOTE: backend/.env and frontend/.env are intentionally NOT ignored:
+#   - frontend/.env provides build-time VITE_* vars (e.g. PayPal client id)
+#   - backend/.env is also injected at runtime via docker-compose `env_file`

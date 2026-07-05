@@ -1,10 +1,19 @@
 import type { MockCamper } from '../../utils/mockData';
 
+/**
+ * All the optional search/filter/sort inputs the camper listing page can
+ * combine. Every field is optional so callers only need to set the ones the
+ * user actually picked; unset fields are treated as "no restriction" by
+ * {@link CamperFilterService.filterAndSort}.
+ */
 export interface CamperFilterCriteria {
+  /** Free-text search matched against name, description and manufacturer. */
   query?: string;
   manufacturer?: string;
+  /** One of `'Diesel'`, `'Benzine'` or `'Electric'`. */
   fuelType?: string;
   requiredLicense?: string;
+  /** One of `'Elektro'` or `'Euro 6'`. */
   emissionsClass?: string;
   priceMin?: number;
   priceMax?: number;
@@ -14,12 +23,28 @@ export interface CamperFilterCriteria {
   widthMax?: number;
   weightMax?: number;
   hasTowHitch?: boolean;
+  /** Feature names that a camper must have ALL of to match. */
   selectedFeatures?: string[];
   providerType?: string;
+  /** One of `'priceAsc'`, `'priceDesc'`, `'nameAsc'` or `'nameDesc'`. */
   sortVal?: string;
 }
 
+/**
+ * Applies search/filter criteria to a list of campers and optionally sorts
+ * the result, all in one pure, stateless pass. Used by the camper listing
+ * page to turn the raw camper data plus the user's filter form into what
+ * gets rendered. This class is used like a namespace/utility bag (its only
+ * member is `static`), never instantiated.
+ */
 export class CamperFilterService {
+  /**
+   * Filters `campers` down to the ones matching every set field in
+   * `criteria`, then sorts them if `criteria.sortVal` is set.
+   * @param campers The full list of campers to filter.
+   * @param criteria The filter/sort options selected by the user.
+   * @returns A new array; the input array is not mutated.
+   */
   static filterAndSort(campers: MockCamper[], criteria: CamperFilterCriteria): MockCamper[] {
     const {
       query,

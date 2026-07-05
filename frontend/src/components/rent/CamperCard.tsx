@@ -1,6 +1,15 @@
 import { createElement } from "../../utils/createElement.ts";
 import type { MockCamper } from "../../utils/mockData.ts";
 
+/**
+ * Renders a single camper "card" for the rental listing grid (`RentPage`).
+ * Shows the camper's image, key badges (manufacturer, license class, beds),
+ * a short description, its feature tags and the price, plus a link to the
+ * camper's detail page.
+ *
+ * @param camper The camper data to display on the card.
+ * @returns The card element for this camper.
+ */
 export function CamperCard(camper: MockCamper) {
   const bedsText = camper.beds ? `${camper.beds} Betten` : "Keine Betten";
   const licenseText = camper.license_name
@@ -11,33 +20,29 @@ export function CamperCard(camper: MockCamper) {
   return (
     <div className="col-12 col-md-6 col-lg-4 mb-4">
       <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden card-hover-lift bg-beige">
-        <div style={{ position: "relative", height: "220px", overflow: "hidden" }}>
+        <div className="position-relative overflow-hidden highlight-card-img">
           <img
             src={imageSrc}
             alt={camper.name || "Camper"}
-            className="w-100 h-100"
-            style={{ objectFit: "cover" }}
+            className="w-100 h-100 object-fit-cover"
           />
           {camper.is_blocked && (
             <div
-              className="position-absolute top-0 end-0 m-3 badge bg-danger text-white fs-6 py-2 px-3 rounded-pill"
-              style={{ zIndex: 2 }}
+              className="position-absolute top-0 end-0 m-3 badge bg-danger text-white fs-6 py-2 px-3 rounded-pill z-2"
             >
               Gesperrt / Wartung
             </div>
           )}
           {camper.providerType === 'original' && (
             <div
-              className="position-absolute top-0 start-0 m-3 badge bg-info text-white fs-6 py-2 px-3 rounded-pill"
-              style={{ zIndex: 2 }}
+              className="position-absolute top-0 start-0 m-3 badge bg-info text-white fs-6 py-2 px-3 rounded-pill z-2"
             >
               Rent-A-Camper Original
             </div>
           )}
           {camper.providerType === 'privat' && (
             <div
-              className="position-absolute top-0 start-0 m-3 badge bg-secondary text-white fs-6 py-2 px-3 rounded-pill"
-              style={{ zIndex: 2 }}
+              className="position-absolute top-0 start-0 m-3 badge bg-secondary text-white fs-6 py-2 px-3 rounded-pill z-2"
             >
               Privatanbieter
             </div>
@@ -60,7 +65,7 @@ export function CamperCard(camper: MockCamper) {
 
           <div className="mb-3 d-flex flex-wrap gap-1">
             {camper.features_list.map((feat) => (
-              <span className="badge bg-light text-secondary border rounded-pill px-2 py-1" style={{ fontSize: "11px" }}>
+              <span className="badge bg-light text-secondary border rounded-pill px-2 py-1 fs-11px">
                 {feat}
               </span>
             ))}
@@ -73,7 +78,7 @@ export function CamperCard(camper: MockCamper) {
                 {camper.price_per_night_base} €
               </span>
             </div>
-            <a href={`/campers/${camper.id}`} className="btn btn-outline-primary px-3 rounded-pill">
+            <a href={`/campers/${camper.id}${window.location.search}`} className="btn btn-outline-primary px-3 rounded-pill">
               Details
             </a>
           </div>

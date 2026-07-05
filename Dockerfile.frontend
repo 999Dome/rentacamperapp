@@ -1,27 +1,47 @@
-# Build
+# ---------------------------------------------------------------------------
+# Frontend image (Vite build served by nginx).
+#
+# IMPORTANT: The build context MUST be the repository root (the `wohnmobilapp/`
+# folder), NOT `frontend/`. All COPY paths are relative to that root so the
+# project can always be built/started from the main folder, e.g.:
+#
+#   docker compose up --build        (run from wohnmobilapp/)
+# ---------------------------------------------------------------------------
+
+# --- Build stage -----------------------------------------------------------
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# copy package files
+# Backend URL that gets baked into the static bundle. Vite reads VITE_* env
+# vars at BUILD time (via import.meta.env), so it must be known here — a value
+# set only at container runtime would have no effect. It is passed in from
+# docker-compose (build.args) so the URL is configured once, in the main
+# folder. An already-set env var takes precedence over frontend/.env.
+ARG VITE_BACKEND_URL=http://localhost:3000
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
+
+# Copy only the manifests first so dependency install is layer-cached.
 COPY frontend/package*.json ./frontend/
 COPY shared/package*.json ./shared/
 
-# install
+# Install frontend dependencies.
 WORKDIR /app/frontend
 RUN npm install --legacy-peer-deps
 
-# copy source code
+# Copy the source. `shared/` must sit next to `frontend/` because the frontend
+# tsconfig references `../shared` (path alias `@shared/*`).
 WORKDIR /app
 COPY shared/ ./shared/
 COPY frontend/ ./frontend/
 
-# build frontend
+# Produce the static production build in frontend/dist.
 WORKDIR /app/frontend
 RUN npm run build
 
-# Serve
+# --- Serve stage -----------------------------------------------------------
 FROM nginx:stable-alpine
 
+# SPA/multi-page routing config (e.g. /campers/:id -> camper-details page).
 COPY default.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 

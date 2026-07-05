@@ -1,3 +1,8 @@
+/**
+ * Bootstrap entry point for the account MPA page: shows the account
+ * dashboard (header, `AccountPage`, footer) if the visitor is logged in,
+ * otherwise shows the login/register `AuthPage` instead.
+ */
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../scss/theme.scss";
 import { isLoggedIn } from "../../auth/auth.ts";

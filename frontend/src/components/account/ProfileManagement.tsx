@@ -2,6 +2,15 @@ import { createElement } from "../../utils/createElement.ts";
 import { fetchCurrentUser } from "../../auth/auth.ts";
 import { fetchProfile, updateProfile } from "../../api/profilesAPI.ts";
 
+/**
+ * Renders the "Profil verwalten" (manage profile) card shown on the account
+ * page. It's a form for editing the user's first/last name and driver's
+ * license class (email is shown but read-only). On mount it loads the
+ * current profile data to pre-fill the form, and on submit it saves the
+ * changes via the profiles API.
+ *
+ * @returns The card element containing the profile form.
+ */
 export function ProfileManagement() {
   const container = (
     <div className="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-beige">

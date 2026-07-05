@@ -9,6 +9,20 @@ interface ProviderDashboardProps {
   onDataChanged: () => void;
 }
 
+/**
+ * Renders the provider's analytics dashboard: total earnings, occupancy
+ * rate (filterable by vehicle and time period) and a list of pending rental
+ * requests ("Mietanfragen") that the provider can accept or decline.
+ *
+ * The camper/time filter dropdowns and the requests list are populated
+ * imperatively after data is fetched, since there is no reactive state
+ * system in this app - `loadData` re-fetches everything and re-renders the
+ * affected DOM sections directly.
+ *
+ * @param props.ownerId ID of the provider whose campers/bookings are shown.
+ * @param props.onDataChanged Callback invoked after a booking's status changes, so the parent can refresh sibling components.
+ * @returns The dashboard's root element.
+ */
 export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardProps) {
   let campers: MockCamper[] = [];
   let camperIds: string[] = [];
@@ -24,10 +38,10 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
               <p className="text-muted mb-0 small">Übersicht über deine Einnahmen und Auslastung.</p>
             </div>
             <div className="d-flex gap-2">
-              <select id="statsCamperSelect" className="form-select form-select-sm rounded-pill" style={{ width: "180px" }}>
+              <select id="statsCamperSelect" className="form-select form-select-sm rounded-pill w-180px">
                 <option value="all">Alle Fahrzeuge</option>
               </select>
-              <select id="statsTimeSelect" className="form-select form-select-sm rounded-pill" style={{ width: "130px" }}>
+              <select id="statsTimeSelect" className="form-select form-select-sm rounded-pill w-130px">
                 <option value="year">Dieses Jahr</option>
                 <option value="month">Diesen Monat</option>
                 <option value="week">Diese Woche</option>
@@ -49,8 +63,8 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
         <div className="card border-0 shadow-sm rounded-4 p-4 bg-white text-center h-100">
           <h5 className="text-muted small text-uppercase fw-bold mb-3">Auslastungsgrad (Buchungsgrad)</h5>
           <div className="display-4 fw-bold text-custom-red mb-2 custom-font-base" id="occupancy-val">0 %</div>
-          <div className="progress rounded-pill mb-2" style={{ height: "10px" }}>
-            <div className="progress-bar bg-custom-red" role="progressbar" style={{ width: "0%" }} id="occupancy-progress"></div>
+          <div className="progress rounded-pill mb-2 occupancy-progress-track">
+            <div className="progress-bar bg-custom-red occupancy-progress-initial" role="progressbar" id="occupancy-progress"></div>
           </div>
           <p className="text-muted small mb-0" id="occupancy-sub">Buchungsgrad in den letzten 365 Tagen</p>
         </div>
@@ -64,14 +78,14 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
               <div className="col-12 col-md-6">
                 <div className="card border rounded-3 p-3 bg-light h-100 placeholder-glow">
                   <div className="d-flex justify-content-between align-items-center mb-2">
-                    <span className="placeholder rounded-pill" style={{ width: "120px", height: "22px" }} />
-                    <span className="placeholder rounded" style={{ width: "140px", height: "14px" }} />
+                    <span className="placeholder rounded-pill dashboard-skel-badge" />
+                    <span className="placeholder rounded dashboard-skel-date" />
                   </div>
-                  <div className="placeholder rounded mb-1" style={{ width: "60%", height: "20px" }} />
-                  <div className="placeholder rounded mb-3" style={{ width: "80%", height: "14px" }} />
+                  <div className="placeholder rounded mb-1 dashboard-skel-title" />
+                  <div className="placeholder rounded mb-3 dashboard-skel-subtitle" />
                   <div className="d-flex gap-2">
-                    <span className="placeholder rounded-pill w-50" style={{ height: "36px" }} />
-                    <span className="placeholder rounded-pill w-50" style={{ height: "36px" }} />
+                    <span className="placeholder rounded-pill w-50 dashboard-skel-btn" />
+                    <span className="placeholder rounded-pill w-50 dashboard-skel-btn" />
                   </div>
                 </div>
               </div>
@@ -206,13 +220,10 @@ export function ProviderDashboard({ ownerId, onDataChanged }: ProviderDashboardP
 
       const select = container.querySelector("#statsCamperSelect") as HTMLSelectElement;
       if (select) {
-        select.innerHTML = '<option value="all">Alle Fahrzeuge</option>';
-        campers.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c.id;
-          opt.textContent = c.name;
-          select.appendChild(opt);
-        });
+        select.replaceChildren(
+          <option value="all">Alle Fahrzeuge</option>,
+          ...campers.map((c) => <option value={c.id}>{c.name}</option>),
+        );
       }
 
       bookings = await fetchBookingsByProvider(ownerId);

@@ -5,17 +5,56 @@ import { CamperCard } from "./CamperCard.tsx";
 import { SkeletonCard } from "../common/SkeletonCard.tsx";
 import type { MockCamper } from "../../utils/mockData.ts";
 import { CamperFilterService } from "../../domain/services/camper-filter.service.ts";
+import { getAllLocations } from "../../api/locationsAPI.ts";
+import { getBlockedDates } from "../../api/bookingsAPI.ts";
 
+function parseGermanDate(dateStr: string): Date | null {
+  if (!dateStr) return null;
+  const parts = dateStr.split('.');
+  if (parts.length === 3) {
+    const [day, month, year] = parts.map(Number);
+    const date = new Date(year, month - 1, day);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+  return null;
+}
+
+function overlapsBlockedRange(start: Date, end: Date, blockedRanges: { from: string; to: string }[]): boolean {
+  const s = new Date(start);
+  const e = new Date(end);
+  s.setHours(0, 0, 0, 0);
+  e.setHours(0, 0, 0, 0);
+
+  return blockedRanges.some(range => {
+    const blockedStart = new Date(range.from);
+    const blockedEnd = new Date(range.to);
+    blockedStart.setHours(0, 0, 0, 0);
+    blockedEnd.setHours(0, 0, 0, 0);
+    return s <= blockedEnd && e >= blockedStart;
+  });
+}
+
+/**
+ * Renders the "Rent" page: a searchable/filterable grid of all available
+ * campers. It shows skeleton placeholder cards immediately, then fetches the
+ * real camper list in the background and re-renders the grid once it and
+ * any filters/sorting are applied.
+ *
+ * @returns The page's root element.
+ */
 export function RentPage() {
   let campersList: MockCamper[] = [];
+  const camperBlockedDatesCache: Record<string, { from: string; to: string }[]> = {};
 
   const container = (
-    <div className="container-fluid py-5 px-3 px-md-5" style={{ backgroundColor: "#D1FEB8" }}>
+    <div className="container-fluid py-5 px-3 px-md-5">
       <header className="text-center mb-5">
-        <h1 className="display-4 fw-bold custom-font-burbank text-custom-light-blue text-stroke-grey mb-2" style={{ letterSpacing: "2px" }}>
+        <h1 className="display-4 fw-bold custom-font-burbank mb-2 text-white letter-spacing-2">
           Unsere Wohnmobile
         </h1>
-        <p className="fs-5 text-muted">Finde deinen perfekten Begleiter für das nächste Abenteuer</p>
+        <p className="fs-5 custom-font-base text-white-50">Finde deinen perfekten Begleiter für das nächste Abenteuer</p>
       </header>
 
       <div className="row">
@@ -30,7 +69,7 @@ export function RentPage() {
             </span>
             <div className="d-flex align-items-center gap-2">
               <label htmlFor="sortSelect" className="small text-uppercase text-muted fw-bold text-nowrap mb-0">Sortieren nach</label>
-              <select id="sortSelect" className="form-select form-select-sm rounded-pill" style={{ width: "200px" }}>
+              <select id="sortSelect" className="form-select form-select-sm rounded-pill w-200px">
                 <option value="priceAsc">Preis: Aufsteigend</option>
                 <option value="priceDesc">Preis: Absteigend</option>
                 <option value="nameAsc">Name: A-Z</option>
@@ -98,18 +137,33 @@ export function RentPage() {
       sortVal,
     });
 
+    const dateFromStr = (form.elements.namedItem("dateFrom") as HTMLInputElement)?.value || "";
+    const dateToStr = (form.elements.namedItem("dateTo") as HTMLInputElement)?.value || "";
+
+    let finalFiltered = filtered;
+    if (dateFromStr && dateToStr) {
+      const start = parseGermanDate(dateFromStr);
+      const end = parseGermanDate(dateToStr);
+      if (start && end) {
+        finalFiltered = filtered.filter(camper => {
+          const blockings = camperBlockedDatesCache[camper.id] || [];
+          return !overlapsBlockedRange(start, end, blockings);
+        });
+      }
+    }
+
     const grid = container.querySelector("#camper-grid-container") as HTMLElement;
     const emptyState = container.querySelector("#empty-state") as HTMLElement;
     const resultsCount = container.querySelector("#results-count") as HTMLElement;
 
     grid.innerHTML = "";
-    resultsCount.textContent = `${filtered.length} Fahrzeug${filtered.length === 1 ? "" : "e"} gefunden`;
+    resultsCount.textContent = `${finalFiltered.length} Fahrzeug${finalFiltered.length === 1 ? "" : "e"} gefunden`;
 
-    if (filtered.length === 0) {
+    if (finalFiltered.length === 0) {
       emptyState.classList.remove("d-none");
     } else {
       emptyState.classList.add("d-none");
-      filtered.forEach((camper) => {
+      finalFiltered.forEach((camper) => {
         const card = CamperCard(camper);
         card.classList.add("fade-in");
         grid.appendChild(card);
@@ -117,15 +171,33 @@ export function RentPage() {
     }
   };
 
-  const filterSidebar = container.querySelector("#filter-sidebar") as HTMLElement;
-  filterSidebar.appendChild(FilterBar({ onFilterChange: updateCampersList }));
-
   const sortSelect = container.querySelector("#sortSelect") as HTMLSelectElement;
   sortSelect.addEventListener("change", updateCampersList);
 
   const loadCampers = async () => {
-    campersList = await getAllCampers();
-    updateCampersList();
+    try {
+      const [campers, locations] = await Promise.all([
+        getAllCampers(),
+        getAllLocations()
+      ]);
+      campersList = campers;
+
+      // Fetch blocked dates for all campers in parallel
+      const blockingsResults = await Promise.all(
+        campers.map(c => getBlockedDates(c.id).catch(() => ({ blockedRanges: [] })))
+      );
+      campers.forEach((c, idx) => {
+        camperBlockedDatesCache[c.id] = blockingsResults[idx].blockedRanges || [];
+      });
+
+      const filterSidebar = container.querySelector("#filter-sidebar") as HTMLElement;
+      filterSidebar.innerHTML = "";
+      filterSidebar.appendChild(FilterBar({ onFilterChange: updateCampersList, locations }));
+
+      updateCampersList();
+    } catch (e) {
+      console.error("Failed to load campers or locations", e);
+    }
   };
 
   setTimeout(loadCampers, 0);

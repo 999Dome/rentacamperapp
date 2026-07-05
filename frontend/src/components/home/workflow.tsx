@@ -1,5 +1,10 @@
 import { createElement } from "../../utils/createElement";
 
+/**
+ * Home page section explaining the 4-step rental process ("Search & Find",
+ * "Transparent Pricing", "Easy Sign-up", "Book Securely") as a row of cards,
+ * each with a numbered icon.
+ */
 export function Workflow() {
   return (
     <section className="container my-5 py-5">
@@ -12,13 +17,11 @@ export function Workflow() {
       <div className="row g-4 justify-content-center">
         {/* Step 1 */}
         <div className="col-12 col-md-6 col-lg-3">
-          <div 
-            className="card h-100 text-white border-0 p-4 text-center shadow-lg hover-zoom"
-            style={{ backgroundColor: "#243946", borderRadius: "16px", transition: "transform 0.2s" }}
+          <div
+            className="card h-100 text-white border-0 p-4 text-center shadow-lg hover-zoom rounded-4 workflow-step-card"
           >
-            <div 
-              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 mx-auto shadow" 
-              style={{ width: "70px", height: "70px", backgroundColor: "rgba(91, 192, 235, 0.1)", border: "2px solid var(--custom-light-blue)" }}
+            <div
+              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 mx-auto shadow workflow-step-icon workflow-step-icon-blue"
             >
               <span className="fs-2 fw-bold text-custom-light-blue custom-font-burbank">1</span>
             </div>
@@ -31,13 +34,11 @@ export function Workflow() {
 
         {/* Step 2 */}
         <div className="col-12 col-md-6 col-lg-3">
-          <div 
-            className="card h-100 text-white border-0 p-4 text-center shadow-lg hover-zoom"
-            style={{ backgroundColor: "#243946", borderRadius: "16px", transition: "transform 0.2s" }}
+          <div
+            className="card h-100 text-white border-0 p-4 text-center shadow-lg hover-zoom rounded-4 workflow-step-card"
           >
-            <div 
-              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 mx-auto shadow" 
-              style={{ width: "70px", height: "70px", backgroundColor: "rgba(253, 231, 76, 0.1)", border: "2px solid var(--custom-yellow)" }}
+            <div
+              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 mx-auto shadow workflow-step-icon workflow-step-icon-yellow"
             >
               <span className="fs-2 fw-bold text-custom-yellow custom-font-burbank">2</span>
             </div>
@@ -50,13 +51,11 @@ export function Workflow() {
 
         {/* Step 3 */}
         <div className="col-12 col-md-6 col-lg-3">
-          <div 
-            className="card h-100 text-white border-0 p-4 text-center shadow-lg hover-zoom"
-            style={{ backgroundColor: "#243946", borderRadius: "16px", transition: "transform 0.2s" }}
+          <div
+            className="card h-100 text-white border-0 p-4 text-center shadow-lg hover-zoom rounded-4 workflow-step-card"
           >
-            <div 
-              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 mx-auto shadow" 
-              style={{ width: "70px", height: "70px", backgroundColor: "rgba(250, 121, 33, 0.1)", border: "2px solid var(--custom-red)" }}
+            <div
+              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 mx-auto shadow workflow-step-icon workflow-step-icon-red"
             >
               <span className="fs-2 fw-bold text-custom-red custom-font-burbank">3</span>
             </div>
@@ -69,15 +68,13 @@ export function Workflow() {
 
         {/* Step 4 */}
         <div className="col-12 col-md-6 col-lg-3">
-          <div 
-            className="card h-100 text-white border-0 p-4 text-center shadow-lg hover-zoom"
-            style={{ backgroundColor: "#243946", borderRadius: "16px", transition: "transform 0.2s" }}
+          <div
+            className="card h-100 text-white border-0 p-4 text-center shadow-lg hover-zoom rounded-4 workflow-step-card"
           >
-            <div 
-              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 mx-auto shadow" 
-              style={{ width: "70px", height: "70px", backgroundColor: "rgba(155, 197, 61, 0.1)", border: "2px solid #9bc53d" }}
+            <div
+              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 mx-auto shadow workflow-step-icon workflow-step-icon-green"
             >
-              <span className="fs-2 fw-bold custom-font-burbank" style={{ color: "#9bc53d" }}>4</span>
+              <span className="fs-2 fw-bold custom-font-burbank workflow-step-number-green">4</span>
             </div>
             <h3 className="h5 fw-bold mb-3 custom-font-base text-white">Sicher Buchen</h3>
             <p className="text-white-50 small mb-0">

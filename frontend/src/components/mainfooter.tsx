@@ -1,6 +1,7 @@
 import { createElement, createSVGElement } from "../utils/createElement.ts";
 import { initCookieBanner } from "./common/CookieBanner.tsx";
 
+/** Builds the Instagram icon (SVG) shown in the footer's social links. */
 function createInstagramIcon() {
   return createSVGElement(
     "svg",
@@ -18,6 +19,7 @@ function createInstagramIcon() {
   );
 }
 
+/** Builds the "X" (formerly Twitter) icon (SVG) shown in the footer's social links. */
 function createTwitterIcon() {
   return createSVGElement(
     "svg",
@@ -35,6 +37,13 @@ function createTwitterIcon() {
   );
 }
 
+/**
+ * Site-wide footer with the brand blurb, quick links, legal links, and
+ * social icons. It also kicks off the cookie-consent banner (see
+ * {@link initCookieBanner}) shortly after the footer is created, since the
+ * footer is present on every page and thus a convenient single place to
+ * trigger it from.
+ */
 export function MainFooter() {
   const footer = (
     <footer className="bg-dark text-white pt-5 pb-4 mt-auto border-top border-secondary border-opacity-25">
@@ -60,7 +69,7 @@ export function MainFooter() {
             <ul className="list-unstyled d-flex flex-column gap-2 mb-0">
               <li>
                 <a
-                  href="/rent/"
+                  href="/pages/rent/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Fahrzeuge mieten
@@ -68,7 +77,7 @@ export function MainFooter() {
               </li>
               <li>
                 <a
-                  href="/rentout/"
+                  href="/pages/rentout/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Camper vermieten
@@ -76,7 +85,7 @@ export function MainFooter() {
               </li>
               <li>
                 <a
-                  href="/aboutus/"
+                  href="/pages/aboutus/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Über uns
@@ -84,7 +93,7 @@ export function MainFooter() {
               </li>
               <li>
                 <a
-                  href="/account/"
+                  href="/pages/account/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Mein Konto
@@ -99,15 +108,7 @@ export function MainFooter() {
             <ul className="list-unstyled d-flex flex-column gap-2 mb-0">
               <li>
                 <a
-                  href="#"
-                  className="text-white-50 text-decoration-none footer-link"
-                >
-                  FAQ
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
+                  href="/pages/contact/"
                   className="text-white-50 text-decoration-none footer-link"
                 >
                   Kontakt

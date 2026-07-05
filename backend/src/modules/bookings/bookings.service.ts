@@ -21,6 +21,16 @@ import { MailService } from '../mail/mail.service';
 import { SupabaseService } from '../../supabase/supabase.service';
 import { Logger } from '@nestjs/common';
 
+/**
+ * Orchestrates the booking lifecycle: creation, listing, status changes and
+ * cancellation.
+ *
+ * This service owns the business rules that span multiple collaborators —
+ * license eligibility, date validation, availability (bookings + blockings),
+ * and the side effects of a status change (invoice PDF + confirmation email).
+ * It depends on repository *interfaces* (injected by token) so it stays
+ * decoupled from the concrete Supabase implementations.
+ */
 @Injectable()
 export class BookingsService {
   constructor(
@@ -38,6 +48,22 @@ export class BookingsService {
 
   private readonly logger = new Logger(BookingsService.name);
 
+  /**
+   * Creates a booking after enforcing every booking rule in order.
+   *
+   * The checks run as a gauntlet — the first failure throws and nothing is
+   * persisted:
+   *   1. The renter's license class must cover the camper's requirement.
+   *   2. Start date must be today or later and strictly before the end date.
+   *   3. A ±3-day logistics buffer around the requested range must be free of
+   *      other active bookings (cleaning/transfer time between rentals).
+   *   4. The exact range must not hit a provider blocking.
+   * Only then is the booking (with add-ons) persisted.
+   *
+   * @param createBookingDto The incoming booking request.
+   * @returns The newly created booking.
+   * @throws BadRequestException If any rule fails or persistence errors.
+   */
   async createBooking(createBookingDto: CreateBookingDto) {
     // 1. Validate drivers license class
     const camper = await this.campersRepository.findById(
@@ -71,17 +97,21 @@ export class BookingsService {
       throw new BadRequestException('Startdatum muss vor dem Enddatum liegen.');
     }
 
-    // 3. Buffer calculation (3 days before and after)
+    // 3. Buffer calculation: widen the requested range by 3 days on each side.
+    // This reserves logistics time (cleaning, inspection, transfer) between two
+    // rentals, so two bookings can never be back-to-back on the same camper.
     const bufferedStartDate = new Date(startDate);
     bufferedStartDate.setDate(startDate.getDate() - 3);
 
     const bufferedEndDate = new Date(endDate);
     bufferedEndDate.setDate(endDate.getDate() + 3);
 
+    // Compare on date-only strings (YYYY-MM-DD) to match how the DB stores dates.
     const bufferedStartStr = bufferedStartDate.toISOString().split('T')[0];
     const bufferedEndStr = bufferedEndDate.toISOString().split('T')[0];
 
-    // 4. Overlap Check
+    // 4. Overlap check against other active bookings, using the buffered range
+    // so the logistics gap above is enforced.
     const overlappingBookings =
       await this.bookingRepository.findOverlappingBookings(
         createBookingDto.camper_id,
@@ -95,6 +125,8 @@ export class BookingsService {
       );
     }
 
+    // Blockings use the exact requested range (no buffer): a provider block is
+    // an explicit unavailability, not a logistics gap.
     const overlappingBlockings =
       await this.camperBlockingRepository.findOverlappingBlockings(
         createBookingDto.camper_id,
@@ -129,6 +161,13 @@ export class BookingsService {
     }
   }
 
+  /**
+   * Lists all bookings made by a given renter.
+   *
+   * @param userId The renter's user id.
+   * @returns The renter's bookings with related data.
+   * @throws BadRequestException If the lookup fails.
+   */
   async getBookingsByRenter(userId: string): Promise<BookingWithRelations[]> {
     try {
       return await this.bookingRepository.findByRenterId(userId);
@@ -139,6 +178,12 @@ export class BookingsService {
     }
   }
 
+  /**
+   * Lists bookings for the provider dashboard (currently all bookings).
+   *
+   * @returns The provider-facing bookings with related data.
+   * @throws BadRequestException If the lookup fails.
+   */
   async getBookingsByProvider(): Promise<BookingWithRelations[]> {
     try {
       return await this.bookingRepository.findByProviderId();
@@ -149,6 +194,19 @@ export class BookingsService {
     }
   }
 
+  /**
+   * Updates a booking's status and, on confirmation, sends the invoice.
+   *
+   * When the new status is `confirmed`, the method additionally builds an
+   * invoice PDF and emails it to the customer. That side effect is wrapped in
+   * its own try/catch so a mail/PDF failure is logged but never rolls back or
+   * fails the status update itself — the booking is confirmed regardless.
+   *
+   * @param bookingId The booking to update.
+   * @param status    The new status.
+   * @returns The updated booking.
+   * @throws BadRequestException If the status update fails.
+   */
   async updateBookingStatus(
     bookingId: string,
     status: 'pending' | 'confirmed' | 'completed' | 'cancelled',
@@ -176,7 +234,11 @@ export class BookingsService {
               );
             const customerEmail = userData?.user?.email || 'kunde@example.com';
 
+            // total_price is gross (incl. 19% German VAT). Divide by 1.19 to
+            // recover the net amount; the difference is the tax portion.
             const invoiceData = {
+              // TODO: random invoice number is a placeholder; a real system
+              // would use a persisted, sequential invoice counter.
               invoiceNumber: `RE-2026-${Math.floor(1000 + Math.random() * 9000)}`,
               invoiceDate: new Date(),
               customerName: `${profile.first_name} ${profile.last_name}`,
@@ -235,6 +297,22 @@ export class BookingsService {
     }
   }
 
+  /**
+   * Cancels a booking on behalf of its owner and emails a cancellation notice.
+   *
+   * Enforces three guards before cancelling: the booking must exist, the
+   * requester must own it, and its current status must be cancellable
+   * (`confirmed` or `pending` — not already cancelled/completed). As with
+   * confirmation, the cancellation PDF + email is a best-effort side effect and
+   * is not allowed to fail the cancellation.
+   *
+   * @param bookingId The booking to cancel.
+   * @param userId    Id of the user requesting cancellation (ownership check).
+   * @returns The cancelled booking.
+   * @throws BadRequestException If the booking is missing, already cancelled,
+   *         or in a non-cancellable state.
+   * @throws ForbiddenException If the requester does not own the booking.
+   */
   async cancelBooking(bookingId: string, userId: string) {
     try {
       const booking = await this.bookingRepository.findById(bookingId);
@@ -242,6 +320,7 @@ export class BookingsService {
         throw new BadRequestException('Buchung nicht gefunden');
       }
 
+      // Ownership check: a renter may only cancel their own bookings.
       if (booking.user_id !== userId) {
         throw new ForbiddenException(
           'Keine Berechtigung, diese Buchung zu stornieren',
@@ -252,6 +331,7 @@ export class BookingsService {
         throw new BadRequestException('Buchung ist bereits storniert');
       }
 
+      // Completed bookings are historical and cannot be undone.
       if (booking.status !== 'confirmed' && booking.status !== 'pending') {
         throw new BadRequestException(
           'Nur bestätigte oder ausstehende Buchungen können storniert werden',
@@ -274,6 +354,8 @@ export class BookingsService {
 
         const customerEmail = userData?.user?.email || 'kunde@example.com';
 
+        // Refund figures mirror the invoice: total_price is gross (incl. 19%
+        // VAT); the net is total / 1.19 and the rest is the refunded tax.
         const cancellationData = {
           cancellationNumber: `ST-2026-${Math.floor(1000 + Math.random() * 9000)}`,
           cancellationDate: new Date(),
@@ -322,6 +404,16 @@ export class BookingsService {
     }
   }
 
+  /**
+   * Builds the list of date ranges a camper is unavailable, for the booking
+   * calendar. Combines two sources:
+   *   - active bookings, each widened by the ±3-day logistics buffer (so the
+   *     calendar visually reflects the same gap enforced at booking time), and
+   *   - manual provider blockings, shown as their exact range.
+   *
+   * @param camperId The camper to compute availability for.
+   * @returns `{ blockedRanges }` where each range is `{ from, to }` (ISO dates).
+   */
   async getBlockedDates(
     camperId: string,
   ): Promise<{ blockedRanges: { from: string; to: string }[] }> {
@@ -332,6 +424,8 @@ export class BookingsService {
 
     const blockedRanges: { from: string; to: string }[] = [];
 
+    // Bookings: apply the same 3-day buffer used during creation so the shown
+    // unavailability matches what the overlap check will actually reject.
     for (const booking of validBookings) {
       const fromDate = new Date(booking.start_date);
       fromDate.setDate(fromDate.getDate() - 3);
@@ -345,6 +439,8 @@ export class BookingsService {
       });
     }
 
+    // Manual blockings are shown as-is (no buffer): they are explicit
+    // unavailability set by the provider, not rentals needing turnaround time.
     for (const blocking of manualBlockings) {
       blockedRanges.push({
         from: new Date(blocking.start_date).toISOString().split('T')[0],

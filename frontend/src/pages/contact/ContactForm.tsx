@@ -1,14 +1,20 @@
 import { createElement } from '../../utils/createElement';
 import { sendContactEmail } from '../../api/supportAPI';
 
+/**
+ * Contact page form: lets a visitor send a message (name, email, subject,
+ * message) to support. On submit it disables the button, shows a spinner,
+ * calls the support API, and displays a success or error alert with the
+ * result.
+ */
 export function ContactForm() {
   const container = (
-    <div className="container my-5" style={{ minHeight: '60vh' }}>
+    <div className="container my-5 min-vh-60">
       <div className="row justify-content-center">
         <div className="col-lg-8">
-          <div className="card shadow-lg border-0 rounded-4">
+          <div className="card shadow-lg border-0 rounded-4 bg-beige">
             <div className="card-body p-5">
-              <h2 className="card-title fw-bold custom-font mb-4 text-center">Schreibe uns</h2>
+              <h2 className="card-title fw-bold custom-font mb-4 text-center custom-font-burbank">Schreibe uns</h2>
               <p className="text-muted text-center mb-5">
                 Hast du Fragen, Wünsche oder Anregungen? Fülle einfach das Formular aus und wir melden uns schnellstmöglich bei dir.
               </p>

@@ -3,26 +3,33 @@ import "../../scss/theme.scss";
 import "bootstrap";
 
 import { setupAuthLogic } from "./AuthPageLogic.ts";
+
+/**
+ * Renders the combined login/register page. The markup contains both the
+ * login and register forms side by side inside a sliding track
+ * (`#auth-slider-track`), and `setupAuthLogic` (an imperative controller,
+ * since this app has no reactive state system) wires up the pill toggle,
+ * form submissions and validation after the markup is created.
+ *
+ * @returns The page's root element.
+ */
 export function AuthPage() {
   const page = (
     <div className="auth-page-bg bg-dark min-vh-100 d-flex align-items-center justify-content-center p-3 p-md-4 overflow-hidden position-relative">
-      <a 
-        href="/" 
-        className="btn btn-outline-light position-absolute top-0 start-0 m-3 m-md-4 d-flex align-items-center gap-2 custom-font-base text-decoration-none shadow-sm"
-        style={{ zIndex: 10, borderRadius: "50px" }}
+      <a
+        href="/"
+        className="btn btn-outline-light position-absolute top-0 start-0 m-3 m-md-4 d-flex align-items-center gap-2 custom-font-base text-decoration-none shadow-sm auth-back-link"
       >
         &#8592; Zurück zur Startseite
       </a>
       <div
-        className="glass-card shadow-lg border-secondary border-opacity-25 rounded-4 position-relative w-100 overflow-hidden"
-        style={{ maxWidth: "500px" }}
+        className="glass-card shadow-lg border-secondary border-opacity-25 rounded-4 position-relative w-100 overflow-hidden max-w-500px"
       >
         <div className="text-center pt-5 px-4 pb-0">
           <img
             src="/icon.svg"
             alt="Logo"
             className="header-icon"
-            style="width: 54px; height: auto"
           />
           <h2 className="title display-1 fw-bold mb-3 d-flex justify-content-center align-items-end">
             <span className="blue mt-2">RENT</span>
@@ -37,8 +44,7 @@ export function AuthPage() {
 
           <div className="d-flex justify-content-center mb-0">
             <div
-              className="d-inline-flex bg-dark bg-opacity-175 rounded-pill p-1 border border-secondary border-opacity-50"
-              style={{ width: "400px" }}
+              className="d-inline-flex bg-dark bg-opacity-175 rounded-pill p-1 border border-secondary border-opacity-50 w-400px"
             >
               <button
                 type="button"
@@ -115,7 +121,7 @@ export function AuthPage() {
             ></div>
 
             <div className="register-success d-none text-center py-4">
-              <div className="mb-4" style={{ color: "#2E8B57" }}>
+              <div className="mb-4 auth-success-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="currentColor" className="bi bi-envelope-check" viewBox="0 0 16 16">
                   <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-1-1V6.628l7 3.493 8-4.004V9.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2H2Zm3.436 3.004L2 3.123V4l3.436 1.004ZM2.5 3h11a.5.5 0 0 1 .5.5v1.07l-6 3.001-6-3V3.5a.5.5 0 0 1 .5-.5Z"/>
                   <path d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm-1.993-1.679a.5.5 0 0 0-.686.172l-1.17 1.95-.547-.547a.5.5 0 0 0-.708.708l.774.773a.75.75 0 0 0 1.174-.144l1.335-2.226a.5.5 0 0 0-.172-.686Z"/>
@@ -193,22 +199,6 @@ export function AuthPage() {
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label className="form-label text-white-50 small text-uppercase fw-bold custom-font-base">
-                  Rolle
-                </label>
-                <select
-                  name="regRole"
-                  className="form-select custom-input custom-font-base"
-                  required
-                >
-                  <option value="" disabled selected>
-                    Bitte wählen
-                  </option>
-                  <option value="renter">Mieter</option>
-                  <option value="provider">Vermieter</option>
-                </select>
-              </div>
 
               <div className="mb-4">
                 <label className="form-label text-white-50 small text-uppercase fw-bold custom-font-base">

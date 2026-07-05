@@ -31,18 +31,18 @@ export function SkeletonCard(): HTMLElement {
 
           {/* Feature badge placeholders */}
           <div className="mb-3 d-flex flex-wrap gap-1">
-            <span className="placeholder rounded-pill skeleton-text-sm" style={{ width: "60px" }} />
-            <span className="placeholder rounded-pill skeleton-text-sm" style={{ width: "50px" }} />
-            <span className="placeholder rounded-pill skeleton-text-sm" style={{ width: "70px" }} />
+            <span className="placeholder rounded-pill skeleton-text-sm skeleton-feature-tag-1" />
+            <span className="placeholder rounded-pill skeleton-text-sm skeleton-feature-tag-2" />
+            <span className="placeholder rounded-pill skeleton-text-sm skeleton-feature-tag-3" />
           </div>
 
           {/* Price & button placeholder */}
           <div className="border-top pt-3 d-flex align-items-center justify-content-between">
             <div>
-              <div className="placeholder rounded skeleton-text-sm w-100 mb-1" style={{ width: "90px" }} />
+              <div className="placeholder rounded skeleton-text-sm w-100 mb-1 skeleton-price-label-text" />
               <div className="placeholder rounded skeleton-price" />
             </div>
-            <span className="placeholder rounded-pill" style={{ width: "80px", height: "36px" }} />
+            <span className="placeholder rounded-pill skeleton-cta-button" />
           </div>
         </div>
       </div>

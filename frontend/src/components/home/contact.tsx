@@ -1,5 +1,9 @@
 import { createElement, createSVGElement } from '../../utils/createElement.ts';
 
+/**
+ * "Still have questions?" call-to-action section shown on the home page.
+ * Displays a phone number and email address and links to the contact page.
+ */
 export function Contact() {
   const phoneIcon = createSVGElement(
     'svg',
@@ -34,27 +38,25 @@ export function Contact() {
   return (
     <section className="container mb-5 pb-5">
       <div
-        className="p-5 text-center rounded-4 shadow-lg position-relative overflow-hidden"
-        style={{ backgroundColor: '#243046' }}
+        className="p-5 text-center rounded-4 shadow-lg position-relative overflow-hidden bg-beige"
       >
         <div
-          className="position-absolute top-0 start-0 w-100 h-100"
-          style="background: radial-gradient(circle at top right, rgba(78, 187, 234, 0.1), transparent 50%); z-index: 0;"
+          className="position-absolute top-0 start-0 w-100 h-100 bg-beige contact-section-glow"
         ></div>
-        <div className="position-relative" style="z-index: 1">
-          <h2 className="display-6 fw-bold custom-font text-white mb-3">Noch Fragen?</h2>
-          <p className="lead text-white-50 mb-4 mx-auto" style="max-width: 600px">
+        <div className="position-relative contact-section-content">
+          <h2 className="display-6 fw-bold custom-font text-black mb-3">Noch Fragen?</h2>
+          <p className="lead text-black-50 mb-4 mx-auto contact-lead-text">
             Egal ob zur Buchung, zu den Fahrzeugen oder zu deiner perfekten Route – unser Team hilft
             dir gerne persönlich weiter.
           </p>
           <div className="d-flex justify-content-center gap-4 flex-wrap mb-4 fs-5">
-            <div className="d-flex align-items-center gap-2 text-white">
+            <div className="d-flex align-items-center gap-2 text-black">
               {phoneIcon}
               <span>+49 (0) 123 456 789</span>
             </div>
-            <div className="d-flex align-items-center gap-2 text-white">
+            <div className="d-flex align-items-center gap-2 text-black">
               {mailIcon}
-              <span>hallo@rent-a-camper.de</span>
+              <span>service@rent-a-camper.me</span>
             </div>
           </div>
           <a

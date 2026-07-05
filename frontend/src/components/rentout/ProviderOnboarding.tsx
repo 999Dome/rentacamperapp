@@ -6,6 +6,17 @@ interface ProviderOnboardingProps {
   onSuccess: () => void;
 }
 
+/**
+ * Renders the onboarding screen shown to a logged-in user who is not yet a
+ * registered provider. It asks them to accept the "Vermieterbedingungen"
+ * (provider terms) checkbox before enabling the registration button; on
+ * click it flags the user's profile as a provider and calls `onSuccess` so
+ * the parent (`RentoutPage`) can switch to the dashboard view.
+ *
+ * @param props.userId ID of the currently logged-in user being registered as a provider.
+ * @param props.onSuccess Callback invoked after the profile was successfully updated.
+ * @returns The onboarding card element.
+ */
 export function ProviderOnboarding({ userId, onSuccess }: ProviderOnboardingProps) {
   let isChecked = false;
 
@@ -40,8 +51,8 @@ export function ProviderOnboarding({ userId, onSuccess }: ProviderOnboardingProp
   };
 
   const container = (
-    <div className="container py-5" style={{ maxWidth: "600px" }}>
-      <div className="card border-0 shadow-lg rounded-4 p-4 p-md-5">
+    <div className="container py-5 access-denied-card">
+      <div className="card border-0 bg-beige shadow-lg rounded-4 p-4 p-md-5">
         <div className="text-center mb-4">
           <i className="bi bi-shop fs-1 text-custom-light-blue mb-3"></i>
           <h2 className="fw-bold custom-font-base text-dark">Als Vermieter registrieren und Camper inserieren</h2>

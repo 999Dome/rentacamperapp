@@ -1,3 +1,7 @@
+/**
+ * Bootstrap entry point for the contact MPA page: mounts the header, the
+ * `ContactForm`, and the footer.
+ */
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../scss/theme.scss";
 

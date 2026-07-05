@@ -5,9 +5,19 @@ import { ProviderOnboarding } from "./ProviderOnboarding.tsx";
 import { getUserIdFromToken } from "../../auth/auth.ts";
 import { fetchProfile } from "../../api/profilesAPI.ts";
 
+/**
+ * Renders the "Vermieter-Portal" (provider portal) page. It first checks
+ * whether the logged-in user is already a registered provider: if not, it
+ * shows the `ProviderOnboarding` flow; once they are (or right after
+ * onboarding succeeds), it shows the provider dashboard with two tabs
+ * ("Dashboard & Anfragen" and "Fahrzeug-Verwaltung") switched imperatively
+ * via `switchTab`, since there is no reactive state system in this app.
+ *
+ * @returns The page's root element.
+ */
 export function RentoutPage() {
   const container = (
-    <div className="container py-5" style={{ minHeight: "80vh" }}>
+    <div className="container py-5 min-vh-80">
       <div id="rentout-loading" className="text-center py-5">
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
@@ -15,17 +25,17 @@ export function RentoutPage() {
       </div>
       <div id="rentout-content" className="d-none">
         <header className="mb-5 text-center">
-          <h1 className="display-4 fw-bold custom-font-burbank text-custom-red text-stroke-grey mb-2" style={{ letterSpacing: "2px" }}>
+          <h1 className="display-4 fw-bold custom-font-burbank text-white letter-spacing-2">
             Vermieter-Portal
           </h1>
-          <p className="fs-5 text-muted">Verwalte deine Inserate, checke Buchungsraten und beantworte Anfragen</p>
+          <p className="fs-5 text-white-50">Verwalte deine Inserate, checke Buchungsraten und beantworte Anfragen</p>
         </header>
 
         <div className="d-flex justify-content-center mb-5">
           <div className="d-inline-flex bg-white rounded-pill p-1 shadow-sm border border-secondary-subtle">
             <button
               type="button"
-              className="btn rounded-pill px-4 py-2 active-tab-btn btn-primary fw-medium"
+              className="btn rounded-pill px-4 py-2 btn-primary fw-medium text-white"
               id="tab-btn-dashboard"
               onclick={() => switchTab("dashboard")}
             >
@@ -33,9 +43,8 @@ export function RentoutPage() {
             </button>
             <button
               type="button"
-              className="btn rounded-pill px-4 py-2 text-secondary btn-light fw-medium"
+              className="btn rounded-pill px-4 py-2 fw-medium rentout-tab-btn-inactive"
               id="tab-btn-crud"
-              style={{ backgroundColor: "transparent", border: "none" }}
               onclick={() => switchTab("crud")}
             >
               Fahrzeug-Verwaltung
@@ -121,17 +130,15 @@ export function RentoutPage() {
     if (!btnDashboard || !btnCrud) return;
 
     if (tab === "dashboard") {
-      btnDashboard.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium";
-      btnCrud.className = "btn rounded-pill px-4 py-2 text-secondary btn-light fw-medium";
-      btnCrud.style.backgroundColor = "transparent";
-      btnCrud.style.border = "none";
+      btnDashboard.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium text-white";
+      btnCrud.className = "btn rounded-pill px-4 py-2 fw-medium rentout-tab-btn-inactive";
+
       paneDashboard.classList.remove("d-none");
       paneCrud.classList.add("d-none");
     } else {
-      btnCrud.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium";
-      btnDashboard.className = "btn rounded-pill px-4 py-2 text-secondary btn-light fw-medium";
-      btnDashboard.style.backgroundColor = "transparent";
-      btnDashboard.style.border = "none";
+      btnCrud.className = "btn rounded-pill px-4 py-2 btn-primary fw-medium text-white";
+      btnDashboard.className = "btn rounded-pill px-4 py-2 fw-medium rentout-tab-btn-inactive";
+
       paneCrud.classList.remove("d-none");
       paneDashboard.classList.add("d-none");
     }

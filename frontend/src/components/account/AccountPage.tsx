@@ -4,6 +4,15 @@ import { ProfileManagement } from "./ProfileManagement.tsx";
 import { BookingsTable } from "./BookingsTable.tsx";
 import { fetchProfile } from "../../api/profilesAPI.ts";
 
+/**
+ * Renders the logged-in user's account page: a sidebar with the user's name,
+ * role badge and tab buttons (profile / bookings), plus a logout button.
+ * Only one of the two content panes (`ProfileManagement` or `BookingsTable`)
+ * is shown at a time; switching tabs just toggles which pane is visible via
+ * `switchTab`, since there is no reactive state system in this app.
+ *
+ * @returns The page's root element.
+ */
 export function AccountPage() {
   const handleLogout = (e: Event) => {
     e.preventDefault();
@@ -12,12 +21,12 @@ export function AccountPage() {
   };
 
   const container = (
-    <div className="container py-5" style={{ minHeight: "80vh" }}>
+    <div className="container py-5 min-vh-80">
       <header className="mb-5 text-center">
-        <h1 className="display-4 fw-bold custom-font-burbank text-custom-red text-stroke-grey mb-2" style={{ letterSpacing: "2px" }}>
+        <h1 className="display-4 fw-bold custom-font-burbank text-white letter-spacing-2">
           Mein Konto
         </h1>
-        <p className="fs-5 text-muted">Willkommen zurück! Hier kannst du deine Buchungen einsehen und deine Profildaten pflegen.</p>
+        <p className="fs-2 text-white-50">Willkommen zurück! Hier kannst du deine Buchungen einsehen und deine Profildaten pflegen.</p>
       </header>
 
       <div className="row g-4">
