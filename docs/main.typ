@@ -2,14 +2,16 @@
 // Rent-A-Camper ("wohnmobilapp") — Technische Dokumentation
 // =============================================================================
 
-#let c-primary  = rgb("#1f4e5f")
-#let c-accent   = rgb("#c1622d")
-#let c-bg-light = rgb("#f7f3ec")
-#let c-ok       = rgb("#2f6b3a")
-#let c-warn     = rgb("#8a4b2b")
-#let c-danger   = rgb("#8c2f2f")
-#let c-tablehead = rgb("#dce8ea")
-#let c-zebra    = rgb("#f7f3ec")
+#let c-primary  = rgb("#000000") // Black for major elements
+#let c-accent   = rgb("#3b82f6") // Vibrant Blue for links & accents
+#let c-bg-light = rgb("#f9fafb") // Very light gray (Tailwind gray-50)
+#let c-border   = rgb("#e5e7eb") // Light gray borders
+#let c-text     = rgb("#1f2937") // Dark gray for text
+#let c-ok       = rgb("#10b981")
+#let c-warn     = rgb("#f59e0b")
+#let c-danger   = rgb("#ef4444")
+#let c-tablehead = rgb("#f9fafb")
+#let c-zebra    = rgb("#ffffff") // Disabling zebra striping by setting it to white
 
 // ---------------------------------------------------------------------------
 // Global document / text / heading setup
@@ -17,118 +19,114 @@
 
 #set document(title: "Rent-A-Camper — Technische Dokumentation", author: "Dominik Kollenz, Kevin")
 
-#set text(font: "Libertinus Serif", size: 11pt, lang: "de", region: "DE")
-#set par(justify: true, leading: 0.68em)
+#set text(font: "Arial", size: 10pt, fill: c-text, lang: "de", region: "DE")
+#set par(justify: false, leading: 0.68em)
 
 #show heading.where(level: 1): it => {
-  set text(font: "Arial", weight: "bold", size: 19pt, fill: c-primary)
-  v(10pt)
+  set text(weight: "bold", size: 21pt, fill: c-primary)
+  v(10pt, weak: true)
   block[#it]
-  v(3pt)
-  line(length: 100%, stroke: 1.2pt + c-primary)
-  v(7pt)
+  v(6pt, weak: true)
 }
-#show heading.where(level: 2): set text(font: "Arial", weight: "bold", size: 14pt, fill: c-primary)
-#show heading.where(level: 3): set text(font: "Arial", weight: "bold", size: 11.5pt, fill: c-accent)
+#show heading.where(level: 2): it => {
+  set text(weight: "bold", size: 15pt, fill: c-primary)
+  v(10pt, weak: true)
+  block[#it]
+  v(5pt, weak: true)
+}
+#show heading.where(level: 3): it => {
+  set text(weight: "bold", size: 12pt, fill: c-primary)
+  v(7pt, weak: true)
+  block[#it]
+  v(3pt, weak: true)
+}
 #set heading(numbering: "1.1")
 
-#show raw: set text(font: "Consolas", size: 8.6pt)
+#show raw: set text(font: ("Consolas", "DejaVu Sans Mono"), size: 8.4pt)
 #show raw.where(block: true): it => block(
-  fill: rgb("#282c34"),
-  inset: 9pt,
-  radius: 3pt,
+  fill: rgb("#18181b"),
+  inset: 16pt,
+  radius: 6pt,
   width: 100%,
-  stroke: 0.5pt + rgb("#1b1e24"),
-)[#text(fill: rgb("#e6e6e6"))[#it]]
+  stroke: none,
+)[#text(fill: rgb("#f4f4f5"))[#it]]
 
-#show link: set text(fill: c-primary)
+#show link: set text(fill: c-accent, weight: "medium")
 
 #let inlinecode(body) = raw(body)
 
 // Highlighted instruction / narrative boxes -----------------------------------
 #let callout(title, color, body) = block(
-  fill: color.lighten(88%),
-  stroke: (left: 3pt + color),
-  inset: 10pt,
-  radius: 3pt,
+  fill: color.lighten(92%),
+  stroke: (left: 4pt + color),
+  inset: 16pt,
+  radius: 2pt,
   width: 100%,
 )[
-  #text(weight: "bold", fill: color, font: "Arial", size: 10pt)[#title]
-  #v(4pt)
-  #body
+  #text(weight: "bold", fill: color, size: 10pt)[#title]
+  #v(8pt, weak: true)
+  #text(fill: c-text)[#body]
 ]
 
-#let screenshot(png, svg, title, desc) = {
-  callout("📸 Screenshot-Anleitung", c-accent)[
-    *Zu erfassende Ansicht:* #title.
-
-    #desc
-
-    Bitte einen Screenshot der laufenden Anwendung (Browser, Desktop-Auflösung,
-    keine DevTools sichtbar) erstellen und exakt unter folgendem Pfad/Dateinamen
-    ablegen: #raw("docs/images/" + png). Nach dem Speichern muss die
-    Bild-Referenz in `main.typ` von `images/#svg` auf `images/#png` umgestellt
-    werden, damit der reale Screenshot anstelle dieses Platzhalters erscheint.
+#let screenshot(png, width, title, desc) = {
+  block(breakable: false)[
+    #align(center)[
+      #image("images/" + png, width: width)
+    ]
+    #v(2pt, weak: true)
+    #align(center)[
+      #text(size: 8.5pt, fill: rgb("#6b7280"))[*#title* — #desc]
+    ]
   ]
-  figure(
-    image("images/" + svg, width: 62%),
-    caption: [Platzhalter für #raw(png) — #title],
-  )
-  v(4pt)
+  v(10pt, weak: true)
 }
 
 // ---------------------------------------------------------------------------
 // TITLE PAGE
 // ---------------------------------------------------------------------------
-#set page(paper: "a4", margin: (x: 2.6cm, top: 3cm, bottom: 2.8cm), numbering: none)
+#set page(paper: "a4", margin: (x: 3.5cm, top: 4.5cm, bottom: 4cm), numbering: none)
 
-#align(center)[
-  #v(2.2cm)
-  #text(font: "Arial", size: 12pt, fill: c-accent, tracking: 2pt)[UNIVERSITÄRES SOFTWAREPROJEKT — 4. SEMESTER]
-  #v(0.6cm)
-  #line(length: 60%, stroke: 0.8pt + c-primary)
-  #v(1.2cm)
-  #text(font: "Arial", size: 34pt, weight: "bold", fill: c-primary)[Rent-A-Camper]
-  #v(0.2cm)
-  #text(font: "Arial", size: 16pt, fill: c-accent)[Konzeption und Entwicklung eines Full-Stack-Portals zum Mieten von Wohnmobilen]
-  #v(0.3cm)
-  #line(length: 60%, stroke: 0.8pt + c-primary)
-  #v(1.6cm)
-
-  #box(fill: c-bg-light, inset: 16pt, radius: 4pt, width: 78%)[
-    #set align(left)
-    #set text(size: 11pt)
+#align(left)[
+  #text(size: 10pt, weight: "bold", fill: c-accent, tracking: 2pt)[UNIVERSITÄRES SOFTWAREPROJEKT — 4. SEMESTER]
+  #v(1cm)
+  #text(size: 48pt, weight: "black", fill: c-primary)[Rent-A-Camper]
+  #v(0.5cm)
+  #text(size: 16pt, weight: "regular", fill: rgb("#4b5563"))[Konzeption und Entwicklung eines Full-Stack-Portals \ zum Mieten von Wohnmobilen]
+  
+  #v(2cm)
+  #box(fill: c-bg-light, inset: 24pt, radius: 6pt, width: 100%, stroke: 1pt + c-border)[
+    #set text(size: 10pt)
     *Technische Dokumentation* zum Projekt „wohnmobilapp“ \
     Modul: Webbasierte Anwendungsentwicklung — 4. Semester \
     Repository: `rentacamperapp` (Full-Stack-TypeScript-Monorepo)
   ]
 
-  #v(1.8cm)
+  #v(1cm)
+
   #grid(
     columns: (1fr, 1fr),
-    gutter: 1cm,
-    align(center)[
-      #text(font: "Arial", size: 10pt, fill: gray)[Autor]
-      #v(2pt)
-      #text(size: 13pt, weight: "bold")[Dominik Kollenz]
+    gutter: 2cm,
+    [
+      #text(size: 9pt, fill: rgb("#6b7280"))[Autoren]
+      #v(6pt, weak: true)
+      #text(size: 11pt, weight: "bold", fill: c-primary)[Dominik Kollenz] \
+      #text(size: 9pt)[Matrikelnr: 5288656]
+      #v(8pt, weak: true)
+      #text(size: 11pt, weight: "bold", fill: c-primary)[Kevin Gojani] \
+      #text(size: 9pt)[Matrikelnr: 6602955]
     ],
-    align(center)[
-      #text(font: "Arial", size: 10pt, fill: gray)[Mitarbeit]
-      #v(2pt)
-      #text(size: 13pt, weight: "bold")[Kevin]
-    ],
+    [
+      #text(size: 9pt, fill: rgb("#6b7280"))[Datum]
+      #v(6pt, weak: true)
+      #text(size: 11pt, fill: c-primary)[5. Juli 2026]
+    ]
   )
 
-  #v(1.6cm)
-  #text(font: "Arial", size: 10pt, fill: gray)[Datum]
-  #v(2pt)
-  #text(size: 12pt)[5. Juli 2026]
-
-  #v(1fr)
-  #text(font: "Arial", size: 9pt, fill: gray)[
+  #v(2cm)
+  #text(size: 8pt, fill: rgb("#9ca3af"))[
     Frontend: Vanilla TypeScript · eigene JSX-Runtime · Bootstrap 5 · Vite \
     Backend: Node.js · NestJS · Supabase/PostgreSQL \
-    Deployment: Docker · Vercel · Heroku
+    Deployment: Docker 
   ]
 ]
 
@@ -146,16 +144,17 @@
 // ---------------------------------------------------------------------------
 #set page(
   numbering: "1",
+  margin: (x: 3.5cm, top: 3.5cm, bottom: 3.5cm),
   header: context {
     if counter(page).get().first() > 1 {
-      set text(size: 8pt, fill: gray, font: "Arial")
+      set text(size: 8pt, fill: rgb("#9ca3af"), font: "Arial")
       grid(
         columns: (1fr, 1fr),
         [Rent-A-Camper — Technische Dokumentation],
         align(right)[wohnmobilapp],
       )
-      v(-6pt)
-      line(length: 100%, stroke: 0.4pt + rgb("#cccccc"))
+      v(-4pt)
+      line(length: 100%, stroke: 0.5pt + rgb("#e5e7eb"))
     }
   },
 )
@@ -184,11 +183,31 @@ müssen.
 
 Persistiert werden die Daten in einer PostgreSQL-Datenbank, gehostet über
 *Supabase*, das zugleich Authentifizierung (Bearer-Token-basiert) und
-Objekt-Storage für Bilder bereitstellt. Für den produktiven Betrieb wird das
-Frontend statisch über *Vercel* ausgeliefert, während das NestJS-Backend als
-eigener Dienst auf *Heroku* läuft; alternativ steht eine vollständige
+Objekt-Storage für Bilder bereitstellt. Es steht eine vollständige
 Docker-Compose-Konfiguration für lokale bzw. selbstgehostete Deployments zur
 Verfügung.
+
+== Umgesetzte Funktionalität
+
+Konkret wurde folgender Funktionsumfang implementiert und ist in der
+laufenden Anwendung nutzbar:
+
+- Registrierung und Login über Supabase Auth (Bearer-Token-basiert).
+- Suche und Filterung verfügbarer Wohnmobile nach Preis, Betten, Maßen,
+  Kraftstoffart, Führerscheinklasse, Ausstattungsmerkmalen und Anbietertyp,
+  inklusive Sortierung und Verfügbarkeitsprüfung über einen Datumsbereich.
+- Detailansicht eines Wohnmobils mit Bildergalerie und Live-Preisberechnung
+  (Saison-Zuschläge, Rabatte, Add-ons, Reinigungsgebühr, Kaution).
+- Buchungsabschluss über einen mehrstufigen Checkout mit Auswahl von
+  Abhol-/Rückgabeort, Zusatzleistungen und Zahlungsmethode (PayPal *oder*
+  Stripe), inklusive automatischer PDF-Rechnungserstellung und
+  E-Mail-Bestätigung.
+- Konto-Bereich für Mieter:innen mit Übersicht und Stornierung eigener
+  Buchungen.
+- Vermieter-Bereich zum Anlegen, Bearbeiten und Löschen eigener Wohnmobile
+  samt Bild-Upload, Ausstattungspflege und manueller Blockierung von
+  Verfügbarkeitszeiträumen (z. B. für Wartung).
+- Kontakt-/Support-Formular mit serverseitigem E-Mail-Versand.
 
 == Zielsetzung dieses Dokuments
 
@@ -314,9 +333,10 @@ Als Datenbank kommt *PostgreSQL* zum Einsatz, betrieben als Managed-Service
   geschützten Routen verifiziert (siehe Kapitel 4.1).
 + *Typgenerierung* — über das Skript `backend/scripts/sync-types.js` (Aufruf:
   `npm run sync-types`) werden die aktuellen Datenbank-Typen aus Supabase
-  gezogen und nach `backend/src/types/supabase.ts` sowie
-  `shared/types/supabase.ts` geschrieben, sodass Backend und Frontend
-  konsistent typisiert bleiben.
+  gezogen, nach `backend/src/types/supabase.ts` geschrieben und von dort nach
+  `frontend/src/types/supabase.ts` kopiert, sodass Backend und Frontend
+  konsistent typisiert bleiben (siehe auch der ehrliche Hinweis zum
+  `shared/`-Ordner in Kapitel 3.1).
 
 Für Zahlungen werden *zwei* Anbieter parallel unterstützt — *Stripe* und
 *PayPal* — jeweils über eigene Service-Klassen im Backend
@@ -338,11 +358,6 @@ liegen muss. Das Frontend-Image erhält seine Backend-URL
 `VITE_*`-Umgebungsvariablen zur Build-Zeit in das statische Bundle einbrennt —
 eine zur Laufzeit gesetzte Umgebungsvariable hätte hier keine Wirkung.
 
-Für den produktiven Betrieb außerhalb von Docker wird das Frontend als
-statisches Bundle auf *Vercel* gehostet, während das NestJS-Backend als
-eigenständiger Dienst auf *Heroku* läuft. Beide Umgebungen sprechen dieselbe
-Supabase-Instanz an.
-
 = Monorepo- und Ordnerstruktur
 
 == Gesamtstruktur
@@ -354,12 +369,32 @@ Monorepo verwaltete Bereiche:
 wohnmobilapp/
 ├── backend/            NestJS-Anwendung (REST-API)
 ├── frontend/           Vanilla-TS-Anwendung (Vite, eigene JSX-Runtime)
-├── shared/             Zwischen Backend und Frontend geteilte Typen
+├── shared/             Ursprünglich für geteilte Typen gedacht (siehe Hinweis unten)
 ├── docker-compose.yml  Lokale/produktive Full-Stack-Orchestrierung
 ├── Dockerfile.backend
 ├── Dockerfile.frontend
 └── docs/               Diese Dokumentation (Typst-Projekt)
 ```
+
+#callout("Ehrlicher Hinweis zum `shared/`-Ordner", c-warn)[
+  Der `shared/`-Ordner ist als "von Backend und Frontend gemeinsam genutzte
+  Typen" gedacht — in der Praxis ist er mittlerweile weitgehend *totes
+  Gewicht*. Beide Seiten importieren ihre Supabase-Typen über eine eigene,
+  lokale Kopie (`backend/src/types/supabase.ts` bzw.
+  `frontend/src/types/supabase.ts`); der `@shared/*`-Pfad-Alias ist zwar in
+  beiden `tsconfig.json`-Dateien sowie in `vite.config.js` konfiguriert, wird
+  aber in keiner einzigen Quelldatei tatsächlich importiert. Die Datei
+  `shared/types/supabase.ts` selbst ist zudem veraltet (295 statt aktuell 676
+  Zeilen) und wird vom Sync-Skript nicht mehr aktualisiert. Historisch enthielt
+  der Ordner mehr (`camper.ts`, `insult.ts`), die im großen Refactoring
+  (Kapitel 5.3) ersatzlos gestrichen wurden. Trotzdem ist der Ordner nicht
+  gefahrlos entfernbar: `backend/tsconfig.json` inkludiert `../shared/**/*`
+  im Kompilat, und `Dockerfile.backend` kopiert ihn explizit in den
+  Build-Kontext — ein Löschen ohne begleitende Anpassung dieser beiden
+  Stellen würde den Build brechen. Der Ordner ist damit ein weiteres,
+  bewusst benanntes Beispiel für unvollständig nachgezogene Aufräumarbeit
+  (vgl. die `api/`-Doppelstruktur in Kapitel 3.3).
+]
 
 == Backend-Struktur
 
@@ -632,7 +667,7 @@ Beleg für den in Kapitel 5.2 beschriebenen Irrweg ist.
   [03.07.], [Dominik], [Bugfixes, fehlende Pflichtfeatures nachgezogen, UI-Feinschliff], [Bughunting], [7.0],
   [04.07.], [Dominik], [Feinschliff: responsive Anpassungen, Randfälle bei der Preisberechnung, Cross-Browser-Test], [Refactoring], [6.5],
   [04.07.], [Dominik], [Finale Politur vor Abgabe (Deadline-Endspurt, Commit „holy moly“)], [Bughunting], [4.5],
-  [05.07.], [Dominik], [Verfassen der technischen Dokumentation (dieses Dokument)], [Doku], [5.0],
+  [05.07.], [Dominik, Kevin], [Verfassen der technischen Dokumentation (dieses Dokument)], [Doku], [5.0],
 )
 
 #align(right)[
@@ -985,81 +1020,56 @@ Team.
 
 = Bildschirmabgriffe
 
-Die folgenden Abschnitte enthalten Platzhalter für Screenshots der laufenden
-Anwendung. Da diese Dokumentation ohne Zugriff auf eine laufende
-Browser-Instanz erstellt wurde, sind an den entsprechenden Stellen
-Platzhaltergrafiken mit klaren Anweisungen eingefügt, welcher Bildschirm
-in welcher Auflösung unter welchem Dateinamen im Ordner `docs/images/`
-abzulegen ist.
+Die folgenden Screenshots stammen aus der tatsächlich laufenden Anwendung
+(lokaler Dev-Server, Desktop-Auflösung) und ordnen sich den in den Kapiteln 2
+und 4 beschriebenen Techniken konkret aus Nutzersicht zu.
 
 #screenshot(
-  "homepage.png", "homepage.svg",
-  "Startseite (Home)",
-  [Vollständige Startseite mit Hero-Bereich, Highlights-Karussell,
-   Workflow-Sektion und Suchleiste. Im Browser auf Desktop-Breite
-   (mind. 1280px) rendern und den gesamten sichtbaren Bereich
-   ("Above the Fold") erfassen.],
+  "homepage.png", 52%,
+  "Startseite",
+  [Deklarative Komposition aus Hero-, Highlights- und Suchleisten-Komponente (Kapitel 4.4).],
 )
 
 #screenshot(
-  "rent-page-filter.png", "rent-page-filter.svg",
-  "Miet-Übersicht mit geöffneter Filter-Sidebar",
-  [Die Seite `/pages/rent/` mit sichtbarem Fahrzeugraster *und*
-   ausgeklappter Filter-Sidebar (`FilterBar.tsx`), idealerweise mit
-   mindestens einem aktiven Filter (z. B. Preisspanne) und dem
-   Ergebnis-Zähler oben rechts im Bild.],
+  "rent-page-filter.png", 55%,
+  "Miet-Übersicht mit Filter-Sidebar",
+  [`RentPage.tsx` mit `FilterBar` — Filter-/Sortierlogik über `CamperFilterService` (Kapitel 5.3, 6.2).],
 )
 
 #screenshot(
-  "camper-details-booking.png", "camper-details-booking.svg",
-  "Camper-Detailseite mit Flatpickr-Kalender",
-  [Die Detailseite eines Wohnmobils (`camper-details.tsx`) mit
-   Bildergalerie und dem Buchungs-Widget (`BookingCard.tsx`), bei dem
-   der Flatpickr-Datumsbereich-Picker geöffnet ist, um die
-   Kalenderansicht sichtbar zu machen.],
+  "camper-details-booking.png", 55%,
+  "Camper-Detailseite mit Buchungs-Widget",
+  [Bildergalerie und `BookingCard.tsx` mit Flatpickr-Datumsbereich-Picker.],
 )
 
 #screenshot(
-  "checkout-page.png", "checkout-page.svg",
+  "checkout-page.png", 66%,
   "Checkout-Seite",
-  [Die Checkout-Seite (`CheckoutPage.tsx`) mit ausgefülltem
-   Personendaten-Formular, ausgewählter Zahlungsmethode
-   (PayPal *oder* Stripe) und vollständiger Preisaufstellung
-   (`PriceBreakdownList`) auf der rechten Seite.],
+  [`CheckoutPage.tsx`: Personendaten, Zahlungsmethode (PayPal/Stripe) und `PriceBreakdownList` (Kapitel 6.2).],
 )
 
 #screenshot(
-  "account-bookings.png", "account-bookings.svg",
+  "account-bookings.png", 38%,
   "Konto-Bereich — Meine Buchungen",
-  [Der Konto-Bereich (`AccountPage.tsx` / `BookingsTable.tsx`) mit
-   mindestens zwei Buchungen unterschiedlichen Status (z. B. „bestätigt“
-   und „storniert“), um die farbliche Status-Kennzeichnung zu zeigen.],
+  [`AccountPage.tsx`/`BookingsTable.tsx` mit Status-Kennzeichnung je Buchung.],
 )
 
 #screenshot(
-  "rentout-dashboard.png", "rentout-dashboard.svg",
-  "Camper-Verwaltung — Vermieter-Dashboard",
-  [Das Vermieter-Dashboard (`ProviderDashboard.tsx` innerhalb von
-   `RentoutPage.tsx`) mit der Liste der eigenen Fahrzeuge
-   (`CamperListItem.tsx`) und den zugehörigen Verwaltungsaktionen.],
+  "rentout-dashboard.png", 66%,
+  "Vermieter-Dashboard",
+  [`ProviderDashboard.tsx` mit der Liste der eigenen Fahrzeuge (`CamperListItem.tsx`).],
 )
 
 #screenshot(
-  "camper-form-modal.png", "camper-form-modal.svg",
+  "camper-form-modal.png", 66%,
   "Formular zum Anlegen/Bearbeiten eines Wohnmobils",
-  [Das geöffnete Modal `CamperFormModal.tsx` (aus `CamperCRUD.tsx`)
-   mit sichtbaren Eingabefeldern für Preis, Ausstattungsmerkmale und
-   Bild-Upload; idealerweise mit einem bereits hochgeladenen
-   Bild-Thumbnail (`ImagePreviewThumbnail.tsx`).],
+  [`CamperFormModal.tsx` aus `CamperCRUD.tsx` — Eingabefelder inkl. Bild-Upload.],
 )
 
 #screenshot(
-  "auth-page.png", "auth-page.svg",
+  "auth-page.png", 60%,
   "Login / Registrierung",
-  [Die Authentifizierungs-Ansicht (`AuthPage.tsx`) — nach Möglichkeit
-   ein Screenshot der Login-Ansicht und optional ein zweiter der
-   Registrierungs-Ansicht als Vergleich (z. B. als
-   `auth-page-register.png`).],
+  [`AuthPage.tsx` — Authentifizierung gegen Supabase Auth (Kapitel 2.3).],
 )
 
 = Fazit und Ausblick
@@ -1069,7 +1079,7 @@ abzulegen ist.
 „Rent-A-Camper“ demonstriert, dass sich auch ohne ein etabliertes
 Frontend-Framework eine komponentenbasierte, deklarative UI-Architektur
 umsetzen lässt — vorausgesetzt, die selbstgebaute Abstraktion (hier: die
-eigene JSX-Runtime) wird konsequent *als solche* respektiert und nicht durch
+eigene JSX-Runtime) wird konsequent als solche respektiert und nicht durch
 imperative Direktzugriffe unterlaufen. Der in Kapitel 5 dokumentierte
 Irrweg war dabei kein Ausrutscher am Rande, sondern der Lernmoment des
 gesamten Projekts: die containerbasierte Zwischenlösung hat rückblickend
@@ -1083,9 +1093,8 @@ NestJS-Projekt dieser Größenordnung übertragen lassen.
 
 == Ausblick
 
-Aus der ehrlichen Bestandsaufnahme in Kapitel 5.3 sowie einem Abgleich mit
-den ursprünglich im README geplanten Features ergeben sich folgende
-konkrete nächste Schritte:
+Aus der ehrlichen Bestandsaufnahme in Kapitel 3.1 und 5.3 ergeben sich
+folgende konkrete nächste Schritte:
 
 - *Rest-Bereinigung von `RentPage.tsx`.* Die verbliebenen
   `container.querySelector`-Zugriffe sollten nach demselben Muster wie
@@ -1094,16 +1103,18 @@ konkrete nächste Schritte:
 - *Konsolidierung der API-Schicht.* Die parallel existierenden Ordner
   `src/api/` (funktional) und `src/infrastructure/api/` (klassenbasiert)
   sollten zu einer einzigen Schicht zusammengeführt werden.
+- *Den `shared/`-Ordner entweder reaktivieren oder entfernen.* Aktuell ist
+  er totes Gewicht (Kapitel 3.1): entweder wird der `@shared/*`-Alias
+  endlich produktiv genutzt (z. B. für tatsächlich geteilte DTOs), oder der
+  Ordner wird ersatzlos gestrichen — inklusive der zugehörigen Anpassungen
+  in `tsconfig.json` und `Dockerfile.backend`.
 - *`class-validator` an der Backend-Grenze nachrüsten*, um die in Kapitel
   6.1 offen benannte Lücke bei der DTO-Validierung zu schließen.
-- *Bislang nicht umgesetzte, im README skizzierte Features*: eine
-  Merkliste über `localStorage`, eine Standort-Karte über die Google Maps
-  API auf der Detailseite, digitale Unterschrift per Canvas-Element beim
-  Buchungsabschluss sowie ein dediziertes Bot-Schutz-Verfahren beim
-  Registrierungsformular. Ein `role`-Feld im Auth-Modell existiert bereits
-  als Datenstruktur, ein vollständiger Freigabe-Workflow für neu angelegte
-  Fahrzeuge (Vermieter → Admin-Freigabe) ist jedoch noch nicht
-  implementiert.
+- *Erweiterungen für den Produktivbetrieb*: eine Merkliste über
+  `localStorage`, eine Standort-Karte auf der Detailseite, sowie ein
+  vollständiger Freigabe-Workflow für neu angelegte Fahrzeuge (Vermieter →
+  Admin-Freigabe) — das `role`-Feld im Auth-Modell existiert dafür bereits
+  als Datenstruktur.
 
 Diese Punkte sind bewusst nicht als Mängel, sondern als nächste, klar
 umrissene Arbeitspakete zu verstehen — eine direkte Fortsetzung der in
