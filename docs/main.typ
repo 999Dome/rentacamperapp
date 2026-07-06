@@ -161,9 +161,9 @@
 #counter(page).update(1)
 
 = Einleitung
-
+\
 == Projektüberblick
-
+\
 „Rent-A-Camper“ ist im Rahmen eines universitären Softwareprojekts im 4.
 Semester als webbasiertes Portal zum Mieten von Wohnmobilen entstanden. Nutzer
 können sich registrieren, verfügbare Fahrzeuge durchsuchen und filtern, einen
@@ -187,8 +187,10 @@ Objekt-Storage für Bilder bereitstellt. Es steht eine vollständige
 Docker-Compose-Konfiguration für lokale bzw. selbstgehostete Deployments zur
 Verfügung.
 
+\
 == Umgesetzte Funktionalität
 
+\
 Konkret wurde folgender Funktionsumfang implementiert und ist in der
 laufenden Anwendung nutzbar:
 
@@ -210,7 +212,7 @@ laufenden Anwendung nutzbar:
 - Kontakt-/Support-Formular mit serverseitigem E-Mail-Versand.
 
 == Zielsetzung dieses Dokuments
-
+\
 Diese Dokumentation verfolgt drei Ziele. Erstens soll sie die technische
 Architektur des Systems — Laufzeitumgebung, Ordnerstruktur, Zusammenspiel von
 Backend und Frontend — so nachvollziehbar beschreiben, dass sich auch
@@ -224,16 +226,19 @@ das gekostet hat und welche konkrete Lösung erarbeitet wurde. Kapitel 5 ist
 diesem Aspekt gewidmet und enthält auch die vollständige Zeiterfassung des
 Projekts.
 
-= Laufzeitumgebung und Technologie-Stack
+#pagebreak()
 
+= Laufzeitumgebung und Technologie-Stack
+\
 Das Projekt trennt Backend und Frontend vollständig in zwei unabhängige
 Node.js-Prozesse, die ausschließlich über eine REST-Schnittstelle
 kommunizieren. Beide Teile sind in TypeScript geschrieben, verwenden jedoch
 unterschiedliche Frameworks bzw. — im Fall des Frontends — bewusst *kein*
 Framework für das UI-Rendering.
 
+\
 == Backend: Node.js und NestJS
-
+\
 Das Backend läuft auf *Node.js 22* und ist mit *NestJS 11* umgesetzt, einem
 opinionated Framework, das Dependency Injection, Decorator-basiertes Routing
 und eine modulare Architektur nach dem Vorbild von Angular auf die
@@ -265,7 +270,7 @@ Dateiänderungen; der Produktionsbuild wird mit `nest build` erzeugt und über
 `node dist/backend/src/main` gestartet.
 
 == Frontend: Vanilla TypeScript mit eigener JSX-Runtime
-
+\
 Das Frontend verzichtet bewusst auf React, Vue oder ein vergleichbares
 Framework. Stattdessen kompiliert *Vite 8* TypeScript-Dateien mit
 JSX-Syntax (`.tsx`), wobei der TypeScript-Compiler so konfiguriert ist, dass
@@ -318,8 +323,9 @@ erzeugt daraus separate Bundles für `main`, `rent`, `rentout`, `aboutus`,
 `/campers/<id>` im Dev-Server auf die Detailseite umgeschrieben werden, damit
 die Camper-ID als Teil des Pfads (statt als Query-Parameter) funktioniert.
 
+\
 == Datenbank und externe Dienste
-
+\
 Als Datenbank kommt *PostgreSQL* zum Einsatz, betrieben als Managed-Service
 über *Supabase*. Supabase übernimmt im Projekt drei Rollen gleichzeitig:
 
@@ -344,8 +350,9 @@ Für Zahlungen werden *zwei* Anbieter parallel unterstützt — *Stripe* und
 `PaymentsController` liegen. Rechnungen werden serverseitig mit `pdfkit` als
 PDF erzeugt und Bestätigungs-/Stornierungs-E-Mails über *Resend* verschickt.
 
+\
 == Deployment und Containerisierung
-
+\
 Für produktionsnahe, reproduzierbare Deployments existieren zwei mehrstufige
 Dockerfiles (`Dockerfile.backend`, `Dockerfile.frontend`) sowie eine
 `docker-compose.yml` im Repository-Wurzelverzeichnis. Eine Besonderheit: *der
@@ -358,10 +365,12 @@ liegen muss. Das Frontend-Image erhält seine Backend-URL
 `VITE_*`-Umgebungsvariablen zur Build-Zeit in das statische Bundle einbrennt —
 eine zur Laufzeit gesetzte Umgebungsvariable hätte hier keine Wirkung.
 
+#pagebreak()
+
 = Monorepo- und Ordnerstruktur
-
+\
 == Gesamtstruktur
-
+\
 Das Repository gliedert sich in drei unabhängig versionierte, aber im selben
 Monorepo verwaltete Bereiche:
 
@@ -396,8 +405,9 @@ wohnmobilapp/
   (vgl. die `api/`-Doppelstruktur in Kapitel 3.3).
 ]
 
+#pagebreak()
 == Backend-Struktur
-
+\
 Das Backend folgt innerhalb von `backend/src/` einer klaren Trennung nach
 *fachlicher Domäne* (`modules/`) und *technischer Schicht*
 (`domain/`, `infrastructure/`):
@@ -440,8 +450,9 @@ Jedes Feature-Modul folgt demselben, in NestJS üblichen Dreiklang: ein
 komplexeren Eingabedaten besitzen zusätzlich einen `dto/`-Unterordner. Details
 zum Zusammenspiel dieser Bausteine folgen in Kapitel 4.1.
 
+\
 == Frontend-Struktur
-
+\
 Das Frontend trennt *Einstiegspunkte* (`pages/`), *Komponenten*
 (`components/`) und die neuere, schichtenorientierte Struktur
 (`domain/`, `infrastructure/`), die im Zuge des in Kapitel 5 beschriebenen
@@ -484,11 +495,11 @@ API-Clients wie `camper-api-client.ts`) existieren aktuell *nebeneinander*.
 Das ist keine geplante Doppelstruktur, sondern das sichtbare Ergebnis eines
 Refactorings, das zum Abgabezeitpunkt begonnen, aber noch nicht flächendeckend
 abgeschlossen wurde — dazu mehr in Kapitel 5.3.
-
+#pagebreak()
 = Architektur und angewandte Techniken
-
+\
 == Backend-Architektur: Vom Request zur Datenbank
-
+\
 Das Backend ist als klassische *Schichtenarchitektur* mit vier Ebenen
 aufgebaut, die in dieser Reihenfolge durchlaufen werden:
 
@@ -512,8 +523,9 @@ Abhängigkeiten — Repository, Führerschein-Prüfung, Profil-Service,
 PDF-/Mail-Versand — nicht direkt, sondern über das zugehörige
 `BookingsModule`, das sie per Dependency Injection bereitstellt.
 
+\
 == Das Repository-Pattern und Dependency-Injection-Tokens
-
+\
 Ein wiederkehrendes Muster im Backend ist die Entkopplung von Services und
 konkreten Datenzugriffsklassen über *Interfaces plus DI-Tokens*. Statt einen
 Service direkt von `BookingRepository` (der Supabase-Implementierung)
@@ -547,8 +559,9 @@ selbst irgendetwas zu laden. `CampersService.calculatePrice()` (siehe Kapitel
 Repositories und reicht sie an den Calculator weiter. Das macht die eigentliche
 Preislogik isoliert unit-testbar.
 
+\
 == Frontend-Architektur: Die eigene JSX-Runtime
-
+\
 Das technisch prägendste Merkmal des Frontends ist der Verzicht auf ein
 UI-Framework zugunsten einer selbstgeschriebenen, rund 170 Zeilen kurzen
 JSX-Runtime (`frontend/src/utils/createElement.ts`, vollständig abgedruckt in
@@ -576,8 +589,10 @@ Diese Entscheidung hat unmittelbare Konsequenzen für den Programmierstil:
   `PriceBreakdownList`, die mehrere Geschwister-Elemente ohne umschließendes
   Wrapper-Element rendern müssen (siehe Kapitel 6.2).
 
-== Komponenten, Views und Services im Frontend
+#pagebreak()
 
+== Komponenten, Views und Services im Frontend
+\
 Der Aufbau einer typischen Seite folgt einem festen Muster: eine
 `pages/<name>/index.html` bindet ein schlankes Einstiegs-Skript ein (z. B.
 `pages/rent/rent.ts`), das lediglich `MainHeader()`, die eigentliche
@@ -603,8 +618,9 @@ haben — etwa das Filtern und Sortieren der Camper-Liste — sind bewusst in di
 `domain/services/`-Schicht ausgelagert (`CamperFilterService`), damit sie
 unabhängig von der konkreten View getestet werden könnten.
 
+\
 == Zusammenspiel Frontend und Backend
-
+\
 Frontend und Backend kommunizieren ausschließlich über eine REST-Schnittstelle
 über HTTP/JSON; es gibt keine gemeinsame Prozessgrenze und keinen
 Server-Side-Rendering-Schritt. Der Ablauf einer typischen Aktion — etwa das
@@ -629,9 +645,9 @@ hinweg zwischenzuspeichern — da beim Zurückkehren von PayPal die
 JavaScript-Laufzeit der Seite komplett neu initialisiert wird.
 
 = Zeiterfassung und Projektverlauf
-
+\
 == Stundenübersicht
-
+\
 Die folgende Tabelle fasst die investierte Arbeitszeit über den gesamten
 Projektzeitraum (18. Mai bis 5. Juli 2026) zusammen, wie sie sich aus
 Commit-Historie, Pull-Requests und ergänzender manueller Aufzeichnung
@@ -651,32 +667,31 @@ Beleg für den in Kapitel 5.2 beschriebenen Irrweg ist.
   [19.05.], [Dominik], [Grundstruktur für Backend und Frontend angelegt (5 Zwischen-Commits)], [Onboarding/Setup], [6.0],
   [20.05.], [Kevin], [Header-Icon und erste statische UI-Bausteine], [Frontend-Views], [2.0],
   [21.05.], [Dominik], [Migration des Backends von Express auf NestJS (Modul-/Controller-Grundgerüst)], [Backend-Architektur], [6.5],
-  [21.05.], [Dominik], [Dockerfiles/`docker-compose.yml`; README-Update (Vercel/Heroku/Supabase-Links)], [Deployment], [4.0],
+  [21.05.], [Dominik], [Dockerfiles/`docker-compose.yml`], [Deployment], [4.0],
   [31.05.], [Dominik], [Bootstrap-5-Integration, SCSS-Theme-Variablen], [Frontend-Views], [4.5],
-  [09.06.], [Dominik], [Homepage-Design: Hero, Highlights, Workflow-Sektion, Suchleiste], [Frontend-Views], [7.0],
+  [09.06.], [Kevin], [Homepage-Design: Hero, Highlights, Workflow-Sektion, Suchleiste], [Frontend-Views], [7.0],
   [14.06.], [Kevin], [Anpassungen an der Startseite (Issue \#16)], [Frontend-Views], [3.0],
   [16.06.], [Dominik], [Umstieg der Startseite von HTML-Strings auf TSX; eigene JSX-Runtime `createElement.ts` grundlegend erstellt], [Frontend-Architektur], [8.0],
   [17.06.], [Dominik], [Ordnerstruktur überarbeitet (Trennung `components`/`pages`, erste Domain-Ordner)], [Refactoring], [4.0],
   [23.06.], [Dominik], [Erste Frontend-Backend-Kommunikation (`fetch`-Wrapper, `campersAPI.ts`)], [Backend-Architektur], [6.5],
-  [25.06.], [Dominik], [Camper-Detailseite inkl. Bildergalerie und Buchungswidget], [Frontend-Views], [6.0],
+  [25.06.], [Kevin], [Camper-Detailseite inkl. Bildergalerie und Buchungswidget], [Frontend-Views], [6.0],
   [30.06.], [Kevin], [„Refactoring“ der Rent-Page — tatsächlich Einführung von `container`-Variablen, verschachtelten `querySelector`-Aufrufen und manuellem `innerHTML`-Handling (siehe 5.2)], [Frontend-Views], [7.5],
   [01.07.], [Kevin], [Umstellung von Mock-Daten auf echte Datenbankdaten *innerhalb* der bereits unübersichtlichen Struktur], [Frontend-Views], [5.0],
   [01.07.], [Dominik], [Bughunting: fehlerhafte DOM-Referenzen nach dynamischem Neu-Rendern des Grids, Race-Conditions bei `setTimeout(loadCampers, 0)`], [Bughunting], [3.5],
-  [02.07.], [Dominik], [Großes Architektur-Refactoring: Domain-/Infrastructure-Schicht, API-Client-Klassen, Validatoren, Rückbau der `container`-Anti-Pattern (siehe 5.3)], [Refactoring], [9.5],
+  [02.07.], [Kevin], [Großes Architektur-Refactoring: Domain-/Infrastructure-Schicht, API-Client-Klassen, Validatoren, Rückbau der `container`-Anti-Pattern (siehe 5.3)], [Refactoring], [12],
   [02.07.], [Dominik], [Zahlungsanbindung: PayPal- und Stripe-Integration], [Backend-Architektur], [6.0],
   [03.07.], [Dominik], [Bugfixes, fehlende Pflichtfeatures nachgezogen, UI-Feinschliff], [Bughunting], [7.0],
-  [04.07.], [Dominik], [Feinschliff: responsive Anpassungen, Randfälle bei der Preisberechnung, Cross-Browser-Test], [Refactoring], [6.5],
-  [04.07.], [Dominik], [Finale Politur vor Abgabe (Deadline-Endspurt, Commit „holy moly“)], [Bughunting], [4.5],
-  [05.07.], [Dominik, Kevin], [Verfassen der technischen Dokumentation (dieses Dokument)], [Doku], [5.0],
+  [04.07.], [Dominik], [Feinschliff: responsive Anpassungen, Randfälle bei der Preisberechnung], [Refactoring], [6.5],
+  [04.07.], [Dominik], [Finale Bugfixes und UI-Anpassungen], [Bughunting], [4.5],
 )
 
 #align(right)[
-  #text(weight: "bold")[Gesamtaufwand: 117,5 Personenstunden]
-  \ #text(size: 9pt, fill: gray)[davon Dominik: 100,0 Std. · Kevin: 17,5 Std.]
+  #text(weight: "bold")[Gesamtaufwand: 114 Personenstunden]
+  \ #text(size: 9pt, fill: gray)[davon Dominik: 72,5 Std. · Kevin: 42,5 Std.]
 ]
-
+\
 == Der Irrweg: Imperative DOM-Manipulation hinter einer JSX-Fassade
-
+\
 Der ehrlichste Teil dieser Dokumentation betrifft eine Designentscheidung, die
 sich über gut zwei Wochen (ca. 25.06. bis 01.07.) unbemerkt in den Code
 einschlich und deren Aufräumen anschließend den mit Abstand größten Einzelposten
@@ -757,9 +772,9 @@ export function RentPage() {
   Sicherheit eines echten deklarativen Modells (Typprüfung, Testbarkeit,
   Wiederverwendbarkeit) zu gewinnen.
 ]
-
+\
 == Die Lösung: Das große Architektur-Refactoring
-
+\
 Am 02.07.2026 — zwei Tage vor der ursprünglich geplanten Feinschliff-Phase —
 wurde die Entscheidung getroffen, nicht länger einzelne Symptome zu flicken,
 sondern die zugrunde liegende Struktur in einem gebündelten Refactoring
@@ -812,15 +827,16 @@ Konkret wurden folgende Prinzipien durchgesetzt:
   bedeutet für uns auch, ehrlich zu benennen, was noch nicht fertig ist,
   statt technische Schulden zu kaschieren.
 ]
-
+#pagebreak()
 = Code-Analyse: Ausgewählte Implementierungen
-
+\
 Dieses Kapitel zeigt drei kuratierte Ausschnitte aus dem tatsächlichen
 Quellcode, die aus unserer Sicht exemplarisch für den nach dem Refactoring
 etablierten Qualitätsstandard stehen.
 
+\
 == Backend: Controller, Service und DTO im Buchungsmodul
-
+\
 Das folgende Beispiel zeigt den vollständigen `BookingsController`. Er ist
 bewusst „dünn“ gehalten: jede Methode validiert höchstens die Form der
 Anfrage (z. B. die Pflichtprüfung der Nutzer-ID bei der Stornierung) und
@@ -926,9 +942,9 @@ das zugehörige Modul (gekürzt):
 })
 export class BookingsModule {}
 ```
-
+\
 == Frontend: Eine rein deklarative JSX-Komponente
-
+\
 Als Gegenstück zum in Kapitel 5.2 gezeigten Irrweg dient
 `PriceBreakdownList.tsx` als Beispiel für eine Komponente, die *ausschließlich*
 aus ihren Props ein Ergebnis ableitet — ohne eine einzige `querySelector`-
@@ -976,8 +992,10 @@ muss — ein direkter Beleg dafür, dass sich echte Wiederverwendbarkeit erst
 einstellt, sobald eine Komponente rein aus Eingabedaten ein Ergebnis
 berechnet, statt selbst Zustand im DOM zu suchen und zu mutieren.
 
+\
 == Dokumentationsstandard: JSDoc am Beispiel der JSX-Runtime
 
+\
 Als Referenz für den im Projekt angestrebten JSDoc-Standard dient die
 zentrale `createElement`-Funktion selbst — das Herzstück der eigenen
 JSX-Runtime (vollständige Datei: `frontend/src/utils/createElement.ts`):
@@ -1018,8 +1036,9 @@ Zuge des Refactorings (Kapitel 5.3) neu geschriebenen oder überarbeiteten
 Dateien festgelegt und ist seither Teil des Code-Review-Kriterienkatalogs im
 Team.
 
+#pagebreak()
 = Bildschirmabgriffe
-
+\
 Die folgenden Screenshots stammen aus der tatsächlich laufenden Anwendung
 (lokaler Dev-Server, Desktop-Auflösung) und ordnen sich den in den Kapiteln 2
 und 4 beschriebenen Techniken konkret aus Nutzersicht zu.
@@ -1071,52 +1090,3 @@ und 4 beschriebenen Techniken konkret aus Nutzersicht zu.
   "Login / Registrierung",
   [`AuthPage.tsx` — Authentifizierung gegen Supabase Auth (Kapitel 2.3).],
 )
-
-= Fazit und Ausblick
-
-== Fazit
-
-„Rent-A-Camper“ demonstriert, dass sich auch ohne ein etabliertes
-Frontend-Framework eine komponentenbasierte, deklarative UI-Architektur
-umsetzen lässt — vorausgesetzt, die selbstgebaute Abstraktion (hier: die
-eigene JSX-Runtime) wird konsequent als solche respektiert und nicht durch
-imperative Direktzugriffe unterlaufen. Der in Kapitel 5 dokumentierte
-Irrweg war dabei kein Ausrutscher am Rande, sondern der Lernmoment des
-gesamten Projekts: die containerbasierte Zwischenlösung hat rückblickend
-mehr Entwicklungszeit gekostet (Bughunting am 01.07. plus das große
-Refactoring am 02.07., zusammen über 13 Stunden) als eine von Anfang an
-konsequent deklarative Umsetzung gebraucht hätte. Gleichzeitig zeigt das
-Backend mit seiner Schichtenarchitektur (Controller/Service/Domain/
-Repository) und dem konsequenten Einsatz von Dependency-Injection-Tokens,
-dass sich die im Studium vermittelten Entwurfsprinzipien direkt auf ein
-NestJS-Projekt dieser Größenordnung übertragen lassen.
-
-== Ausblick
-
-Aus der ehrlichen Bestandsaufnahme in Kapitel 3.1 und 5.3 ergeben sich
-folgende konkrete nächste Schritte:
-
-- *Rest-Bereinigung von `RentPage.tsx`.* Die verbliebenen
-  `container.querySelector`-Zugriffe sollten nach demselben Muster wie
-  `PriceBreakdownList` in kleinere, rein deklarative Unterkomponenten
-  überführt werden.
-- *Konsolidierung der API-Schicht.* Die parallel existierenden Ordner
-  `src/api/` (funktional) und `src/infrastructure/api/` (klassenbasiert)
-  sollten zu einer einzigen Schicht zusammengeführt werden.
-- *Den `shared/`-Ordner entweder reaktivieren oder entfernen.* Aktuell ist
-  er totes Gewicht (Kapitel 3.1): entweder wird der `@shared/*`-Alias
-  endlich produktiv genutzt (z. B. für tatsächlich geteilte DTOs), oder der
-  Ordner wird ersatzlos gestrichen — inklusive der zugehörigen Anpassungen
-  in `tsconfig.json` und `Dockerfile.backend`.
-- *`class-validator` an der Backend-Grenze nachrüsten*, um die in Kapitel
-  6.1 offen benannte Lücke bei der DTO-Validierung zu schließen.
-- *Erweiterungen für den Produktivbetrieb*: eine Merkliste über
-  `localStorage`, eine Standort-Karte auf der Detailseite, sowie ein
-  vollständiger Freigabe-Workflow für neu angelegte Fahrzeuge (Vermieter →
-  Admin-Freigabe) — das `role`-Feld im Auth-Modell existiert dafür bereits
-  als Datenstruktur.
-
-Diese Punkte sind bewusst nicht als Mängel, sondern als nächste, klar
-umrissene Arbeitspakete zu verstehen — eine direkte Fortsetzung der in
-diesem Dokument beschriebenen Arbeitsweise: erst ehrlich den Ist-Zustand
-benennen, dann gezielt refactorn.
